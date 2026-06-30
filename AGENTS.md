@@ -7,6 +7,12 @@ This project is the public/client-facing SarapMagBike website.
 - Phase 1 is the current static marketing website deployed for `sarapmagbike.com`.
 - Phase 2 will connect this website to the existing SMBSystem backoffice web application.
 
+## Chat Phase Prefix
+
+- Current phase is Phase 1 unless the user explicitly says they are switching phase.
+- Prefix assistant chat responses with `P1>` while working in Phase 1.
+- If the user explicitly switches to Phase 2, prefix assistant chat responses with `P2>`.
+
 ## Integration Rule
 
 SMBWeb2 must not grow its own separate business database or duplicate backoffice business logic. When dynamic features are added, they should integrate through SMBSystem's API and use SMBSystem's existing database as the source of truth.

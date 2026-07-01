@@ -12,134 +12,265 @@
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="#top" aria-label="SarapMagBike Shop home">
-        <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
-        <span>SarapMagBike Shop</span>
-      </a>
-      <nav class="nav-links" aria-label="Main navigation">
-        <a href="#services">Services</a>
-        <a href="#shop">Shop</a>
-        <a href="#visit">Visit</a>
-        <a class="nav-cta" href="#contact">Contact</a>
-      </nav>
-      <button class="menu-button" type="button" aria-label="Open menu" aria-expanded="false">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+    <div class="page-bg"></div>
+
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <nav aria-label="Utility navigation">
+          <a href="#contact">Contact</a>
+          <a href="#services">Service</a>
+        </nav>
+        <div class="topbar-options">
+          <span>English</span>
+          <span>Prices in PHP</span>
+        </div>
+      </div>
     </header>
 
-    <main id="top">
-      <section class="hero-section">
-        <div class="hero-content">
-          <p class="eyebrow">Quezon City bike shop</p>
-          <h1>SarapMagBike Shop</h1>
-          <p class="hero-copy">
-            Bikes, parts, accessories, apparel, coffee, and reliable bike service for everyday riders,
-            weekend warriors, and the local cycling community.
-          </p>
-          <div class="hero-actions">
-            <a class="button primary" href="#contact">Message the Shop</a>
-            <a class="button secondary" href="#services">View Services</a>
-          </div>
+    <div class="wrap header-main">
+      <a class="logo" href="#top" aria-label="SarapMagBike Shop home">
+        <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+        <span class="logo-tag">QC | PAMPANGA</span>
+      </a>
+      <form class="search-form">
+        <input type="search" aria-label="Search" placeholder="Search bikes, parts, service">
+        <button type="button">Search</button>
+      </form>
+      <div class="cart-box" aria-label="Message SarapMagBike">
+        <strong>Message Us</strong>
+        <span>stock check</span>
+      </div>
+      <div class="lock-box" aria-hidden="true">Lock</div>
+    </div>
+
+    <nav class="wrap main-nav" aria-label="Product categories">
+      <a href="#bikes">Bikes</a>
+      <a href="#parts">Bike Parts</a>
+      <a href="#parts">Tires and Tubes</a>
+      <a href="#apparel">Clothing</a>
+      <a href="#services">Service</a>
+      <a href="#online">Online Orders</a>
+    </nav>
+
+    <main id="top" class="wrap content">
+      <section class="hero-slider" aria-label="Featured shop image">
+        <div class="slide-image"></div>
+        <div class="hero-message">
+          <p>SarapMagBike Shop</p>
+          <h1>Bikes, Parts & Bike Service</h1>
+          <span>Message us to confirm stock, prices, service queue, and Shopee/Lazada orders.</span>
+          <a href="#contact">Check Stock</a>
         </div>
-        <aside class="hero-panel" aria-label="Shop highlights">
-          <img src="assets/sarapmagbike-logo.png" alt="">
+        <div class="slide-pages" aria-hidden="true">
+          <span class="active">1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+        </div>
+      </section>
+
+      <section class="feature-tiles" aria-label="Featured categories">
+        <article id="bikes" class="feature-card feature-bike">
+          <h2>Bikes <span>& Frames</span></h2>
+          <p>MTB, road, gravel, folding, starter builds, and shop-assembled options.</p>
+          <a href="#products">View Catalog</a>
+        </article>
+        <article id="parts" class="feature-card feature-parts">
+          <h2>Bike Parts <span>& Components</span></h2>
+          <p>Drivetrain, brakes, cockpit, forks, wheelsets, tires, tubes, and upgrades.</p>
+          <a href="#products">Check Stock</a>
+        </article>
+        <article id="apparel" class="feature-card feature-clothing">
+          <h2>Cycling <span>Clothing</span></h2>
+          <p>Jerseys, shorts, gloves, socks, ride apparel, and everyday shop gear.</p>
+          <a href="#products">Ask Availability</a>
+        </article>
+        <article id="helmets" class="feature-card feature-helmets">
+          <h2>Helmets <span>& Sunglasses</span></h2>
+          <p>Safety gear, helmets, eyewear, lights, bags, and daily ride essentials.</p>
+          <a href="#products">Ask Availability</a>
+        </article>
+      </section>
+
+      <section id="products" class="product-section">
+        <div class="product-tabs" aria-label="Product lists">
+          <span class="active">New Arrivals</span>
+          <span>Popular</span>
+          <span>Service Picks</span>
+        </div>
+
+        <p class="stock-note">
+          Static Phase 1 catalog preview. Stocks and prices may change. Message us to confirm before visiting or ordering.
+        </p>
+
+        <div class="product-grid">
+          <article class="product-card">
+            <span class="badge">New</span>
+            <span class="badge sale">Sale!</span>
+            <div class="product-photo product-saddle"></div>
+            <h3>Comfort MTB Saddle</h3>
+            <p>Daily ride saddle for MTB, city, and commute builds.</p>
+            <strong>PHP 1,250.00 <del>PHP 1,520.00</del> <em>-18%</em></strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <div class="product-photo product-helmet"></div>
+            <h3>Blue Road Helmet</h3>
+            <p>Lightweight helmet for road, commute, and fitness rides.</p>
+            <strong>PHP 2,689.00</strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <span class="badge sale">Sale!</span>
+            <div class="product-photo product-jacket"></div>
+            <h3>Long Sleeve Jersey</h3>
+            <p>Cool-weather cycling top with practical rear pockets.</p>
+            <strong>PHP 3,946.00 <del>PHP 4,312.00</del> <em>-8%</em></strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <div class="product-photo product-stem"></div>
+            <h3>Alloy 4-Axis Stem</h3>
+            <p>Cockpit fit upgrade for road, gravel, and MTB builds.</p>
+            <strong>PHP 1,428.96</strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <div class="product-photo product-brake"></div>
+            <h3>Shimano Brake Set</h3>
+            <p>Brake replacement with shop installation support.</p>
+            <strong>PHP 632.15</strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <span class="badge sale">Sale!</span>
+            <div class="product-photo product-helmet2"></div>
+            <h3>Euro Road Helmet</h3>
+            <p>Vented helmet for long rides and weekend training.</p>
+            <strong>PHP 3,846.61 <del>PHP 4,321.15</del> <em>-11%</em></strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <span class="badge">New</span>
+            <div class="product-photo product-saddle2"></div>
+            <h3>Performance Saddle</h3>
+            <p>Road and gravel saddle with slim comfort profile.</p>
+            <strong>PHP 924.25</strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+          <article class="product-card">
+            <div class="product-photo product-wheel"></div>
+            <h3>Disc Wheelset</h3>
+            <p>Wheelset upgrade options for road, gravel, and MTB.</p>
+            <strong>PHP 5,540.25</strong>
+            <a href="#contact">Ask Availability</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="banner-row" aria-label="Promotions">
+        <article class="sale-banner banner-tires">
+          <h2>Tires, Tubes & Wheels</h2>
+          <p>Get up to 20% off selected essentials.</p>
+          <a href="#contact">Check Stock</a>
+        </article>
+        <article id="services" class="sale-banner banner-shoes">
+          <h2>Service & Tune-Up</h2>
+          <p>Wash, tune-up, overhaul, repairs, and upgrades by queue confirmation.</p>
+          <a href="#contact">Book Service</a>
+        </article>
+      </section>
+
+      <section class="info-panels" aria-label="Shop information">
+        <article class="facebook-box">
+          <h2>Follow us on Facebook</h2>
+          <div class="mock-facebook">
+            <strong>SarapMagBike Shop</strong>
+            <span>QC | PAMPANGA</span>
+            <div class="fb-photos">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <p>Message us for current stock, service queue, and platform orders.</p>
+          </div>
+        </article>
+        <article class="service-list">
           <div>
-            <strong>Now preparing a better online system.</strong>
-            <span>For now, contact us directly for product availability, service booking, and order inquiries.</span>
+            <span class="round-icon">01</span>
+            <h3>Bike sales and parts</h3>
+            <p>Bikes, frames, groupsets, wheelsets, tires, tubes, cockpit, and accessories.</p>
           </div>
-        </aside>
-      </section>
-
-      <section class="quick-info" aria-label="Shop quick information">
-        <div>
-          <span>Location</span>
-          <strong>Quezon City, Philippines</strong>
-        </div>
-        <div>
-          <span>Products</span>
-          <strong>Bikes, parts, apparel, accessories</strong>
-        </div>
-        <div>
-          <span>Services</span>
-          <strong>Wash, tune-up, overhaul, repairs</strong>
-        </div>
-      </section>
-
-      <section id="services" class="section">
-        <div class="section-heading">
-          <p class="eyebrow">Bike service</p>
-          <h2>Workshop support for real ride needs</h2>
-          <p>
-            Bring your bike in for routine maintenance, troubleshooting, upgrades, or a full refresh before your next ride.
-          </p>
-        </div>
-        <div class="service-grid">
-          <article>
-            <h3>Bike Wash</h3>
-            <p>Clean bike care for post-ride mud, city grime, and regular upkeep.</p>
-          </article>
-          <article>
-            <h3>Tune-Up</h3>
-            <p>Brake, shifting, drivetrain, and safety checks to keep the bike road-ready.</p>
-          </article>
-          <article>
-            <h3>Overhaul</h3>
-            <p>Deeper service for bikes that need bearing, drivetrain, and component attention.</p>
-          </article>
-          <article>
-            <h3>Repairs & Upgrades</h3>
-            <p>Parts replacement, fitting, diagnostics, and practical upgrades for better riding.</p>
-          </article>
-        </div>
-      </section>
-
-      <section id="shop" class="section split-section">
-        <div>
-          <p class="eyebrow">Shop products</p>
-          <h2>Parts and gear for Filipino cyclists</h2>
-          <p>
-            We carry bikes, frames, groupsets, wheelsets, tires, tubes, cockpit parts, brakes,
-            drivetrain items, accessories, apparel, tools, and service labor.
-          </p>
-        </div>
-        <div class="category-list" aria-label="Product categories">
-          <span>Bikes</span>
-          <span>Frames</span>
-          <span>Wheelsets</span>
-          <span>Tires & Tubes</span>
-          <span>Drivetrain</span>
-          <span>Accessories</span>
-          <span>Apparel</span>
-          <span>Tools</span>
-        </div>
-      </section>
-
-      <section id="visit" class="section visit-section">
-        <div class="visit-card">
-          <p class="eyebrow">Visit the shop</p>
-          <h2>Drop by or message first for availability</h2>
-          <p>
-            Product stocks and service queue may change during the day. Send a message before visiting
-            if you need a specific item, size, color, or service schedule.
-          </p>
-        </div>
-        <div id="contact" class="contact-card">
-          <h2>Contact</h2>
-          <a href="https://www.facebook.com/search/top?q=sarapmagbike" target="_blank" rel="noreferrer">
-            Find us on Facebook
-          </a>
-          <a href="mailto:hello@sarapmagbike.com">hello@sarapmagbike.com</a>
-          <p>Quezon City, Metro Manila</p>
-        </div>
+          <div>
+            <span class="round-icon">02</span>
+            <h3>Workshop service</h3>
+            <p>Wash, tune-up, overhaul, repairs, diagnostics, and component installation.</p>
+          </div>
+          <div>
+            <span class="round-icon">03</span>
+            <h3>Online order support</h3>
+            <p>Shopee and Lazada availability checks, order questions, and pickup guidance.</p>
+          </div>
+        </article>
+        <article id="online" class="useful-links">
+          <h2>Useful Links</h2>
+          <a href="#bikes">Bikes and frames</a>
+          <a href="#parts">Parts and accessories</a>
+          <a href="#apparel">Cycling apparel</a>
+          <a href="#helmets">Helmets and safety gear</a>
+          <a href="#contact">Service booking</a>
+          <a href="#contact">Shopee/Lazada orders</a>
+          <a href="#contact">Contact the shop</a>
+        </article>
       </section>
     </main>
 
-    <footer>
-      <span>&copy; <span id="year"></span> SarapMagBike Shop</span>
-      <span>Temporary website while the full system is being built.</span>
+    <footer id="footer" class="footer">
+      <div class="wrap footer-main">
+        <div class="footer-logo">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        </div>
+        <div>
+          <h2>Information</h2>
+          <a href="#products">New products</a>
+          <a href="#services">Bike service</a>
+          <a href="#online">Online orders</a>
+          <a href="#contact">Contact us</a>
+        </div>
+        <div>
+          <h2>Customer Help</h2>
+          <a href="#contact">Check stock</a>
+          <a href="#contact">Book service</a>
+          <a href="#contact">Ask compatibility</a>
+          <a href="#contact">Platform order help</a>
+        </div>
+        <div>
+          <h2>Follow Us</h2>
+          <a href="https://www.facebook.com/search/top?q=sarapmagbike" target="_blank" rel="noreferrer">Facebook</a>
+          <a href="#footer">Instagram</a>
+          <a href="#footer">YouTube</a>
+        </div>
+        <div id="contact">
+          <h2>Store Information</h2>
+          <p>SarapMagBike Shop, QC | Pampanga</p>
+          <p>Stocks, prices, and service queue may change:</p>
+          <strong>Message us on Facebook</strong>
+          <a href="mailto:hello@sarapmagbike.com">hello@sarapmagbike.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="wrap">
+          <span>&copy; <span id="year"></span> SarapMagBike Shop</span>
+          <span>YPP Enterprises OPC</span>
+        </div>
+      </div>
     </footer>
 
     <script src="script.js"></script>

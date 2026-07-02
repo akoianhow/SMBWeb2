@@ -700,12 +700,22 @@ p {
 }
 
 .product-api-photo.has-image {
-  background-color: #f4f7fb;
-  background-repeat: no-repeat;
+  background: #f7f9fb;
+  overflow: hidden;
 }
 
 .product-api-photo.has-image::before {
   content: none;
+}
+
+.product-api-photo.has-image img {
+  display: block;
+  height: calc(100% - 24px);
+  inset: 12px;
+  object-fit: contain;
+  object-position: center;
+  position: absolute;
+  width: calc(100% - 24px);
 }
 
 .product-card-state {

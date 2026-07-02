@@ -101,7 +101,11 @@ function renderWebItemCard(item) {
   photo.dataset.initial = (item.itemDescription || "SMB").trim().slice(0, 1).toUpperCase();
   if (item.mainImageUrl) {
     photo.classList.add("has-image");
-    photo.style.backgroundImage = `url("${getApiBaseUrl()}${item.mainImageUrl}")`;
+    const image = document.createElement("img");
+    image.alt = item.itemDescription || "Web catalog item";
+    image.loading = "lazy";
+    image.src = `${getApiBaseUrl()}${item.mainImageUrl}`;
+    photo.append(image);
   }
 
   const detail = [item.category, item.brand, item.stockStatus].filter(Boolean).join(" / ");

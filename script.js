@@ -82,7 +82,7 @@ function getApiBaseUrl() {
       return "";
     }
 
-    return "http://localhost:5088";
+    return `http://${window.location.hostname}:5088`;
   }
 
   return "https://api.sarapmagbike.com";
@@ -152,7 +152,14 @@ async function apiRequest(path, options = {}) {
   });
 
   if (!response.ok) {
-    const error = new Error(`Request failed with ${response.status}`);
+    let message = `Request failed with ${response.status}`;
+    try {
+      const errorBody = await response.json();
+      message = errorBody.message || message;
+    } catch {
+      // Keep the generic status message when the API has no JSON error body.
+    }
+    const error = new Error(message);
     error.status = response.status;
     throw error;
   }
@@ -527,7 +534,398 @@ function bindCatalogUi() {
   });
 }
 
+const customerState = {
+  account: null,
+  profile: null,
+  mode: "register",
+  profileImage: null
+};
+
+function getCustomerLoginForm() {
+  return document.querySelector("[data-customer-login-form]");
+}
+
+function getCustomerSessionPanel() {
+  return document.querySelector("[data-customer-session]");
+}
+
+function getProfileForm() {
+  return document.querySelector("[data-profile-form]");
+}
+
+function getChangePasswordForm() {
+  return document.querySelector("[data-change-password-form]");
+}
+
+function setMessage(element, message, type = "") {
+  if (!element) {
+    return;
+  }
+  element.textContent = message || "";
+  element.classList.toggle("is-error", type === "error");
+  element.classList.toggle("is-success", type === "success");
+}
+
+function showProfileMode(show) {
+  document.body.classList.toggle("is-profile-mode", show);
+  const profileView = document.querySelector("[data-profile-view]");
+  if (profileView) {
+    profileView.hidden = !show;
+  }
+  if (show) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function updateCustomerHeader() {
+  const loginForm = getCustomerLoginForm();
+  const sessionPanel = getCustomerSessionPanel();
+  const greeting = document.querySelector("[data-customer-greeting]");
+  const isLoggedIn = Boolean(customerState.account);
+
+  if (loginForm) {
+    loginForm.hidden = isLoggedIn;
+  }
+  if (sessionPanel) {
+    sessionPanel.hidden = !isLoggedIn;
+  }
+  if (greeting && customerState.account) {
+    greeting.textContent = customerState.account.username;
+  }
+}
+
+function setPasswordFieldsVisible(visible) {
+  const passwordFields = document.querySelector("[data-password-fields]");
+  const profileForm = getProfileForm();
+  if (passwordFields) {
+    passwordFields.hidden = !visible;
+  }
+  if (profileForm) {
+    profileForm.elements.password.required = visible;
+    profileForm.elements.confirmPassword.required = visible;
+  }
+}
+
+function renderProfilePhoto(url) {
+  const preview = document.querySelector("[data-profile-photo-preview]");
+  if (!preview) {
+    return;
+  }
+
+  preview.replaceChildren();
+  if (url) {
+    const image = document.createElement("img");
+    image.alt = "Profile picture preview";
+    image.src = url.startsWith("/") ? `${getApiBaseUrl()}${url}` : url;
+    preview.append(image);
+    return;
+  }
+
+  preview.textContent = "SMB";
+}
+
+function fillProfileForm(profile) {
+  const form = getProfileForm();
+  if (!form) {
+    return;
+  }
+
+  form.elements.username.value = profile?.username || "";
+  form.elements.email.value = profile?.email || "";
+  form.elements.hometown.value = profile?.hometown || "";
+  form.elements.birthday.value = profile?.birthday || "";
+  form.elements.password.value = "";
+  form.elements.confirmPassword.value = "";
+  form.elements.marketingConsent.checked = false;
+  form.querySelectorAll("input[name='riderTypes']").forEach((input) => {
+    input.checked = (profile?.riderTypes || []).includes(input.value);
+  });
+  customerState.profileImage = null;
+  renderProfilePhoto(profile?.profilePictureUrl || profile?.profilePictureUrl === null ? profile.profilePictureUrl : profile?.profilePictureUrl);
+  if (profile?.profilePictureUrl) {
+    renderProfilePhoto(profile.profilePictureUrl);
+  }
+}
+
+function openRegisterForm() {
+  customerState.mode = "register";
+  const form = getProfileForm();
+  const title = document.querySelector("[data-profile-title]");
+  const eyebrow = document.querySelector("[data-profile-eyebrow]");
+  const submit = document.querySelector("[data-profile-submit]");
+  const changeButton = document.querySelector("[data-open-change-password]");
+
+  if (title) {
+    title.textContent = "Create your SarapMagBike profile";
+  }
+  if (eyebrow) {
+    eyebrow.textContent = "Customer registration";
+  }
+  if (submit) {
+    submit.textContent = "Create Profile";
+  }
+  if (changeButton) {
+    changeButton.hidden = true;
+  }
+  if (form) {
+    form.reset();
+    form.elements.username.disabled = false;
+  }
+  setPasswordFieldsVisible(true);
+  renderProfilePhoto(null);
+  setMessage(document.querySelector("[data-profile-message]"), "");
+  getChangePasswordForm()?.setAttribute("hidden", "");
+  showProfileMode(true);
+}
+
+async function openEditProfileForm() {
+  customerState.mode = "edit";
+  const form = getProfileForm();
+  const title = document.querySelector("[data-profile-title]");
+  const eyebrow = document.querySelector("[data-profile-eyebrow]");
+  const submit = document.querySelector("[data-profile-submit]");
+  const changeButton = document.querySelector("[data-open-change-password]");
+
+  if (title) {
+    title.textContent = "Edit your SarapMagBike profile";
+  }
+  if (eyebrow) {
+    eyebrow.textContent = "Customer profile";
+  }
+  if (submit) {
+    submit.textContent = "Save Profile";
+  }
+  if (changeButton) {
+    changeButton.hidden = false;
+  }
+  if (form) {
+    form.elements.username.disabled = true;
+  }
+  setPasswordFieldsVisible(false);
+  setMessage(document.querySelector("[data-profile-message]"), "Loading profile...");
+
+  try {
+    const profile = await apiRequest("/api/public/customer-account/profile");
+    customerState.profile = profile;
+    fillProfileForm(profile);
+    setMessage(document.querySelector("[data-profile-message]"), "");
+    showProfileMode(true);
+  } catch (error) {
+    setMessage(document.querySelector("[data-profile-message]"), "Please log in before editing your profile.", "error");
+    customerState.account = null;
+    updateCustomerHeader();
+  }
+}
+
+function getSelectedRiderTypes(form) {
+  return Array.from(form.querySelectorAll("input[name='riderTypes']:checked")).map((input) => input.value);
+}
+
+async function readProfileImage(file) {
+  if (!file) {
+    return null;
+  }
+  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+    throw new Error("Profile picture must be JPG, PNG, or WebP.");
+  }
+  if (file.size > 1_000_000) {
+    throw new Error("Profile picture must be 1 MB or smaller.");
+  }
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Profile picture could not be read."));
+    reader.readAsDataURL(file);
+  });
+  const [, base64 = ""] = dataUrl.split(",");
+  return {
+    base64,
+    contentType: file.type,
+    dataUrl
+  };
+}
+
+async function submitProfile(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = document.querySelector("[data-profile-message]");
+  setMessage(message, "Saving profile...");
+
+  try {
+    const image = customerState.profileImage;
+    const payload = {
+      username: form.elements.username.value.trim(),
+      password: form.elements.password.value,
+      confirmPassword: form.elements.confirmPassword.value,
+      email: form.elements.email.value.trim(),
+      hometown: form.elements.hometown.value.trim(),
+      birthday: form.elements.birthday.value || null,
+      riderTypes: getSelectedRiderTypes(form),
+      profileImageBase64: image?.base64 || null,
+      profileImageContentType: image?.contentType || null,
+      marketingConsent: form.elements.marketingConsent.checked,
+      website: form.elements.website.value
+    };
+
+    if (!payload.email || !form.elements.email.checkValidity()) {
+      throw new Error("Enter a valid email address.");
+    }
+    if (customerState.mode === "register" && payload.password !== payload.confirmPassword) {
+      throw new Error("Password and confirm password must match.");
+    }
+
+    if (customerState.mode === "register") {
+      customerState.account = await apiRequest("/api/public/customer-account/register", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      updateCustomerHeader();
+      setMessage(message, "Profile created. You are now logged in.", "success");
+      await openEditProfileForm();
+      return;
+    }
+
+    const profile = await apiRequest("/api/public/customer-account/profile", {
+      method: "PUT",
+      body: JSON.stringify({
+        email: payload.email,
+        hometown: payload.hometown,
+        birthday: payload.birthday,
+        riderTypes: payload.riderTypes,
+        profileImageBase64: payload.profileImageBase64,
+        profileImageContentType: payload.profileImageContentType,
+        marketingConsent: payload.marketingConsent
+      })
+    });
+    customerState.profile = profile;
+    customerState.account = {
+      ...customerState.account,
+      email: profile.email,
+      profilePictureUrl: profile.profilePictureUrl
+    };
+    customerState.profileImage = null;
+    updateCustomerHeader();
+    setMessage(message, "Profile saved.", "success");
+  } catch (error) {
+    setMessage(message, error.message || "Unable to save profile.", "error");
+  }
+}
+
+async function loginCustomer(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  try {
+    customerState.account = await apiRequest("/api/public/customer-account/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: form.elements.username.value.trim(),
+        password: form.elements.password.value,
+        website: form.elements.website.value
+      })
+    });
+    form.reset();
+    updateCustomerHeader();
+    await openEditProfileForm();
+  } catch (error) {
+    alert("Unable to log in. Check your username and password.");
+  }
+}
+
+async function logoutCustomer() {
+  await apiRequest("/api/public/customer-account/logout", { method: "POST" }).catch(() => null);
+  customerState.account = null;
+  customerState.profile = null;
+  updateCustomerHeader();
+  showProfileMode(false);
+}
+
+async function restoreCustomerSession() {
+  try {
+    customerState.account = await apiRequest("/api/public/customer-account/session");
+  } catch (error) {
+    customerState.account = null;
+  }
+  updateCustomerHeader();
+}
+
+async function submitChangePassword(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = document.querySelector("[data-password-message]");
+  setMessage(message, "Saving password...");
+
+  try {
+    await apiRequest("/api/public/customer-account/change-password", {
+      method: "POST",
+      body: JSON.stringify({
+        currentPassword: form.elements.currentPassword.value,
+        newPassword: form.elements.newPassword.value,
+        confirmPassword: form.elements.confirmNewPassword.value
+      })
+    });
+    form.reset();
+    form.hidden = true;
+    setMessage(message, "Password changed.", "success");
+  } catch (error) {
+    setMessage(message, error.message || "Unable to change password.", "error");
+  }
+}
+
+function bindCustomerAccountUi() {
+  getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
+  document.querySelector("[data-open-register]")?.addEventListener("click", openRegisterForm);
+  document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
+  document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
+  document.querySelector("[data-close-profile]")?.addEventListener("click", () => showProfileMode(false));
+  getProfileForm()?.addEventListener("submit", submitProfile);
+  getChangePasswordForm()?.addEventListener("submit", submitChangePassword);
+  document.querySelector("[data-open-change-password]")?.addEventListener("click", () => {
+    const form = getChangePasswordForm();
+    if (form) {
+      form.hidden = !form.hidden;
+      setMessage(document.querySelector("[data-password-message]"), "");
+    }
+  });
+  document.querySelector("[data-cancel-change-password]")?.addEventListener("click", () => {
+    const form = getChangePasswordForm();
+    if (form) {
+      form.reset();
+      form.hidden = true;
+    }
+  });
+
+  document.querySelectorAll("[data-toggle-password]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = button.closest(".password-control")?.querySelector("input");
+      if (!(input instanceof HTMLInputElement)) {
+        return;
+      }
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      button.textContent = show ? "Hide" : "Show";
+    });
+  });
+
+  getProfileForm()?.elements.profilePicture.addEventListener("change", async (event) => {
+    const file = event.target.files?.[0];
+    const message = document.querySelector("[data-profile-message]");
+    try {
+      customerState.profileImage = await readProfileImage(file);
+      renderProfilePhoto(customerState.profileImage?.dataUrl || customerState.profile?.profilePictureUrl || null);
+      setMessage(message, "");
+    } catch (error) {
+      customerState.profileImage = null;
+      event.target.value = "";
+      setMessage(message, error.message || "Profile picture could not be read.", "error");
+    }
+  });
+
+  restoreCustomerSession();
+}
+
 function startCatalog() {
+  bindCustomerAccountUi();
   bindCatalogUi();
   loadNewArrivalItems();
 }

@@ -38,6 +38,10 @@ body.is-account-mode #products {
   display: none;
 }
 
+[data-account-panel][hidden] {
+  display: none !important;
+}
+
 body::before {
   position: fixed;
   inset: 0;

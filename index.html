@@ -23,6 +23,12 @@
         <div class="topbar-options">
           <span>English</span>
           <span>Prices in PHP</span>
+          <form class="topbar-login" data-login-form>
+            <input name="username" type="text" autocomplete="username" placeholder="Username" aria-label="Username">
+            <input name="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password">
+            <button type="submit">Login</button>
+            <button type="button" data-register-jump>Register</button>
+          </form>
         </div>
       </div>
     </header>
@@ -55,6 +61,81 @@
     </nav>
 
     <main id="top" class="wrap content">
+      <section class="customer-account-panel" data-account-panel>
+        <div class="account-heading">
+          <div>
+            <span data-account-kicker>Customer Registration</span>
+            <h1 data-account-title>Create your SarapMagBike profile</h1>
+          </div>
+          <button type="button" class="account-logout" data-account-logout hidden>Sign Out</button>
+        </div>
+
+        <div class="account-grid">
+          <aside class="account-summary">
+            <div class="account-avatar" data-account-avatar aria-hidden="true">SMB</div>
+            <strong data-account-name>Register or login</strong>
+            <span data-account-username>Use your SMBWeb2 username and password.</span>
+            <p data-account-status role="status" aria-live="polite"></p>
+          </aside>
+
+          <form class="account-form" data-account-form>
+            <label class="photo-upload">
+              Profile Picture
+              <input name="profilePhoto" type="file" accept="image/png,image/jpeg,image/webp">
+              <span>PNG, JPG, or WEBP up to 2 MB.</span>
+            </label>
+
+            <div class="form-row two-columns">
+              <label>
+                Username
+                <input name="username" type="text" autocomplete="username" required>
+              </label>
+              <label>
+                Display Name
+                <input name="displayName" type="text" autocomplete="name" required>
+              </label>
+            </div>
+
+            <div class="form-row two-columns" data-password-row>
+              <label>
+                Password
+                <input name="password" type="password" autocomplete="new-password">
+              </label>
+              <label>
+                Confirm Password
+                <input name="confirmPassword" type="password" autocomplete="new-password">
+              </label>
+            </div>
+
+            <div class="form-row two-columns">
+              <label>
+                Hometown
+                <input name="hometown" type="text" autocomplete="address-level2" placeholder="Quezon City">
+              </label>
+              <label>
+                Birthday
+                <input name="birthday" type="date">
+              </label>
+            </div>
+
+            <fieldset class="ride-type-group">
+              <legend>Cyclist Ride Types</legend>
+              <label><input type="checkbox" name="riderTypes" value="MTB"> MTB</label>
+              <label><input type="checkbox" name="riderTypes" value="Road bike"> Road bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Gravel Bike"> Gravel Bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Folding"> Folding</label>
+              <label><input type="checkbox" name="riderTypes" value="Hybrid"> Hybrid</label>
+              <label><input type="checkbox" name="riderTypes" value="Others"> Others</label>
+            </fieldset>
+
+            <div class="account-actions">
+              <button type="submit" data-account-submit>Register</button>
+              <button type="button" data-account-reset>Clear</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
       <section class="hero-slider" aria-label="Featured shop image" data-home-section>
         <div class="slide-image"></div>
         <div class="hero-message">

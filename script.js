@@ -609,29 +609,13 @@ function setSelectedRiderTypes(form, values = []) {
   });
 }
 
-function showAccountPanel() {
-  const { panel } = getAccountElements();
-  if (panel) {
-    panel.hidden = false;
-  }
-  setCatalogMode(false);
-  document.body.classList.add("is-account-mode");
-}
-
-function hideAccountPanel() {
-  const { panel } = getAccountElements();
-  if (panel) {
-    panel.hidden = true;
-  }
-  document.body.classList.remove("is-account-mode");
-}
-
 function setAccountMode(mode, profile = null) {
   const { form, logout, submit, title, kicker, name, username, passwordRow } = getAccountElements();
   accountState.mode = mode;
   accountState.profile = profile;
   const isProfile = mode === "profile";
 
+  document.body.classList.add("is-account-mode");
   if (logout) {
     logout.hidden = !isProfile;
   }
@@ -678,7 +662,7 @@ function fillAccountForm(profile) {
   setSelectedRiderTypes(form, profile?.riderTypes || []);
 }
 
-function resetRegistrationForm({ show = true } = {}) {
+function resetRegistrationForm() {
   const { form } = getAccountElements();
   if (!form) {
     return;
@@ -687,12 +671,7 @@ function resetRegistrationForm({ show = true } = {}) {
   form.reset();
   setAccountMode("register");
   setAccountStatus("");
-  if (show) {
-    showAccountPanel();
-    form.elements.username.focus();
-  } else {
-    hideAccountPanel();
-  }
+  form.elements.username.focus();
 }
 
 async function loadCustomerAccount() {
@@ -701,13 +680,11 @@ async function loadCustomerAccount() {
     const profile = session?.customer;
     setAccountMode("profile", profile);
     fillAccountForm(profile);
-    showAccountPanel();
     setAccountStatus("You are logged in. You can edit your profile.", "success");
   } catch (error) {
     setAccountMode("register");
     fillAccountForm(null);
-    hideAccountPanel();
-    setAccountStatus("");
+    setAccountStatus("Register below or login above to edit your profile.");
   }
 }
 
@@ -819,11 +796,8 @@ async function submitTopbarLogin(event) {
     });
     loginForm.reset();
     await loadCustomerAccount();
-    showAccountPanel();
     setAccountStatus("Logged in. You can edit your profile.", "success");
   } catch (error) {
-    setAccountMode("register");
-    showAccountPanel();
     setAccountStatus("Username or password is incorrect.", "error");
   }
 }
@@ -843,7 +817,8 @@ function bindCustomerAccountUi() {
   });
   logout?.addEventListener("click", async () => {
     await apiRequest("/api/public/customer-account/logout", { method: "POST" });
-    resetRegistrationForm({ show: false });
+    resetRegistrationForm();
+    setAccountStatus("Signed out.");
   });
 
   loadCustomerAccount();

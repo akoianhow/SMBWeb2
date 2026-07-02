@@ -19,7 +19,6 @@
         <nav aria-label="Utility navigation">
           <a href="#contact">Contact Us</a>
           <a href="#services">Book Service</a>
-          <a href="#customer-profile">Customer Login</a>
         </nav>
         <div class="topbar-options">
           <span>English</span>
@@ -53,7 +52,6 @@
       <a href="#products" data-category-nav="helmets-sunglasses">Helmets & Sunglasses</a>
       <a href="#services">Services</a>
       <a href="#online">Shopee / Lazada Orders</a>
-      <a href="#customer-profile">My Profile</a>
     </nav>
 
     <main id="top" class="wrap content">
@@ -163,90 +161,6 @@
           <div data-page-numbers></div>
           <button type="button" data-page-action="next">Next</button>
           <span data-result-count></span>
-        </div>
-      </section>
-
-      <section id="customer-profile" class="customer-profile-section">
-        <div class="section-heading">
-          <span>Customer Account</span>
-          <h2>My SarapMagBike Profile</h2>
-        </div>
-
-        <div class="customer-profile-shell">
-          <aside class="profile-summary">
-            <div class="profile-avatar" data-profile-avatar aria-hidden="true">SMB</div>
-            <div>
-              <p data-profile-name>Sign in to update your profile</p>
-              <span data-profile-email>Use Google or Facebook to continue.</span>
-            </div>
-            <div class="profile-auth-actions" data-auth-actions>
-              <button type="button" data-auth-provider="google">Continue with Gmail</button>
-              <button type="button" data-auth-provider="facebook">Continue with Facebook</button>
-            </div>
-            <button type="button" class="profile-logout" data-profile-logout hidden>Sign Out</button>
-          </aside>
-
-          <form class="profile-form" data-profile-form hidden>
-            <div class="form-status" data-profile-status role="status" aria-live="polite"></div>
-
-            <div class="form-row two-columns">
-              <label>
-                First Name
-                <input name="firstName" type="text" autocomplete="given-name" required>
-              </label>
-              <label>
-                Last Name
-                <input name="lastName" type="text" autocomplete="family-name" required>
-              </label>
-            </div>
-
-            <div class="form-row two-columns">
-              <label>
-                Mobile Number
-                <input name="mobileNumber" type="tel" autocomplete="tel" inputmode="tel" placeholder="09xxxxxxxxx">
-              </label>
-              <label>
-                Birthday
-                <input name="birthdate" type="date">
-              </label>
-            </div>
-
-            <label>
-              Hometown
-              <input name="hometown" type="text" autocomplete="address-level2" placeholder="Quezon City">
-            </label>
-
-            <fieldset class="bike-type-group">
-              <legend>Bike Type</legend>
-              <label><input type="checkbox" name="bikeTypes" value="MTB"> MTB</label>
-              <label><input type="checkbox" name="bikeTypes" value="Road"> Road</label>
-              <label><input type="checkbox" name="bikeTypes" value="Gravel"> Gravel</label>
-              <label><input type="checkbox" name="bikeTypes" value="Folding"> Folding</label>
-              <label><input type="checkbox" name="bikeTypes" value="Hybrid"> Hybrid</label>
-              <label><input type="checkbox" name="bikeTypes" value="Others"> Others</label>
-            </fieldset>
-
-            <label data-other-bike-field hidden>
-              Other Bike Type
-              <input name="otherBikeType" type="text" placeholder="Specify bike type">
-            </label>
-
-            <label class="photo-upload">
-              Profile Picture
-              <input name="profilePhoto" type="file" accept="image/png,image/jpeg,image/webp">
-              <span>PNG, JPG, or WEBP only. Saved through SMBSystem customer profile API.</span>
-            </label>
-
-            <div class="profile-form-actions">
-              <button type="submit">Save Profile</button>
-              <button type="button" data-profile-refresh>Refresh</button>
-            </div>
-          </form>
-
-          <div class="profile-api-empty" data-profile-empty>
-            <strong>Customer profile API not connected yet.</strong>
-            <span>SMBWeb2 is ready to call SMBSystem once public customer login and profile endpoints are available.</span>
-          </div>
         </div>
       </section>
 

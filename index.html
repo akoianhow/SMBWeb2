@@ -9,7 +9,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20260702">
   </head>
   <body>
     <div class="page-bg"></div>
@@ -45,11 +45,12 @@
     </div>
 
     <nav class="wrap main-nav" aria-label="Product categories">
-      <a href="#bikes">Bikes</a>
-      <a href="#parts">Bike Parts</a>
-      <a href="#parts">Tires and Tubes</a>
-      <a href="#apparel">Clothing</a>
-      <a href="#services">Service</a>
+      <a href="#bikes">Bike & Frames</a>
+      <a href="#parts">Parts & Components</a>
+      <a href="#tires">Tires & Tubes</a>
+      <a href="#apparel">Cycling Clothing</a>
+      <a href="#helmets">Helmets & Sunglasses</a>
+      <a href="#services">Services</a>
       <a href="#online">Online Orders</a>
     </nav>
 
@@ -72,13 +73,13 @@
 
       <section class="feature-tiles" aria-label="Featured categories">
         <article id="bikes" class="feature-card feature-bike">
-          <h2>Bikes <span>& Frames</span></h2>
+          <h2>Bike <span>& Frames</span></h2>
           <p>MTB, road, gravel, folding, starter builds, and shop-assembled options.</p>
           <a href="#products">View Catalog</a>
         </article>
         <article id="parts" class="feature-card feature-parts">
-          <h2>Bike Parts <span>& Components</span></h2>
-          <p>Drivetrain, brakes, cockpit, forks, wheelsets, tires, tubes, and upgrades.</p>
+          <h2>Parts <span>& Components</span></h2>
+          <p>Drivetrain, brakes, cockpit, forks, wheelsets, and upgrade parts.</p>
           <a href="#products">Check Stock</a>
         </article>
         <article id="apparel" class="feature-card feature-clothing">
@@ -91,6 +92,16 @@
           <p>Safety gear, helmets, eyewear, lights, bags, and daily ride essentials.</p>
           <a href="#products">Ask Availability</a>
         </article>
+        <article id="tires" class="feature-card feature-tires">
+          <h2>Tires <span>& Tubes</span></h2>
+          <p>MTB, road, gravel, folding bike tires, inner tubes, and repair essentials.</p>
+          <a href="#products">Check Stock</a>
+        </article>
+        <article id="services" class="feature-card feature-services">
+          <h2>Services</h2>
+          <p>Bike wash, tune-up, overhaul, diagnostics, repairs, and upgrade labor.</p>
+          <a href="#contact">Book Service</a>
+        </article>
       </section>
 
       <section id="products" class="product-section">
@@ -101,87 +112,25 @@
         </div>
 
         <p class="stock-note">
-          Static Phase 1 catalog preview. Stocks and prices may change. Message us to confirm before visiting or ordering.
+          New arrivals are loaded from SMBSystem items marked Display on Web and New Item. Stocks and prices may change. Message us to confirm before visiting or ordering.
         </p>
 
-        <div class="product-grid">
-          <article class="product-card">
-            <span class="badge">New</span>
-            <span class="badge sale">Sale!</span>
-            <div class="product-photo product-saddle"></div>
-            <h3>Comfort MTB Saddle</h3>
-            <p>Daily ride saddle for MTB, city, and commute builds.</p>
-            <strong>PHP 1,250.00 <del>PHP 1,520.00</del> <em>-18%</em></strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <div class="product-photo product-helmet"></div>
-            <h3>Blue Road Helmet</h3>
-            <p>Lightweight helmet for road, commute, and fitness rides.</p>
-            <strong>PHP 2,689.00</strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <span class="badge sale">Sale!</span>
-            <div class="product-photo product-jacket"></div>
-            <h3>Long Sleeve Jersey</h3>
-            <p>Cool-weather cycling top with practical rear pockets.</p>
-            <strong>PHP 3,946.00 <del>PHP 4,312.00</del> <em>-8%</em></strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <div class="product-photo product-stem"></div>
-            <h3>Alloy 4-Axis Stem</h3>
-            <p>Cockpit fit upgrade for road, gravel, and MTB builds.</p>
-            <strong>PHP 1,428.96</strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <div class="product-photo product-brake"></div>
-            <h3>Shimano Brake Set</h3>
-            <p>Brake replacement with shop installation support.</p>
-            <strong>PHP 632.15</strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <span class="badge sale">Sale!</span>
-            <div class="product-photo product-helmet2"></div>
-            <h3>Euro Road Helmet</h3>
-            <p>Vented helmet for long rides and weekend training.</p>
-            <strong>PHP 3,846.61 <del>PHP 4,321.15</del> <em>-11%</em></strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <span class="badge">New</span>
-            <div class="product-photo product-saddle2"></div>
-            <h3>Performance Saddle</h3>
-            <p>Road and gravel saddle with slim comfort profile.</p>
-            <strong>PHP 924.25</strong>
-            <a href="#contact">Ask Availability</a>
-          </article>
-          <article class="product-card">
-            <div class="product-photo product-wheel"></div>
-            <h3>Disc Wheelset</h3>
-            <p>Wheelset upgrade options for road, gravel, and MTB.</p>
-            <strong>PHP 5,540.25</strong>
-            <a href="#contact">Ask Availability</a>
+        <div class="product-grid" data-web-items-grid>
+          <article class="product-card product-card-state">
+            <h3>Loading New Arrivals</h3>
+            <p>Checking SMBSystem web catalog items for Quezon City.</p>
           </article>
         </div>
       </section>
 
       <section class="banner-row" aria-label="Promotions">
         <article class="sale-banner banner-tires">
-          <h2>Tires, Tubes & Wheels</h2>
+          <h2>Tires & Tubes</h2>
           <p>Get up to 20% off selected essentials.</p>
           <a href="#contact">Check Stock</a>
         </article>
-        <article id="services" class="sale-banner banner-shoes">
-          <h2>Service & Tune-Up</h2>
+        <article class="sale-banner banner-shoes">
+          <h2>Services</h2>
           <p>Wash, tune-up, overhaul, repairs, and upgrades by queue confirmation.</p>
           <a href="#contact">Book Service</a>
         </article>
@@ -222,10 +171,11 @@
         <article id="online" class="useful-links">
           <h2>Useful Links</h2>
           <a href="#bikes">Bikes and frames</a>
-          <a href="#parts">Parts and accessories</a>
-          <a href="#apparel">Cycling apparel</a>
-          <a href="#helmets">Helmets and safety gear</a>
-          <a href="#contact">Service booking</a>
+          <a href="#parts">Parts and components</a>
+          <a href="#tires">Tires and tubes</a>
+          <a href="#apparel">Cycling clothing</a>
+          <a href="#helmets">Helmets and sunglasses</a>
+          <a href="#services">Services</a>
           <a href="#contact">Shopee/Lazada orders</a>
           <a href="#contact">Contact the shop</a>
         </article>
@@ -273,6 +223,6 @@
       </div>
     </footer>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20260702"></script>
   </body>
 </html>

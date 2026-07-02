@@ -395,7 +395,7 @@ p {
 
 .feature-tiles {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 22px;
   margin-top: 21px;
 }
@@ -468,6 +468,14 @@ p {
 
 .feature-helmets {
   background-position: right bottom;
+}
+
+.feature-tires {
+  background-position: center top;
+}
+
+.feature-services {
+  background-position: center bottom;
 }
 
 .product-section {
@@ -665,6 +673,55 @@ p {
     0 54px 0 -4px #171717,
     -54px 0 0 -4px #171717,
     54px 0 0 -4px #171717;
+}
+
+.product-api-photo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(223, 32, 39, 0.22), transparent 32%),
+    linear-gradient(135deg, #f4f7fb, #dce9f6);
+  background-position: center;
+  background-size: cover;
+}
+
+.product-api-photo::before {
+  content: attr(data-initial);
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  color: var(--white);
+  background: var(--red);
+  border-radius: 50%;
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.product-api-photo.has-image {
+  background-color: #f4f7fb;
+  background-repeat: no-repeat;
+}
+
+.product-api-photo.has-image::before {
+  content: none;
+}
+
+.product-card-state {
+  grid-column: 1 / -1;
+  min-height: 160px;
+  justify-content: center;
+}
+
+.product-card.product-card-state h3 {
+  font-size: 18px;
+}
+
+.product-card.product-card-state p {
+  min-height: 0;
+  max-width: 560px;
+  font-size: 13px;
 }
 
 .product-card h3 {

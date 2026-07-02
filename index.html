@@ -9,7 +9,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260702">
+    <link rel="stylesheet" href="styles.css?v=20260702-catalog-mode">
   </head>
   <body>
     <div class="page-bg"></div>
@@ -17,8 +17,9 @@
     <header class="topbar">
       <div class="wrap topbar-inner">
         <nav aria-label="Utility navigation">
-          <a href="#contact">Contact</a>
-          <a href="#services">Service</a>
+          <a href="#contact">Contact Us</a>
+          <a href="#services">Book Service</a>
+          <a href="#customer-profile">Customer Login</a>
         </nav>
         <div class="topbar-options">
           <span>English</span>
@@ -45,17 +46,18 @@
     </div>
 
     <nav class="wrap main-nav" aria-label="Product categories">
-      <a href="#bikes">Bike & Frames</a>
-      <a href="#parts">Parts & Components</a>
-      <a href="#tires">Tires & Tubes</a>
-      <a href="#apparel">Cycling Clothing</a>
-      <a href="#helmets">Helmets & Sunglasses</a>
+      <a href="#products" data-category-nav="bike-frames">Bike & Frames</a>
+      <a href="#products" data-category-nav="parts-components">Parts & Components</a>
+      <a href="#products" data-category-nav="tires-tubes">Tires & Tubes</a>
+      <a href="#products" data-category-nav="cycling-clothing">Cycling Clothing</a>
+      <a href="#products" data-category-nav="helmets-sunglasses">Helmets & Sunglasses</a>
       <a href="#services">Services</a>
-      <a href="#online">Online Orders</a>
+      <a href="#online">Shopee / Lazada Orders</a>
+      <a href="#customer-profile">My Profile</a>
     </nav>
 
     <main id="top" class="wrap content">
-      <section class="hero-slider" aria-label="Featured shop image">
+      <section class="hero-slider" aria-label="Featured shop image" data-home-section>
         <div class="slide-image"></div>
         <div class="hero-message">
           <p>SarapMagBike Shop</p>
@@ -71,31 +73,31 @@
         </div>
       </section>
 
-      <section class="feature-tiles" aria-label="Featured categories">
-        <article id="bikes" class="feature-card feature-bike">
+      <section class="feature-tiles" aria-label="Featured categories" data-home-section>
+        <article id="bikes" class="feature-card feature-bike" data-category-card="bike-frames" tabindex="0">
           <h2>Bike <span>& Frames</span></h2>
           <p>MTB, road, gravel, folding, starter builds, and shop-assembled options.</p>
-          <a href="#products">View Catalog</a>
+          <a href="#products" data-category-link="bike-frames">View Catalog</a>
         </article>
-        <article id="parts" class="feature-card feature-parts">
+        <article id="parts" class="feature-card feature-parts" data-category-card="parts-components" tabindex="0">
           <h2>Parts <span>& Components</span></h2>
           <p>Drivetrain, brakes, cockpit, forks, wheelsets, and upgrade parts.</p>
-          <a href="#products">Check Stock</a>
+          <a href="#products" data-category-link="parts-components">View Catalog</a>
         </article>
-        <article id="apparel" class="feature-card feature-clothing">
+        <article id="apparel" class="feature-card feature-clothing" data-category-card="cycling-clothing" tabindex="0">
           <h2>Cycling <span>Clothing</span></h2>
           <p>Jerseys, shorts, gloves, socks, ride apparel, and everyday shop gear.</p>
-          <a href="#products">Ask Availability</a>
+          <a href="#products" data-category-link="cycling-clothing">View Catalog</a>
         </article>
-        <article id="helmets" class="feature-card feature-helmets">
+        <article id="helmets" class="feature-card feature-helmets" data-category-card="helmets-sunglasses" tabindex="0">
           <h2>Helmets <span>& Sunglasses</span></h2>
           <p>Safety gear, helmets, eyewear, lights, bags, and daily ride essentials.</p>
-          <a href="#products">Ask Availability</a>
+          <a href="#products" data-category-link="helmets-sunglasses">View Catalog</a>
         </article>
-        <article id="tires" class="feature-card feature-tires">
+        <article id="tires" class="feature-card feature-tires" data-category-card="tires-tubes" tabindex="0">
           <h2>Tires <span>& Tubes</span></h2>
           <p>MTB, road, gravel, folding bike tires, inner tubes, and repair essentials.</p>
-          <a href="#products">Check Stock</a>
+          <a href="#products" data-category-link="tires-tubes">View Catalog</a>
         </article>
         <article id="services" class="feature-card feature-services">
           <h2>Services</h2>
@@ -105,13 +107,47 @@
       </section>
 
       <section id="products" class="product-section">
-        <div class="product-tabs" aria-label="Product lists">
+        <div class="product-tabs" aria-label="Product lists" data-home-products>
           <span class="active">New Arrivals</span>
           <span>Popular</span>
           <span>Service Picks</span>
         </div>
 
-        <p class="stock-note">
+        <div class="catalog-panel" data-catalog-panel hidden>
+          <div class="catalog-hero">
+            <div>
+              <h1 data-catalog-title>Bike & Frames</h1>
+              <p>
+                <strong>Quezon City catalog</strong>
+                <span>Stocks and prices may change. Message us to confirm before visiting or ordering.</span>
+              </p>
+            </div>
+            <button type="button" data-back-to-categories>Back to Categories</button>
+          </div>
+
+          <div class="catalog-toolbar">
+            <div class="subcategory-filters" data-subcategory-filters aria-label="Subcategory filters"></div>
+            <div class="catalog-controls" aria-label="Catalog controls">
+              <fieldset>
+                <legend>Show</legend>
+                <button type="button" data-page-size="5">5</button>
+                <button type="button" data-page-size="10">10</button>
+                <button type="button" data-page-size="15">15</button>
+                <button type="button" data-page-size="all">All</button>
+              </fieldset>
+              <label>
+                Sort by:
+                <select data-sort-select>
+                  <option value="newest">Newest</option>
+                  <option value="price-asc">Price Low to High</option>
+                  <option value="price-desc">Price High to Low</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <p class="stock-note" data-stock-note>
           New arrivals are loaded from SMBSystem items marked Display on Web and New Item. Stocks and prices may change. Message us to confirm before visiting or ordering.
         </p>
 
@@ -121,9 +157,100 @@
             <p>Checking SMBSystem web catalog items for Quezon City.</p>
           </article>
         </div>
+
+        <div class="catalog-pagination" data-catalog-pagination hidden>
+          <button type="button" data-page-action="prev">Previous</button>
+          <div data-page-numbers></div>
+          <button type="button" data-page-action="next">Next</button>
+          <span data-result-count></span>
+        </div>
       </section>
 
-      <section class="banner-row" aria-label="Promotions">
+      <section id="customer-profile" class="customer-profile-section">
+        <div class="section-heading">
+          <span>Customer Account</span>
+          <h2>My SarapMagBike Profile</h2>
+        </div>
+
+        <div class="customer-profile-shell">
+          <aside class="profile-summary">
+            <div class="profile-avatar" data-profile-avatar aria-hidden="true">SMB</div>
+            <div>
+              <p data-profile-name>Sign in to update your profile</p>
+              <span data-profile-email>Use Google or Facebook to continue.</span>
+            </div>
+            <div class="profile-auth-actions" data-auth-actions>
+              <button type="button" data-auth-provider="google">Continue with Gmail</button>
+              <button type="button" data-auth-provider="facebook">Continue with Facebook</button>
+            </div>
+            <button type="button" class="profile-logout" data-profile-logout hidden>Sign Out</button>
+          </aside>
+
+          <form class="profile-form" data-profile-form hidden>
+            <div class="form-status" data-profile-status role="status" aria-live="polite"></div>
+
+            <div class="form-row two-columns">
+              <label>
+                First Name
+                <input name="firstName" type="text" autocomplete="given-name" required>
+              </label>
+              <label>
+                Last Name
+                <input name="lastName" type="text" autocomplete="family-name" required>
+              </label>
+            </div>
+
+            <div class="form-row two-columns">
+              <label>
+                Mobile Number
+                <input name="mobileNumber" type="tel" autocomplete="tel" inputmode="tel" placeholder="09xxxxxxxxx">
+              </label>
+              <label>
+                Birthday
+                <input name="birthdate" type="date">
+              </label>
+            </div>
+
+            <label>
+              Hometown
+              <input name="hometown" type="text" autocomplete="address-level2" placeholder="Quezon City">
+            </label>
+
+            <fieldset class="bike-type-group">
+              <legend>Bike Type</legend>
+              <label><input type="checkbox" name="bikeTypes" value="MTB"> MTB</label>
+              <label><input type="checkbox" name="bikeTypes" value="Road"> Road</label>
+              <label><input type="checkbox" name="bikeTypes" value="Gravel"> Gravel</label>
+              <label><input type="checkbox" name="bikeTypes" value="Folding"> Folding</label>
+              <label><input type="checkbox" name="bikeTypes" value="Hybrid"> Hybrid</label>
+              <label><input type="checkbox" name="bikeTypes" value="Others"> Others</label>
+            </fieldset>
+
+            <label data-other-bike-field hidden>
+              Other Bike Type
+              <input name="otherBikeType" type="text" placeholder="Specify bike type">
+            </label>
+
+            <label class="photo-upload">
+              Profile Picture
+              <input name="profilePhoto" type="file" accept="image/png,image/jpeg,image/webp">
+              <span>PNG, JPG, or WEBP only. Saved through SMBSystem customer profile API.</span>
+            </label>
+
+            <div class="profile-form-actions">
+              <button type="submit">Save Profile</button>
+              <button type="button" data-profile-refresh>Refresh</button>
+            </div>
+          </form>
+
+          <div class="profile-api-empty" data-profile-empty>
+            <strong>Customer profile API not connected yet.</strong>
+            <span>SMBWeb2 is ready to call SMBSystem once public customer login and profile endpoints are available.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="banner-row" aria-label="Promotions" data-home-section>
         <article class="sale-banner banner-tires">
           <h2>Tires & Tubes</h2>
           <p>Get up to 20% off selected essentials.</p>
@@ -136,7 +263,7 @@
         </article>
       </section>
 
-      <section class="info-panels" aria-label="Shop information">
+      <section class="info-panels" aria-label="Shop information" data-home-section>
         <article class="facebook-box">
           <h2>Follow us on Facebook</h2>
           <div class="mock-facebook">
@@ -223,6 +350,6 @@
       </div>
     </footer>
 
-    <script src="script.js?v=20260702"></script>
+    <script src="script.js?v=20260702-web-category-filter"></script>
   </body>
 </html>

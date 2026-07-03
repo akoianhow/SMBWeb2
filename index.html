@@ -18,7 +18,7 @@
       <div class="wrap topbar-inner">
         <nav aria-label="Utility navigation">
           <a href="#contact">Contact Us</a>
-          <a href="#services">Book Service</a>
+          <a href="services.html">Book Service</a>
         </nav>
         <div class="topbar-options">
           <span>English</span>
@@ -249,7 +249,7 @@
         <article id="services" class="feature-card feature-services">
           <h2>Services</h2>
           <p>Bike wash, tune-up, overhaul, diagnostics, repairs, and upgrade labor.</p>
-          <a href="#contact">Book Service</a>
+          <a href="services.html">View Services</a>
         </article>
       </section>
 
@@ -298,7 +298,7 @@
         <article class="sale-banner banner-shoes">
           <h2>Services</h2>
           <p>Wash, tune-up, overhaul, repairs, and upgrades by queue confirmation.</p>
-          <a href="#contact">Book Service</a>
+          <a href="services.html">View Services</a>
         </article>
       </section>
 
@@ -341,7 +341,7 @@
           <a href="#tires">Tires and tubes</a>
           <a href="#apparel">Cycling clothing</a>
           <a href="#helmets">Helmets and sunglasses</a>
-          <a href="#services">Services</a>
+          <a href="services.html">Services</a>
           <a href="#contact">Shopee/Lazada orders</a>
           <a href="#contact">Contact the shop</a>
         </article>
@@ -416,6 +416,64 @@
       </div>
     </div>
 
+    <div class="community-thread-modal" data-community-thread-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-thread-title">
+        <div class="community-thread-header">
+          <div>
+            <p>Discussion Thread</p>
+            <h2 id="community-thread-title">Community replies</h2>
+          </div>
+          <button type="button" data-community-thread-close>Close</button>
+        </div>
+        <div class="community-thread-content" data-community-thread-content></div>
+      </div>
+    </div>
+
+    <div class="community-photo-modal" data-community-photo-modal hidden>
+      <div role="dialog" aria-modal="true" aria-label="Post photo viewer">
+        <div class="community-photo-stage">
+          <button class="community-photo-close" type="button" data-community-photo-close aria-label="Close photo viewer">x</button>
+          <button class="community-photo-nav community-photo-prev" type="button" data-community-photo-prev aria-label="Previous photo">‹</button>
+          <figure>
+            <img data-community-photo-viewer-image alt="Post photo">
+            <figcaption data-community-photo-counter></figcaption>
+          </figure>
+          <button class="community-photo-nav community-photo-next" type="button" data-community-photo-next aria-label="Next photo">›</button>
+        </div>
+        <aside class="community-photo-panel" data-community-photo-panel></aside>
+      </div>
+    </div>
+
+    <div class="community-edit-modal" data-community-edit-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-edit-title">
+        <div class="community-thread-header">
+          <div>
+            <p>Edit Post</p>
+            <h2 id="community-edit-title">Update your discussion</h2>
+          </div>
+          <button type="button" data-community-edit-close>Close</button>
+        </div>
+        <form class="community-edit-form" data-community-edit-form>
+          <div class="community-edit-author" data-community-edit-author></div>
+          <div class="community-edit-media" data-community-edit-media></div>
+          <textarea name="body" maxlength="2000" required></textarea>
+          <div class="community-edit-actions">
+            <button type="submit" data-community-edit-save disabled>Save Post</button>
+            <button type="button" data-community-edit-cancel>Close</button>
+          </div>
+          <div class="community-edit-confirm" data-community-edit-confirm hidden>
+            <p>You have unsaved changes.</p>
+            <div>
+              <button type="button" data-community-edit-confirm-save>Save changes</button>
+              <button type="button" data-community-edit-confirm-discard>Discard changes</button>
+              <button type="button" data-community-edit-confirm-keep>Keep editing</button>
+            </div>
+          </div>
+          <p class="community-message" data-community-edit-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
     <footer id="footer" class="footer">
       <div class="wrap footer-main">
         <div class="footer-logo">
@@ -424,7 +482,7 @@
         <div>
           <h2>Information</h2>
           <a href="#products">New products</a>
-          <a href="#services">Bike service</a>
+          <a href="services.html">Bike service</a>
           <a href="#online">Online orders</a>
           <a href="#contact">Contact us</a>
         </div>

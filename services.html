@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="SarapMagBike Shop bike service menu for tune-ups, overhauls, bike assembly, brake service, drivetrain service, wheel service, and accessory installation."
+    >
+    <title>Bike Services | SarapMagBike Shop</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260703-customer-account">
+  </head>
+  <body>
+    <div class="page-bg"></div>
+
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <nav aria-label="Utility navigation">
+          <a href="#contact">Contact Us</a>
+          <a href="#service-menu">Book Service</a>
+        </nav>
+        <div class="topbar-options">
+          <span>English</span>
+          <span>Prices in PHP</span>
+          <form class="customer-login" data-customer-login-form>
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" autocomplete="username" aria-label="Customer username">
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" autocomplete="current-password" aria-label="Customer password">
+            </label>
+            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+            <button type="submit">Login</button>
+            <button type="button" data-open-register>Register</button>
+          </form>
+          <div class="customer-session" data-customer-session hidden>
+            <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
+              <span data-account-avatar>SMB</span>
+            </button>
+            <div class="account-menu" data-account-menu hidden>
+              <div class="account-menu-header">
+                <span data-account-menu-avatar>SMB</span>
+                <div>
+                  <strong data-customer-greeting>Account</strong>
+                  <p data-account-email></p>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt>Hometown</dt>
+                  <dd data-account-hometown>Not set</dd>
+                </div>
+                <div>
+                  <dt>Rider type</dt>
+                  <dd data-account-rider-types>Not set</dd>
+                </div>
+              </dl>
+              <div class="account-menu-actions">
+                <button type="button" data-edit-profile>Edit Profile</button>
+                <button type="button" data-logout>Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap header-main">
+      <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+        <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+        <span class="logo-tag">QC | PAMPANGA</span>
+      </a>
+      <form class="search-form">
+        <input type="search" aria-label="Search" placeholder="Search bikes, parts, service">
+        <button type="button">Search</button>
+      </form>
+      <div class="cart-box" aria-label="Message SarapMagBike">
+        <strong>Message Us</strong>
+        <span>stock check</span>
+      </div>
+      <div class="lock-box" aria-hidden="true">Lock</div>
+    </div>
+
+    <nav class="wrap main-nav" aria-label="Website navigation" data-category-nav-list>
+    </nav>
+
+    <main id="top" class="wrap content">
+      <section id="service-menu" class="service-menu-section">
+        <div class="service-menu-hero">
+          <div>
+            <p class="section-eyebrow">Quezon City service desk</p>
+            <h1>Bike Services</h1>
+            <p>
+              Maintenance, repairs, builds, and upgrades for daily riders, weekend rides, and new bike setups.
+              Message us before visiting so we can confirm the queue and parts needed.
+            </p>
+            <div class="service-actions">
+              <a href="#contact">Book Service</a>
+              <a href="#contact">Message Us</a>
+            </div>
+          </div>
+          <div class="service-hero-panel" aria-label="SarapMagBike workshop service preview"></div>
+        </div>
+
+        <div class="service-category-chips" aria-label="Service categories">
+          <button type="button" class="active" data-service-filter="all">All Services</button>
+          <button type="button" data-service-filter="basic">Basic</button>
+          <button type="button" data-service-filter="overhaul">Overhaul</button>
+          <button type="button" data-service-filter="assembly">Assembly</button>
+          <button type="button" data-service-filter="drivetrain">Drivetrain</button>
+          <button type="button" data-service-filter="brakes">Brakes</button>
+          <button type="button" data-service-filter="cables">Cables</button>
+          <button type="button" data-service-filter="wheels">Wheels & Tires</button>
+          <button type="button" data-service-filter="fork">Fork</button>
+          <button type="button" data-service-filter="cockpit">Cockpit</button>
+          <button type="button" data-service-filter="accessories">Accessories</button>
+        </div>
+
+        <div class="service-grid" aria-label="SarapMagBike service list">
+          <article id="basic-bike-service" class="service-card">
+            <span>Basic Bike Service</span>
+            <h2>Basic Tune-Up</h2>
+            <strong>₱100</strong>
+            <p>Basic adjustment of brakes, shifting, and key moving parts to keep the bike running smoothly.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Basic Bike Service</span>
+            <h2>Bike Wash</h2>
+            <strong>₱250</strong>
+            <p>Cleaning service for the bike frame, drivetrain area, wheels, and key exterior components.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="full-bike-service" class="service-card">
+            <span>Full Bike Service</span>
+            <h2>Full Bike Overhaul</h2>
+            <strong>₱800</strong>
+            <p>Full bike service including inspection, cleaning, re-greasing, and adjustment of major components.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="bike-assembly" class="service-card">
+            <span>Bike Assembly</span>
+            <h2>Standard Bike Assembly</h2>
+            <strong>₱500</strong>
+            <p>Basic assembly and safety check for boxed or ready-to-build bikes.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Bike Assembly</span>
+            <h2>Bike Assembly with Groupset Installation</h2>
+            <strong>₱1,000</strong>
+            <p>Assembly service for bikes requiring groupset installation and basic setup.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Bike Assembly</span>
+            <h2>Complete Bike Build</h2>
+            <strong>₱1,500</strong>
+            <p>More complete bike build service including groupset and wheelset installation.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="drivetrain-service" class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Chain Installation</h2>
+            <strong>₱150</strong>
+            <p>Installation or replacement of bicycle chain.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Cassette / Sprocket Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of cassette, cogs, or sprocket.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Crankset Installation - Cartridge Type</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of cartridge-type crankset.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Crankset Installation - Hollowtech Type</h2>
+            <strong>₱250</strong>
+            <p>Installation or replacement of Hollowtech-type crankset.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Bottom Bracket Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of bottom bracket.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Drivetrain Service</span>
+            <h2>Groupset Installation</h2>
+            <strong>₱800</strong>
+            <p>Installation of drivetrain and shifting components, excluding parts.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="brake-service" class="service-card">
+            <span>Brake Service</span>
+            <h2>Brake Pad / Brake Shoe Replacement</h2>
+            <strong>₱150</strong>
+            <p>Replacement and basic alignment of brake pads or brake shoes.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Brake Service</span>
+            <h2>Hydraulic Brake Bleeding</h2>
+            <strong>₱150</strong>
+            <p>Bleeding service for hydraulic brakes to restore proper brake feel and performance.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Brake Service</span>
+            <h2>Hydraulic Brake Installation - External Routing</h2>
+            <strong>₱200</strong>
+            <p>Installation of hydraulic brakes with external cable or hose routing.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Brake Service</span>
+            <h2>Hydraulic Brake Installation - Internal Routing</h2>
+            <strong>₱200</strong>
+            <p>Installation of hydraulic brakes with internal cable or hose routing.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="cable-service" class="service-card">
+            <span>Cable Service</span>
+            <h2>External Cable Installation</h2>
+            <strong>₱150</strong>
+            <p>Installation or replacement of externally routed brake or shifter cables.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Cable Service</span>
+            <h2>Internal Cable Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of internally routed brake or shifter cables.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Shifter Service</span>
+            <h2>Road Shifter / STI Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation of road bike STI shifters with basic setup.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="wheel-tire-service" class="service-card">
+            <span>Wheel & Tire Service</span>
+            <h2>Tire Installation</h2>
+            <strong>₱50 per tire</strong>
+            <p>Installation or replacement of bicycle tire.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Wheel & Tire Service</span>
+            <h2>Tire / Wheel Alignment Check</h2>
+            <strong>₱50</strong>
+            <p>Basic tire or wheel alignment check for smoother rolling.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Wheel & Tire Service</span>
+            <h2>Wheel Build</h2>
+            <strong>₱200 per rim</strong>
+            <p>Assembly or building of wheel using rim, spokes, and hub.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Wheel & Tire Service</span>
+            <h2>Wheel Rebuild / Hub Replacement</h2>
+            <strong>₱200 per rim</strong>
+            <p>Rebuilding of wheelset or replacement of hub.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Hub Service</span>
+            <h2>Hub Repack</h2>
+            <strong>₱75 per hub</strong>
+            <p>Cleaning and re-greasing of hub bearings for smoother wheel rotation.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Hub Service</span>
+            <h2>Freehub Body Service</h2>
+            <strong>₱200</strong>
+            <p>Cleaning and servicing of freehub body to improve engagement and reduce noise.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Headset Service</span>
+            <h2>Headset Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of headset components.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Headset Service</span>
+            <h2>Headset Repack</h2>
+            <strong>₱100</strong>
+            <p>Cleaning and re-greasing of headset bearings for smoother steering.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="fork-service" class="service-card">
+            <span>Fork Service</span>
+            <h2>Coil Fork Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of coil suspension fork.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Fork Service</span>
+            <h2>Coil Fork Basic Service</h2>
+            <strong>₱200</strong>
+            <p>Basic cleaning and servicing of coil suspension fork.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Fork Service</span>
+            <h2>Air Fork Basic Service</h2>
+            <strong>₱250</strong>
+            <p>Basic cleaning and servicing of air suspension fork.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="cockpit-service" class="service-card">
+            <span>Cockpit Service</span>
+            <h2>MTB Handlebar Installation</h2>
+            <strong>₱100</strong>
+            <p>Installation or replacement of mountain bike handlebar.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Cockpit Service</span>
+            <h2>Road Handlebar / Loop Bar Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of road handlebar, drop bar, or loop bar.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Cockpit Service</span>
+            <h2>Stem / Seatpost Installation</h2>
+            <strong>₱50</strong>
+            <p>Installation or replacement of stem or seatpost.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Cockpit Service</span>
+            <h2>Bar Tape Installation</h2>
+            <strong>₱200</strong>
+            <p>Installation or replacement of road bike bar tape.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article id="accessory-installation" class="service-card">
+            <span>Accessory Installation</span>
+            <h2>Pedal / Grip / Saddle Installation</h2>
+            <strong>₱50</strong>
+            <p>Installation of basic bike accessories such as pedals, grips, or saddle.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Accessory Installation</span>
+            <h2>Carrier Rack Installation</h2>
+            <strong>₱150</strong>
+            <p>Installation of rear rack or carrier rack.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+          <article class="service-card">
+            <span>Fit / Adjustment Service</span>
+            <h2>Seatpost Cutting</h2>
+            <strong>₱50</strong>
+            <p>Cutting of seatpost to match rider or frame fit requirement.</p>
+            <a href="#contact">Ask about this service</a>
+          </article>
+        </div>
+
+        <div class="service-help-row">
+          <article>
+            <h2>Not sure what your bike needs?</h2>
+            <p><strong>Noisy shifting:</strong> Basic Tune-Up, Chain Installation, Cassette / Sprocket Installation.</p>
+            <p><strong>Old or neglected bike:</strong> Full Bike Overhaul, Hub Repack, Headset Repack.</p>
+            <p><strong>New bike setup:</strong> Standard Bike Assembly, Complete Bike Build, Groupset Installation.</p>
+          </article>
+          <article>
+            <h2>Service pricing note</h2>
+            <p>Prices are labor estimates only. Parts, special tools, and additional repairs may be quoted after inspection.</p>
+            <p>Default branch: Quezon City, 44 Mindanao Ave., Bgy. Tandang Sora. Phone: 0968.356.8251.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="wrap footer-main">
+        <div class="footer-logo">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        </div>
+        <div>
+          <h2>Information</h2>
+          <a href="index.html#products">New products</a>
+          <a href="#service-menu">Bike service</a>
+          <a href="index.html#online">Online orders</a>
+          <a href="#contact">Contact us</a>
+        </div>
+        <div>
+          <h2>Customer Help</h2>
+          <a href="index.html#contact">Check stock</a>
+          <a href="#contact">Book service</a>
+          <a href="index.html#contact">Ask compatibility</a>
+          <a href="index.html#contact">Platform order help</a>
+        </div>
+        <div>
+          <h2>Follow Us</h2>
+          <a href="https://www.facebook.com/search/top?q=sarapmagbike" target="_blank" rel="noreferrer">Facebook</a>
+          <a href="#footer">Instagram</a>
+          <a href="#footer">YouTube</a>
+        </div>
+        <div id="contact">
+          <h2>Store Information</h2>
+          <p>SarapMagBike Shop, QC | Pampanga</p>
+          <p>Stocks, prices, and service queue may change:</p>
+          <strong>Message us on Facebook</strong>
+          <a href="mailto:hello@sarapmagbike.com">hello@sarapmagbike.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="wrap">
+          <span>&copy; <span id="year"></span> SarapMagBike Shop</span>
+          <span>YPP Enterprises OPC</span>
+        </div>
+      </div>
+    </footer>
+
+    <script src="config.js?v=20260703-staging-api"></script>
+    <script src="script.js?v=20260703-customer-account-catalog"></script>
+  </body>
+</html>

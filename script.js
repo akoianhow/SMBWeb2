@@ -28,6 +28,13 @@ const communityState = {
   config: null,
   isLoaded: false,
   isLoading: false,
+  activeThreadPostId: null,
+  activePhotoPostId: null,
+  activePhotoIndex: 0,
+  editingPostId: null,
+  editingOriginalBody: "",
+  editingSavedBody: "",
+  isSavingEdit: false,
   photoUploads: [],
   posts: [],
   search: "",
@@ -411,18 +418,40 @@ function renderCategoryNav() {
     return;
   }
 
+  const isServicesPage = window.location.pathname.endsWith("/services.html");
+  const goToHomeTarget = (targetId) => {
+    if (isServicesPage) {
+      window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
+      return;
+    }
+    if (targetId === "top") {
+      returnToHome();
+      return;
+    }
+    scrollHomeTarget(targetId);
+  };
+  const goToServices = () => {
+    if (isServicesPage) {
+      document.getElementById("service-menu")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    window.location.href = "services.html";
+  };
+
   nav.replaceChildren();
   [
-    { label: "Home", href: "#top", action: returnToHome },
-    { label: "Products", href: "#products", action: () => scrollHomeTarget("products") },
-    { label: "Services", href: "#services", action: () => scrollHomeTarget("services") },
-    { label: "Rides", href: "#online", action: () => scrollHomeTarget("online") },
-    { label: "Community", href: "/community", action: () => openCommunityPage(true), community: true },
-    { label: "Contact", href: "#contact", action: () => scrollHomeTarget("contact") }
+    { label: "Home", href: isServicesPage ? "index.html" : "#top", action: () => goToHomeTarget("top") },
+    { label: "Products", href: isServicesPage ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
+    { label: "Services", href: "services.html", action: goToServices, active: isServicesPage },
+    { label: "Rides", href: isServicesPage ? "index.html#online" : "#online", action: () => goToHomeTarget("online") },
+    { label: "Community", href: isServicesPage ? "index.html#community" : "/community", action: () => isServicesPage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage },
+    { label: "Contact", href: isServicesPage ? "#contact" : "#contact", action: () => isServicesPage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
   ].forEach((item) => {
     const link = document.createElement("a");
     link.href = item.href;
     link.textContent = item.label;
+    link.classList.toggle("active", Boolean(item.active));
+    link.setAttribute("aria-current", item.active ? "page" : "false");
     if (item.community) {
       link.dataset.communityLink = "";
     }
@@ -434,6 +463,59 @@ function renderCategoryNav() {
   });
 
   updateActiveCategoryNav();
+}
+
+function getServiceCardCategory(card) {
+  return card.querySelector("span")?.textContent.trim() || "";
+}
+
+function serviceCardMatchesFilter(card, filter) {
+  if (filter === "all") {
+    return true;
+  }
+
+  const category = getServiceCardCategory(card);
+  const serviceFilterCategories = {
+    basic: ["Basic Bike Service"],
+    overhaul: ["Full Bike Service"],
+    assembly: ["Bike Assembly"],
+    drivetrain: ["Drivetrain Service", "Shifter Service"],
+    brakes: ["Brake Service"],
+    cables: ["Cable Service"],
+    wheels: ["Wheel & Tire Service", "Hub Service"],
+    fork: ["Fork Service"],
+    cockpit: ["Cockpit Service", "Headset Service", "Fit / Adjustment Service"],
+    accessories: ["Accessory Installation"]
+  };
+
+  return (serviceFilterCategories[filter] || []).includes(category);
+}
+
+function applyServiceFilter(filter) {
+  const chips = document.querySelectorAll("[data-service-filter]");
+  const cards = document.querySelectorAll(".service-card");
+  chips.forEach((chip) => {
+    const active = chip.dataset.serviceFilter === filter;
+    chip.classList.toggle("active", active);
+    chip.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  cards.forEach((card) => {
+    card.hidden = !serviceCardMatchesFilter(card, filter);
+  });
+}
+
+function bindServiceFilters() {
+  const chips = document.querySelectorAll("[data-service-filter]");
+  if (chips.length === 0) {
+    return;
+  }
+
+  chips.forEach((chip) => {
+    chip.setAttribute("aria-pressed", chip.classList.contains("active") ? "true" : "false");
+    chip.addEventListener("click", () => {
+      applyServiceFilter(chip.dataset.serviceFilter || "all");
+    });
+  });
 }
 
 function updateActiveCategoryNav() {
@@ -741,40 +823,163 @@ function renderCommunityPosts() {
   communityState.posts.forEach((post) => posts.append(renderCommunityPostCard(post)));
 }
 
+function getCommunityPostAuthorName(post) {
+  return post.authorName || post.author?.displayName || "SarapMagBike rider";
+}
+
+function getCommunityPostAuthorAvatar(post) {
+  return post.authorAvatarUrl || post.author?.avatarUrl || post.author?.profilePictureUrl || "";
+}
+
+function isOwnCommunityPost(post) {
+  const accountId = customerState.account?.id || customerState.account?.Id;
+  const authorId = post.authorCustomerAccountId || post.authorId || post.author?.id || post.author?.customerAccountId;
+  return Boolean(accountId && authorId && String(accountId).toLowerCase() === String(authorId).toLowerCase());
+}
+
+function renderCommunityPostHeader(post) {
+  const header = document.createElement("div");
+  header.className = "community-post-header";
+
+  const authorName = getCommunityPostAuthorName(post);
+  const avatar = renderCommunityAvatar(authorName, getCommunityPostAuthorAvatar(post));
+  avatar.classList.add("community-post-avatar");
+
+  const identity = document.createElement("div");
+  identity.className = "community-post-identity";
+  identity.append(createTextElement("strong", authorName));
+
+  const detail = document.createElement("div");
+  detail.className = "community-post-detail";
+  detail.append(createTextElement("span", formatCommunityDateTime(post.createdAt)));
+  const dot = document.createElement("span");
+  dot.textContent = "·";
+  dot.setAttribute("aria-hidden", "true");
+  const globe = document.createElement("span");
+  globe.className = "community-post-visibility";
+  globe.title = "Public";
+  globe.innerHTML = `
+    <svg viewBox="0 0 16 16" focusable="false">
+      <circle cx="8" cy="8" r="6.2"></circle>
+      <path d="M2.4 8h11.2M8 1.8c1.7 1.7 2.5 3.8 2.5 6.2s-.8 4.5-2.5 6.2M8 1.8C6.3 3.5 5.5 5.6 5.5 8s.8 4.5 2.5 6.2"></path>
+    </svg>
+  `;
+  detail.append(dot, globe);
+  identity.append(detail);
+
+  header.append(avatar, identity);
+
+  const menu = renderCommunityPostMenu(post);
+  header.append(menu);
+
+  return header;
+}
+
+function renderCommunityPostMenu(post) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "community-post-menu";
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "community-post-menu-button";
+  button.setAttribute("aria-label", "Open post actions");
+  button.setAttribute("aria-expanded", "false");
+  button.textContent = "...";
+
+  const menu = document.createElement("div");
+  menu.className = "community-post-menu-list";
+  menu.hidden = true;
+
+  if (isOwnCommunityPost(post)) {
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Edit post";
+    edit.addEventListener("click", () => {
+      closeCommunityPostMenus();
+      openCommunityEditModal(post.id);
+    });
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.textContent = "Delete post";
+    deleteButton.addEventListener("click", () => {
+      closeCommunityPostMenus();
+      deleteCommunityPost(post.id);
+    });
+
+    menu.append(edit, deleteButton);
+  } else {
+    const report = document.createElement("button");
+    report.type = "button";
+    report.textContent = "Report post";
+    report.addEventListener("click", () => {
+      closeCommunityPostMenus();
+      reportCommunityPost(post.id);
+    });
+    menu.append(report);
+  }
+  button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const willOpen = menu.hidden;
+    closeCommunityPostMenus();
+    menu.hidden = !willOpen;
+    button.setAttribute("aria-expanded", String(willOpen));
+  });
+  wrapper.append(button, menu);
+  return wrapper;
+}
+
+function renderCommunityMediaGrid(mediaItems = [], options = {}) {
+  const photos = Array.isArray(mediaItems) ? mediaItems.slice(0, 3) : [];
+  if (photos.length === 0) {
+    return null;
+  }
+
+  const media = document.createElement("div");
+  media.className = `community-media-grid media-count-${photos.length}`;
+  photos.forEach((photo, index) => {
+    const image = document.createElement("img");
+    image.alt = photo.fileName || "Discussion photo";
+    image.loading = "lazy";
+    image.src = normalizeApiUrl(photo.url);
+    if (typeof options.onPhotoClick === "function") {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "community-media-button";
+      button.setAttribute("aria-label", `Open ${image.alt}`);
+      button.addEventListener("click", () => options.onPhotoClick(index));
+      button.append(image);
+      media.append(button);
+    } else {
+      media.append(image);
+    }
+  });
+  return media;
+}
+
+function closeCommunityPostMenus() {
+  document.querySelectorAll(".community-post-menu-list").forEach((menu) => {
+    menu.hidden = true;
+  });
+  document.querySelectorAll(".community-post-menu-button").forEach((button) => {
+    button.setAttribute("aria-expanded", "false");
+  });
+}
+
 function renderCommunityPostCard(post) {
   const card = document.createElement("article");
   card.className = "community-post-card";
   card.dataset.communityPostId = post.id;
 
-  const meta = document.createElement("div");
-  meta.className = "community-post-meta";
-  const author = post.authorName || post.author?.displayName || "SarapMagBike rider";
-  const categories = Array.isArray(post.categories) && post.categories.length > 0
-    ? post.categories
-    : [{ name: post.categoryName || post.category?.name || "Discussion", slug: post.categorySlug || "discussion" }];
-  const categoryLabel = categories.map((category) => category.name).join(" / ");
-  meta.append(
-    createTextElement("span", categoryLabel),
-    createTextElement("span", author),
-    createTextElement("span", formatCommunityTime(post.createdAt))
-  );
-  if (post.status === "resolved") {
-    meta.append(createTextElement("span", "Resolved"));
-  }
+  const meta = renderCommunityPostHeader(post);
 
   const body = createTextElement("p", post.body, "community-post-body");
   card.append(meta, body);
 
-  if (Array.isArray(post.media) && post.media.length > 0) {
-    const media = document.createElement("div");
-    media.className = "community-media-grid";
-    post.media.forEach((photo) => {
-      const image = document.createElement("img");
-      image.alt = photo.fileName || "Discussion photo";
-      image.loading = "lazy";
-      image.src = normalizeApiUrl(photo.url);
-      media.append(image);
-    });
+  const media = renderCommunityMediaGrid(post.media, {
+    onPhotoClick: (index) => openCommunityPhotoModal(post.id, index)
+  });
+  if (media) {
     card.append(media);
   }
 
@@ -783,19 +988,60 @@ function renderCommunityPostCard(post) {
   actions.append(
     createCommunityActionButton(getCommunityLikeLabel(post), () => toggleCommunityReaction(post.id), {
       className: "community-like-action",
+      icon: "like",
+      label: `Like, ${getCommunityLikeLabel(post)} likes`,
       pressed: Boolean(post.likedByMe)
     }),
-    createCommunityActionButton("Reply", () => focusCommunityReply(card)),
-    createCommunityActionButton("Report", () => reportCommunityPost(post.id))
+    createCommunityActionButton(getCommunityReplyLabel(post), () => openCommunityThreadModal(post.id), {
+      className: "community-thread-action",
+      icon: "comment",
+      label: `${getCommunityReplyLabel(post)} replies`
+    })
   );
   card.append(actions);
+
+  return card;
+}
+
+function renderCommunityPostThread(post) {
+  const thread = document.createElement("article");
+  thread.className = "community-post-card community-post-thread-card";
+  thread.dataset.communityThreadPostId = post.id;
+
+  const meta = renderCommunityPostHeader(post);
+
+  const body = createTextElement("p", post.body, "community-post-body");
+  thread.append(meta, body);
+
+  const media = renderCommunityMediaGrid(post.media);
+  if (media) {
+    thread.append(media);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "community-post-actions";
+  actions.append(
+    createCommunityActionButton(getCommunityLikeLabel(post), () => toggleCommunityReaction(post.id), {
+      className: "community-like-action",
+      icon: "like",
+      label: `Like, ${getCommunityLikeLabel(post)} likes`,
+      pressed: Boolean(post.likedByMe)
+    })
+  );
+  thread.append(actions);
 
   const comments = document.createElement("div");
   comments.className = "community-comments";
   renderCommunityCommentTree(post).forEach((commentNode) => {
     comments.append(renderCommunityComment(commentNode.comment, post.id, commentNode.children));
   });
-  card.append(comments);
+  if (comments.childElementCount === 0) {
+    const empty = document.createElement("p");
+    empty.className = "community-thread-empty";
+    empty.textContent = "No replies yet.";
+    comments.append(empty);
+  }
+  thread.append(comments);
 
   const replyForm = document.createElement("form");
   replyForm.className = "community-reply-form";
@@ -804,9 +1050,9 @@ function renderCommunityPostCard(post) {
     <button type="submit">Reply</button>
   `;
   replyForm.addEventListener("submit", (event) => submitCommunityComment(event, post.id));
-  card.append(replyForm);
+  thread.append(replyForm);
 
-  return card;
+  return thread;
 }
 
 function renderCommunityCommentTree(post) {
@@ -824,7 +1070,13 @@ function renderCommunityCommentTree(post) {
     }
   });
 
-  return roots;
+  const sortNodes = (items) => {
+    items.sort((first, second) => (Date.parse(second.comment?.createdAt || "") || 0) - (Date.parse(first.comment?.createdAt || "") || 0));
+    items.forEach((item) => sortNodes(item.children));
+    return items;
+  };
+
+  return sortNodes(roots);
 }
 
 function getCommunityActivityTime(post) {
@@ -917,6 +1169,9 @@ function upsertCommunityPost(updatedPost, options = {}) {
       }
     });
   }
+
+  refreshCommunityThreadModal();
+  refreshCommunityPhotoModal();
 }
 
 function renderCommunityComment(comment, postId, childNodes = []) {
@@ -991,7 +1246,15 @@ function getCommunityInitials(name) {
 }
 
 function getCommunityLikeLabel(post) {
-  return `Like (${post?.likeCount || post?.reactionCount || 0})`;
+  return String(post?.likeCount || post?.reactionCount || 0);
+}
+
+function getCommunityReplyCount(post) {
+  return Array.isArray(post?.comments) ? post.comments.length : Number(post?.commentCount || post?.replyCount || 0);
+}
+
+function getCommunityReplyLabel(post) {
+  return String(getCommunityReplyCount(post));
 }
 
 function getCommunityCommentLikeLabel(comment) {
@@ -1001,15 +1264,61 @@ function getCommunityCommentLikeLabel(comment) {
 function createCommunityActionButton(label, onClick, options = {}) {
   const button = document.createElement("button");
   button.type = "button";
-  button.textContent = label;
   if (options.className) {
     button.className = options.className;
   }
+  if (options.icon) {
+    button.append(createCommunityActionIcon(options.icon));
+  }
+  const labelElement = document.createElement("span");
+  labelElement.className = options.icon ? "community-action-count" : "community-action-label";
+  labelElement.textContent = label;
+  button.append(labelElement);
   if (typeof options.pressed === "boolean") {
     button.setAttribute("aria-pressed", String(options.pressed));
   }
+  if (options.label) {
+    button.setAttribute("aria-label", options.label);
+    button.title = options.label;
+  }
   button.addEventListener("click", onClick);
   return button;
+}
+
+function createCommunityActionIcon(icon) {
+  const wrapper = document.createElement("span");
+  wrapper.className = `community-action-icon community-action-icon-${icon}`;
+  wrapper.setAttribute("aria-hidden", "true");
+
+  if (icon === "like") {
+    wrapper.innerHTML = `
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M7.2 21H4.4A2.4 2.4 0 0 1 2 18.6v-6.2A2.4 2.4 0 0 1 4.4 10h2.8V21Z"></path>
+        <path d="M7.2 10.2c1.6-1 2.7-2.5 3.4-4.6l.6-1.9A2.1 2.1 0 0 1 15.3 4v4.3h3.8a2.6 2.6 0 0 1 2.5 3.1l-1.2 6.5A3.8 3.8 0 0 1 16.7 21H7.2V10.2Z"></path>
+      </svg>
+    `;
+  } else if (icon === "comment") {
+    wrapper.innerHTML = `
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M12 4C6.9 4 3 7.5 3 12c0 2.5 1.3 4.8 3.4 6.2l-.5 3 3.4-1.7c.9.3 1.8.5 2.8.5 5.1 0 9-3.5 9-8S17.1 4 12 4Z"></path>
+      </svg>
+    `;
+  }
+
+  return wrapper;
+}
+
+function setCommunityActionButtonLabel(button, label, ariaLabel) {
+  const labelElement = button.querySelector(".community-action-count");
+  if (labelElement) {
+    labelElement.textContent = label;
+  } else {
+    button.textContent = label;
+  }
+  if (ariaLabel) {
+    button.setAttribute("aria-label", ariaLabel);
+    button.title = ariaLabel;
+  }
 }
 
 function updateCommunityReactionLabel(updatedPost) {
@@ -1022,13 +1331,12 @@ function updateCommunityReactionLabel(updatedPost) {
     communityState.posts[existingIndex] = updatedPost;
   }
 
-  const likeButton = document.querySelector(`[data-community-post-id="${CSS.escape(updatedPost.id)}"] .community-like-action`);
-  if (!likeButton) {
-    return;
-  }
-
-  likeButton.textContent = getCommunityLikeLabel(updatedPost);
-  likeButton.setAttribute("aria-pressed", String(Boolean(updatedPost.likedByMe)));
+  document
+    .querySelectorAll(`[data-community-post-id="${CSS.escape(updatedPost.id)}"] .community-like-action, [data-community-thread-post-id="${CSS.escape(updatedPost.id)}"] .community-like-action, [data-community-photo-post-id="${CSS.escape(updatedPost.id)}"] .community-like-action`)
+    .forEach((likeButton) => {
+      setCommunityActionButtonLabel(likeButton, getCommunityLikeLabel(updatedPost), `Like, ${getCommunityLikeLabel(updatedPost)} likes`);
+      likeButton.setAttribute("aria-pressed", String(Boolean(updatedPost.likedByMe)));
+    });
 }
 
 function updateCommunityCommentReactionLabel(updatedPost, commentId) {
@@ -1049,6 +1357,360 @@ function updateCommunityCommentReactionLabel(updatedPost, commentId) {
 
   likeButton.textContent = getCommunityCommentLikeLabel(updatedComment);
   likeButton.setAttribute("aria-pressed", String(Boolean(updatedComment.likedByMe)));
+}
+
+function getCommunityPostById(postId) {
+  return communityState.posts.find((post) => post.id === postId);
+}
+
+function openCommunityThreadModal(postId) {
+  const post = getCommunityPostById(postId);
+  const modal = document.querySelector("[data-community-thread-modal]");
+  const content = document.querySelector("[data-community-thread-content]");
+  if (!post || !modal || !content) {
+    return;
+  }
+
+  communityState.activeThreadPostId = postId;
+  content.replaceChildren(renderCommunityPostThread(post));
+  modal.hidden = false;
+}
+
+function closeCommunityThreadModal() {
+  const modal = document.querySelector("[data-community-thread-modal]");
+  const content = document.querySelector("[data-community-thread-content]");
+  communityState.activeThreadPostId = null;
+  if (content) {
+    content.replaceChildren();
+  }
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function getCommunityPostPhotos(post) {
+  return Array.isArray(post?.media) ? post.media.slice(0, 3) : [];
+}
+
+function openCommunityPhotoModal(postId, photoIndex = 0) {
+  const post = getCommunityPostById(postId);
+  const photos = getCommunityPostPhotos(post);
+  const modal = document.querySelector("[data-community-photo-modal]");
+  if (!post || photos.length === 0 || !modal) {
+    return;
+  }
+
+  communityState.activePhotoPostId = postId;
+  communityState.activePhotoIndex = Math.min(Math.max(photoIndex, 0), photos.length - 1);
+  modal.hidden = false;
+  renderCommunityPhotoModal();
+}
+
+function closeCommunityPhotoModal() {
+  const modal = document.querySelector("[data-community-photo-modal]");
+  const panel = document.querySelector("[data-community-photo-panel]");
+  communityState.activePhotoPostId = null;
+  communityState.activePhotoIndex = 0;
+  if (panel) {
+    panel.replaceChildren();
+  }
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function changeCommunityPhotoModal(delta) {
+  const post = getCommunityPostById(communityState.activePhotoPostId);
+  const photos = getCommunityPostPhotos(post);
+  if (photos.length === 0) {
+    return;
+  }
+
+  communityState.activePhotoIndex = (communityState.activePhotoIndex + delta + photos.length) % photos.length;
+  renderCommunityPhotoModal();
+}
+
+function refreshCommunityPhotoModal() {
+  if (!communityState.activePhotoPostId) {
+    return;
+  }
+
+  const post = getCommunityPostById(communityState.activePhotoPostId);
+  if (!post || getCommunityPostPhotos(post).length === 0) {
+    closeCommunityPhotoModal();
+    return;
+  }
+
+  renderCommunityPhotoModal();
+}
+
+function renderCommunityPhotoModal() {
+  const post = getCommunityPostById(communityState.activePhotoPostId);
+  const photos = getCommunityPostPhotos(post);
+  const image = document.querySelector("[data-community-photo-viewer-image]");
+  const counter = document.querySelector("[data-community-photo-counter]");
+  const previous = document.querySelector("[data-community-photo-prev]");
+  const next = document.querySelector("[data-community-photo-next]");
+  const panel = document.querySelector("[data-community-photo-panel]");
+  if (!post || photos.length === 0 || !image || !counter || !previous || !next || !panel) {
+    return;
+  }
+
+  communityState.activePhotoIndex = Math.min(Math.max(communityState.activePhotoIndex, 0), photos.length - 1);
+  const photo = photos[communityState.activePhotoIndex];
+  image.src = normalizeApiUrl(photo.url);
+  image.alt = photo.fileName || "Post photo";
+  counter.textContent = photos.length > 1 ? `${communityState.activePhotoIndex + 1} / ${photos.length}` : "";
+  previous.hidden = photos.length < 2;
+  next.hidden = photos.length < 2;
+  panel.replaceChildren(renderCommunityPhotoPanel(post));
+}
+
+function renderCommunityPhotoPanel(post) {
+  const panel = document.createElement("div");
+  panel.className = "community-photo-panel-inner";
+  panel.dataset.communityPhotoPostId = post.id;
+
+  panel.append(renderCommunityPostHeader(post));
+  panel.append(createTextElement("p", post.body, "community-post-body"));
+
+  const actions = document.createElement("div");
+  actions.className = "community-post-actions";
+  actions.append(
+    createCommunityActionButton(getCommunityLikeLabel(post), () => toggleCommunityReaction(post.id), {
+      className: "community-like-action",
+      icon: "like",
+      label: `Like, ${getCommunityLikeLabel(post)} likes`,
+      pressed: Boolean(post.likedByMe)
+    }),
+    createCommunityActionButton(getCommunityReplyLabel(post), () => {
+      if (!requireCommunityLogin()) {
+        return;
+      }
+      panel.querySelector(".community-reply-form input")?.focus();
+    }, {
+      className: "community-thread-action",
+      icon: "comment",
+      label: `${getCommunityReplyLabel(post)} replies`
+    })
+  );
+  panel.append(actions);
+
+  const comments = document.createElement("div");
+  comments.className = "community-comments community-photo-comments";
+  renderCommunityCommentTree(post).forEach((commentNode) => {
+    comments.append(renderCommunityComment(commentNode.comment, post.id, commentNode.children));
+  });
+  if (comments.childElementCount === 0) {
+    const empty = document.createElement("p");
+    empty.className = "community-thread-empty";
+    empty.textContent = "No replies yet.";
+    comments.append(empty);
+  }
+  panel.append(comments);
+
+  const replyForm = document.createElement("form");
+  replyForm.className = "community-reply-form";
+  replyForm.innerHTML = `
+    <input name="body" maxlength="1000" placeholder="Write a comment">
+    <button type="submit">Reply</button>
+  `;
+  replyForm.addEventListener("submit", (event) => submitCommunityComment(event, post.id));
+  panel.append(replyForm);
+
+  return panel;
+}
+
+function openCommunityEditModal(postId) {
+  const post = getCommunityPostById(postId);
+  const modal = document.querySelector("[data-community-edit-modal]");
+  const form = document.querySelector("[data-community-edit-form]");
+  const message = document.querySelector("[data-community-edit-message]");
+  const author = document.querySelector("[data-community-edit-author]");
+  const mediaContainer = document.querySelector("[data-community-edit-media]");
+  if (!post || !modal || !form || !author || !mediaContainer) {
+    return;
+  }
+
+  communityState.editingPostId = postId;
+  communityState.editingOriginalBody = post.body || "";
+  communityState.editingSavedBody = post.body || "";
+  communityState.isSavingEdit = false;
+  author.replaceChildren(renderCommunityAvatar(getCommunityPostAuthorName(post), getCommunityPostAuthorAvatar(post)));
+  const authorText = document.createElement("div");
+  authorText.append(
+    createTextElement("strong", getCommunityPostAuthorName(post)),
+    createTextElement("span", "Editing your post")
+  );
+  author.append(authorText);
+  mediaContainer.replaceChildren();
+  const media = renderCommunityMediaGrid(post.media);
+  if (media) {
+    mediaContainer.append(media);
+    mediaContainer.hidden = false;
+  } else {
+    mediaContainer.hidden = true;
+  }
+  form.elements.body.value = post.body || "";
+  hideCommunityEditCloseConfirm();
+  updateCommunityEditSaveState();
+  setMessage(message, "");
+  modal.hidden = false;
+  form.elements.body.focus();
+}
+
+function closeCommunityEditModal() {
+  const modal = document.querySelector("[data-community-edit-modal]");
+  const form = document.querySelector("[data-community-edit-form]");
+  const message = document.querySelector("[data-community-edit-message]");
+  const author = document.querySelector("[data-community-edit-author]");
+  const mediaContainer = document.querySelector("[data-community-edit-media]");
+  communityState.editingPostId = null;
+  communityState.editingOriginalBody = "";
+  communityState.editingSavedBody = "";
+  communityState.isSavingEdit = false;
+  if (form) {
+    form.reset();
+  }
+  if (author) {
+    author.replaceChildren();
+  }
+  if (mediaContainer) {
+    mediaContainer.replaceChildren();
+    mediaContainer.hidden = true;
+  }
+  hideCommunityEditCloseConfirm();
+  setMessage(message, "");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function getCommunityEditBody() {
+  const form = document.querySelector("[data-community-edit-form]");
+  return form?.elements.body.value.trim() || "";
+}
+
+function hasUnsavedCommunityEditChanges() {
+  return Boolean(communityState.editingPostId) && getCommunityEditBody() !== communityState.editingSavedBody.trim();
+}
+
+function updateCommunityEditSaveState() {
+  const saveButton = document.querySelector("[data-community-edit-save]");
+  if (!saveButton) {
+    return;
+  }
+
+  const body = getCommunityEditBody();
+  saveButton.disabled = communityState.isSavingEdit || !body || body === communityState.editingSavedBody.trim();
+}
+
+function hideCommunityEditCloseConfirm() {
+  const confirm = document.querySelector("[data-community-edit-confirm]");
+  if (confirm) {
+    confirm.hidden = true;
+  }
+}
+
+function requestCloseCommunityEditModal() {
+  if (!hasUnsavedCommunityEditChanges()) {
+    closeCommunityEditModal();
+    return;
+  }
+
+  const confirm = document.querySelector("[data-community-edit-confirm]");
+  if (confirm) {
+    confirm.hidden = false;
+  }
+}
+
+async function submitCommunityPostEdit(event) {
+  event.preventDefault();
+  await saveCommunityPostEdit({ closeAfterSave: false });
+}
+
+async function saveCommunityPostEdit(options = {}) {
+  if (!communityState.editingPostId) {
+    return;
+  }
+
+  const message = document.querySelector("[data-community-edit-message]");
+  const body = getCommunityEditBody();
+  if (!body) {
+    setMessage(message, "Post text is required.", "error");
+    updateCommunityEditSaveState();
+    return;
+  }
+
+  if (body === communityState.editingSavedBody.trim()) {
+    updateCommunityEditSaveState();
+    if (options.closeAfterSave) {
+      closeCommunityEditModal();
+    }
+    return;
+  }
+
+  communityState.isSavingEdit = true;
+  updateCommunityEditSaveState();
+  setMessage(message, "Saving post...");
+  try {
+    const updatedPost = await apiRequest(`/api/public/community/posts/${communityState.editingPostId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ body })
+    });
+    communityState.editingSavedBody = updatedPost.body || body;
+    communityState.editingOriginalBody = communityState.editingSavedBody;
+    const form = document.querySelector("[data-community-edit-form]");
+    if (form) {
+      form.elements.body.value = communityState.editingSavedBody;
+    }
+    upsertCommunityPost(updatedPost, { placement: "preserve" });
+    hideCommunityEditCloseConfirm();
+    setMessage(message, "Post updated.", "success");
+    if (options.closeAfterSave) {
+      closeCommunityEditModal();
+    }
+  } catch (error) {
+    setMessage(message, error.message || "Unable to edit post. SMBSystem may need the public edit endpoint first.", "error");
+  } finally {
+    communityState.isSavingEdit = false;
+    updateCommunityEditSaveState();
+  }
+}
+
+async function deleteCommunityPost(postId) {
+  if (!window.confirm("Delete this post? This cannot be undone.")) {
+    return;
+  }
+
+  try {
+    await apiRequest(`/api/public/community/posts/${postId}`, { method: "DELETE" });
+    communityState.posts = communityState.posts.filter((post) => post.id !== postId);
+    document.querySelector(`[data-community-post-id="${CSS.escape(postId)}"]`)?.remove();
+    if (communityState.activeThreadPostId === postId) {
+      closeCommunityThreadModal();
+    }
+    if (communityState.posts.length === 0) {
+      setCommunityStateCard("No Discussions Yet", "Start with a product question, service concern, bike check, or ride invite.");
+    }
+  } catch (error) {
+    alert(error.message || "Unable to delete post. SMBSystem may need the public delete endpoint first.");
+  }
+}
+
+function refreshCommunityThreadModal() {
+  if (!communityState.activeThreadPostId) {
+    return;
+  }
+
+  const post = getCommunityPostById(communityState.activeThreadPostId);
+  const modal = document.querySelector("[data-community-thread-modal]");
+  const content = document.querySelector("[data-community-thread-content]");
+  if (!post || !modal || !content || modal.hidden) {
+    return;
+  }
+
+  content.replaceChildren(renderCommunityPostThread(post));
 }
 
 function showCommunityCommentReplyForm(commentItem) {
@@ -1185,14 +1847,14 @@ async function reportCommunityPost(postId) {
   }
 }
 
-async function readCommunityPhotos(fileList) {
+async function readCommunityPhotos(fileList, existingCount = 0) {
   const files = Array.from(fileList || []);
   const config = communityState.config || {};
   const maxFiles = config.maxPhotosPerPost || 3;
   const maxSize = config.maxPhotoBytes || config.maxPhotoSizeBytes || 2_000_000;
   const allowedTypes = config.allowedImageTypes || config.allowedImageContentTypes || ["image/jpeg", "image/png", "image/webp"];
 
-  if (files.length > maxFiles) {
+  if (existingCount + files.length > maxFiles) {
     throw new Error(`Upload up to ${maxFiles} photos only.`);
   }
 
@@ -1219,6 +1881,11 @@ async function readCommunityPhotos(fileList) {
   }));
 }
 
+async function addCommunityPhotos(fileList) {
+  const photos = await readCommunityPhotos(fileList, communityState.photoUploads.length);
+  communityState.photoUploads = [...communityState.photoUploads, ...photos];
+}
+
 async function handleCommunityPhotoChange(event) {
   const input = event.currentTarget;
   const message = getCommunityMessage();
@@ -1228,13 +1895,41 @@ async function handleCommunityPhotoChange(event) {
   }
 
   try {
-    communityState.photoUploads = await readCommunityPhotos(input.files);
+    await addCommunityPhotos(input.files);
+    input.value = "";
     renderCommunityPhotoPreviews();
     updateCommunityComposerState();
     setMessage(message, "");
   } catch (error) {
-    communityState.photoUploads = [];
     input.value = "";
+    renderCommunityPhotoPreviews();
+    updateCommunityComposerState();
+    setMessage(message, error.message || "Unable to read photos.", "error");
+  }
+}
+
+async function handleCommunityPhotoDrop(event) {
+  const message = getCommunityMessage();
+  const composer = document.querySelector("[data-community-composer]");
+  event.preventDefault();
+  composer?.classList.remove("is-dragging");
+
+  if (!requireCommunityLogin()) {
+    return;
+  }
+
+  const files = event.dataTransfer?.files;
+  if (!files || files.length === 0) {
+    return;
+  }
+
+  try {
+    setCommunityComposerActive(true);
+    await addCommunityPhotos(files);
+    renderCommunityPhotoPreviews();
+    updateCommunityComposerState();
+    setMessage(message, "");
+  } catch (error) {
     renderCommunityPhotoPreviews();
     updateCommunityComposerState();
     setMessage(message, error.message || "Unable to read photos.", "error");
@@ -1256,7 +1951,8 @@ function renderCommunityPhotoPreviews() {
     image.alt = photo.fileName || `Selected photo ${index + 1}`;
     const remove = document.createElement("button");
     remove.type = "button";
-    remove.textContent = "Remove";
+    remove.textContent = "x";
+    remove.setAttribute("aria-label", `Remove ${photo.fileName || `photo ${index + 1}`}`);
     remove.addEventListener("click", () => removeCommunityPhoto(index));
     item.append(image, remove);
     container.append(item);
@@ -1313,6 +2009,19 @@ function formatCommunityTime(value) {
   }).format(new Date(value));
 }
 
+function formatCommunityDateTime(value) {
+  if (!value) {
+    return "";
+  }
+  return new Intl.DateTimeFormat("en-PH", {
+    day: "2-digit",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false
+  }).format(new Date(value));
+}
+
 function bindCommunityUi() {
   document.querySelector("[data-community-composer]")?.addEventListener("submit", submitCommunityPost);
   document.querySelector("[data-community-start]")?.addEventListener("click", () => {
@@ -1338,8 +2047,19 @@ function bindCommunityUi() {
     requireCommunityLogin();
     setCommunityComposerActive(true);
   });
+  const communityComposer = document.querySelector("[data-community-composer]");
   document.querySelector("[data-community-composer] textarea")?.addEventListener("input", updateCommunityComposerState);
-  document.querySelector("[data-community-composer]")?.addEventListener("focusout", (event) => {
+  communityComposer?.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    communityComposer.classList.add("is-dragging");
+  });
+  communityComposer?.addEventListener("dragleave", (event) => {
+    if (!communityComposer.contains(event.relatedTarget)) {
+      communityComposer.classList.remove("is-dragging");
+    }
+  });
+  communityComposer?.addEventListener("drop", handleCommunityPhotoDrop);
+  communityComposer?.addEventListener("focusout", (event) => {
     const form = event.currentTarget;
     window.setTimeout(() => {
       if (!form.contains(document.activeElement)) {
@@ -1364,6 +2084,53 @@ function bindCommunityUi() {
     communityState.selectedCategory = event.target.value;
     loadCommunityDiscussions(true);
   });
+  document.querySelector("[data-community-thread-close]")?.addEventListener("click", closeCommunityThreadModal);
+  document.querySelector("[data-community-thread-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeCommunityThreadModal();
+    }
+  });
+  document.querySelector("[data-community-photo-close]")?.addEventListener("click", closeCommunityPhotoModal);
+  document.querySelector("[data-community-photo-prev]")?.addEventListener("click", () => changeCommunityPhotoModal(-1));
+  document.querySelector("[data-community-photo-next]")?.addEventListener("click", () => changeCommunityPhotoModal(1));
+  document.querySelector("[data-community-photo-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeCommunityPhotoModal();
+    }
+  });
+  document.querySelector("[data-community-edit-form]")?.addEventListener("submit", submitCommunityPostEdit);
+  document.querySelector("[data-community-edit-form] textarea")?.addEventListener("input", () => {
+    hideCommunityEditCloseConfirm();
+    updateCommunityEditSaveState();
+  });
+  document.querySelector("[data-community-edit-close]")?.addEventListener("click", requestCloseCommunityEditModal);
+  document.querySelector("[data-community-edit-cancel]")?.addEventListener("click", requestCloseCommunityEditModal);
+  document.querySelector("[data-community-edit-confirm-save]")?.addEventListener("click", () => saveCommunityPostEdit({ closeAfterSave: true }));
+  document.querySelector("[data-community-edit-confirm-discard]")?.addEventListener("click", closeCommunityEditModal);
+  document.querySelector("[data-community-edit-confirm-keep]")?.addEventListener("click", hideCommunityEditCloseConfirm);
+  document.querySelector("[data-community-edit-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      requestCloseCommunityEditModal();
+    }
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".community-post-menu")) {
+      closeCommunityPostMenus();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+    closeCommunityPostMenus();
+    if (!document.querySelector("[data-community-photo-modal]")?.hidden) {
+      closeCommunityPhotoModal();
+    } else if (!document.querySelector("[data-community-edit-modal]")?.hidden) {
+      requestCloseCommunityEditModal();
+    } else if (!document.querySelector("[data-community-thread-modal]")?.hidden) {
+      closeCommunityThreadModal();
+    }
+  });
   document.querySelectorAll("[data-community-link]").forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -1381,6 +2148,9 @@ function bindCommunityUi() {
 
 function bindCatalogUi() {
   document.querySelector(".logo")?.addEventListener("click", (event) => {
+    if (event.currentTarget.getAttribute("href") !== "#top") {
+      return;
+    }
     event.preventDefault();
     returnToHome();
   });
@@ -1543,6 +2313,10 @@ function updateCustomerHeader() {
       : "Not set";
   }
   updateCommunityAuthState();
+  if (communityState.posts.length > 0) {
+    renderCommunityPosts();
+    refreshCommunityThreadModal();
+  }
 }
 
 function setPasswordFieldsVisible(visible) {
@@ -1918,8 +2692,10 @@ function bindCustomerAccountUi() {
 }
 
 function startCatalog() {
+  renderCategoryNav();
   bindCustomerAccountUi();
   bindCatalogUi();
+  bindServiceFilters();
   bindCommunityUi();
   loadNewArrivalItems();
   if (window.location.pathname === "/community") {

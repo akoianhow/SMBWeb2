@@ -1081,6 +1081,7 @@ body.is-catalog-mode .product-section {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 24px 22px;
+  overflow: visible;
 }
 
 .product-card {
@@ -1092,6 +1093,23 @@ body.is-catalog-mode .product-section {
   background: var(--white);
   border: 1px solid #e7e7e7;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  overflow: visible;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+
+.product-card.has-image-gallery {
+  cursor: pointer;
+}
+
+.product-card.has-image-gallery:hover,
+.product-card.has-image-gallery:focus-within,
+.product-card.has-image-gallery.is-gallery-active {
+  z-index: 20;
+}
+
+.product-card.has-image-gallery:focus-visible {
+  outline: 3px solid rgba(223, 32, 39, 0.42);
+  outline-offset: 3px;
 }
 
 .badge {
@@ -1279,6 +1297,67 @@ body.is-catalog-mode .product-section {
   object-position: center;
   position: absolute;
   width: calc(100% - 24px);
+}
+
+.product-card.has-image-gallery .product-photo-primary {
+  transition: opacity 180ms ease, filter 180ms ease;
+}
+
+.product-card.has-image-gallery.is-gallery-active .product-photo-primary {
+  filter: saturate(0.82);
+  opacity: 0.25;
+}
+
+.product-image-gallery-stack {
+  position: absolute;
+  top: 14px;
+  left: 8px;
+  right: 8px;
+  height: 292px;
+  pointer-events: none;
+  z-index: 8;
+}
+
+.product-image-gallery-frame {
+  position: absolute;
+  top: 0;
+  left: 8%;
+  display: block;
+  width: 84%;
+  height: 268px;
+  padding: 9px;
+  object-fit: contain;
+  object-position: center;
+  background: #ffffff;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transform: translate(var(--gallery-x, 0), var(--gallery-y, 0)) rotate(var(--gallery-rotate, 0deg)) scale(0.88);
+  transform-origin: center;
+  transition:
+    opacity 160ms ease,
+    transform 240ms ease,
+    filter 240ms ease;
+  z-index: var(--gallery-z, 1);
+}
+
+.product-card.is-gallery-active .product-image-gallery-frame {
+  opacity: 0.92;
+  transform: translate(var(--gallery-x, 0), var(--gallery-y, 0)) rotate(var(--gallery-rotate, 0deg)) scale(0.98);
+}
+
+.product-card.is-gallery-active .product-image-gallery-frame.is-front {
+  filter: saturate(1.04);
+  opacity: 1;
+  transform: translate(var(--gallery-x, 0), var(--gallery-y, 0)) rotate(var(--gallery-rotate, 0deg)) scale(1.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card,
+  .product-card.has-image-gallery .product-photo-primary,
+  .product-image-gallery-frame {
+    transition: none;
+  }
 }
 
 .product-card-state {

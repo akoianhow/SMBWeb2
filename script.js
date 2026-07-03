@@ -23,6 +23,9 @@ const state = {
   sort: "price-asc"
 };
 
+const productImageGalleryState = new WeakMap();
+const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+
 const communityState = {
   categories: [],
   config: null,
@@ -133,6 +136,167 @@ function normalizeImageUrl(mainImageUrl) {
   return `${getApiBaseUrl()}/${mainImageUrl}`;
 }
 
+function getProductImageCandidateUrl(image) {
+  if (!image) {
+    return "";
+  }
+
+  if (typeof image === "string") {
+    return image;
+  }
+
+  return image.url
+    || image.imageUrl
+    || image.photoUrl
+    || image.thumbnailUrl
+    || image.fileUrl
+    || image.path
+    || "";
+}
+
+function appendProductImageCandidate(urls, seen, image) {
+  const imageUrl = normalizeImageUrl(getProductImageCandidateUrl(image));
+  if (!imageUrl || seen.has(imageUrl)) {
+    return;
+  }
+
+  seen.add(imageUrl);
+  urls.push(imageUrl);
+}
+
+function getProductImageUrls(item) {
+  const urls = [];
+  const seen = new Set();
+
+  [
+    item.mainImageUrl,
+    item.imageUrl,
+    item.photoUrl,
+    item.thumbnailUrl
+  ].forEach((image) => appendProductImageCandidate(urls, seen, image));
+
+  [
+    item.imageUrls,
+    item.images,
+    item.photos,
+    item.photoUrls,
+    item.additionalImageUrls,
+    item.additionalImages,
+    item.galleryImages,
+    item.webImages,
+    item.productImages,
+    item.media
+  ].forEach((collection) => {
+    if (!Array.isArray(collection)) {
+      return;
+    }
+
+    collection.forEach((image) => appendProductImageCandidate(urls, seen, image));
+  });
+
+  return urls;
+}
+
+function getProductGalleryCardLayout(distance, isFront) {
+  if (isFront) {
+    return { x: 38, y: 10, rotation: 10 };
+  }
+
+  const layouts = [
+    { x: 0, y: 0, rotation: -4 },
+    { x: -44, y: 18, rotation: -16 },
+    { x: 18, y: 14, rotation: 4 },
+    { x: -20, y: 24, rotation: -9 }
+  ];
+
+  return layouts[(distance - 1) % layouts.length];
+}
+
+function showProductGalleryCard(card, frontIndex) {
+  const frames = card.querySelectorAll("[data-product-gallery-frame]");
+  frames.forEach((frame, index) => {
+    const distance = (index - frontIndex + frames.length) % frames.length;
+    const isFront = index === frontIndex;
+    const layout = getProductGalleryCardLayout(distance, isFront);
+    frame.classList.toggle("is-front", isFront);
+    frame.style.setProperty("--gallery-z", String(frames.length - distance + (isFront ? frames.length : 0)));
+    frame.style.setProperty("--gallery-x", `${layout.x}px`);
+    frame.style.setProperty("--gallery-y", `${layout.y}px`);
+    frame.style.setProperty("--gallery-rotate", `${layout.rotation}deg`);
+  });
+}
+
+function stopProductImageGallery(card) {
+  const gallery = productImageGalleryState.get(card);
+  if (gallery?.timerId) {
+    window.clearInterval(gallery.timerId);
+  }
+
+  productImageGalleryState.delete(card);
+  card.classList.remove("is-gallery-active");
+  showProductGalleryCard(card, 0);
+}
+
+function startProductImageGallery(card) {
+  if (productImageGalleryState.has(card)) {
+    return;
+  }
+
+  const frames = card.querySelectorAll("[data-product-gallery-frame]");
+  if (frames.length === 0) {
+    return;
+  }
+
+  let frontIndex = 0;
+  const gallery = {
+    timerId: null
+  };
+
+  productImageGalleryState.set(card, gallery);
+  card.classList.add("is-gallery-active");
+  showProductGalleryCard(card, frontIndex);
+
+  if (prefersReducedMotion?.matches || frames.length === 1) {
+    return;
+  }
+
+  gallery.timerId = window.setInterval(() => {
+    frontIndex = (frontIndex + 1) % frames.length;
+    showProductGalleryCard(card, frontIndex);
+  }, 900);
+}
+
+function bindProductImageGallery(card) {
+  card.addEventListener("pointerenter", () => startProductImageGallery(card));
+  card.addEventListener("pointerleave", () => stopProductImageGallery(card));
+  card.addEventListener("focusin", () => startProductImageGallery(card));
+  card.addEventListener("focusout", () => stopProductImageGallery(card));
+}
+
+function renderProductImageGallery(imageUrls) {
+  const gallery = document.createElement("div");
+  gallery.className = "product-image-gallery-stack";
+  gallery.setAttribute("aria-hidden", "true");
+
+  imageUrls.forEach((imageUrl, index) => {
+    const layout = getProductGalleryCardLayout(index, index === 0);
+    const image = document.createElement("img");
+    image.alt = "";
+    image.className = "product-image-gallery-frame";
+    image.dataset.productGalleryFrame = "";
+    image.decoding = "async";
+    image.loading = "lazy";
+    image.src = imageUrl;
+    image.style.setProperty("--gallery-z", String(imageUrls.length - index));
+    image.style.setProperty("--gallery-x", `${layout.x}px`);
+    image.style.setProperty("--gallery-y", `${layout.y}px`);
+    image.style.setProperty("--gallery-rotate", `${layout.rotation}deg`);
+    gallery.append(image);
+  });
+
+  return gallery;
+}
+
 function normalizeApiUrl(url) {
   if (!url) {
     return "";
@@ -213,7 +377,7 @@ function renderPrice(item) {
 
 function renderProductPhoto(item) {
   const photo = document.createElement("div");
-  const imageUrl = normalizeImageUrl(item.mainImageUrl || item.imageUrl || item.photoUrl);
+  const imageUrl = getProductImageUrls(item)[0];
 
   photo.className = "product-photo product-api-photo";
   photo.dataset.initial = (item.itemDescription || "SMB").trim().slice(0, 1).toUpperCase();
@@ -221,6 +385,7 @@ function renderProductPhoto(item) {
   if (imageUrl) {
     photo.classList.add("has-image");
     const image = document.createElement("img");
+    image.className = "product-photo-primary";
     image.alt = item.itemDescription || "Web catalog item";
     image.loading = "lazy";
     image.src = imageUrl;
@@ -242,6 +407,7 @@ function getAvailabilityLabel(item) {
 function renderWebItemCard(item) {
   const card = document.createElement("article");
   card.className = "product-card";
+  const imageUrls = getProductImageUrls(item);
 
   if (item.isNew) {
     card.append(createTextElement("span", "New", "badge"));
@@ -271,6 +437,15 @@ function renderWebItemCard(item) {
     renderPrice(item),
     action
   );
+
+  if (imageUrls.length > 1) {
+    card.classList.add("has-image-gallery");
+    card.tabIndex = 0;
+    card.setAttribute("aria-label", `${item.itemDescription || "Product"} image gallery preview`);
+    card.append(renderProductImageGallery(imageUrls));
+    showProductGalleryCard(card, 0);
+    bindProductImageGallery(card);
+  }
 
   return card;
 }

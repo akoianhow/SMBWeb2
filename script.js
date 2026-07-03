@@ -23,6 +23,18 @@ const state = {
   sort: "price-asc"
 };
 
+const communityState = {
+  categories: [],
+  config: null,
+  isLoaded: false,
+  isLoading: false,
+  photoUploads: [],
+  posts: [],
+  search: "",
+  selectedCategory: "all",
+  selectedCategorySlugs: []
+};
+
 if (year) {
   year.textContent = new Date().getFullYear();
 }
@@ -112,6 +124,18 @@ function normalizeImageUrl(mainImageUrl) {
   }
 
   return `${getApiBaseUrl()}/${mainImageUrl}`;
+}
+
+function normalizeApiUrl(url) {
+  if (!url) {
+    return "";
+  }
+
+  if (/^(https?:)?\/\//.test(url) || url.startsWith("assets/")) {
+    return url;
+  }
+
+  return url.startsWith("/") ? `${getApiBaseUrl()}${url}` : `${getApiBaseUrl()}/${url}`;
 }
 
 async function apiRequest(path, options = {}) {
@@ -360,7 +384,9 @@ function getCatalogItems() {
 }
 
 function setCatalogMode(isCatalogMode) {
+  document.body.classList.remove("is-community-mode");
   document.body.classList.toggle("is-catalog-mode", isCatalogMode);
+  document.querySelector("[data-community-view]")?.setAttribute("hidden", "");
   document.querySelector("[data-catalog-panel]").hidden = !isCatalogMode;
   document.querySelector("[data-home-products]").hidden = isCatalogMode;
   document.querySelectorAll("[data-home-section]").forEach((section) => {
@@ -370,6 +396,7 @@ function setCatalogMode(isCatalogMode) {
 
 function returnToHome() {
   setCatalogMode(false);
+  showCommunityMode(false);
   state.activeCategory = null;
   state.activeSubcategory = "All";
   updateActiveCategoryNav();
@@ -385,14 +412,23 @@ function renderCategoryNav() {
   }
 
   nav.replaceChildren();
-  state.categoryGroups.forEach((group) => {
+  [
+    { label: "Home", href: "#top", action: returnToHome },
+    { label: "Products", href: "#products", action: () => scrollHomeTarget("products") },
+    { label: "Services", href: "#services", action: () => scrollHomeTarget("services") },
+    { label: "Rides", href: "#online", action: () => scrollHomeTarget("online") },
+    { label: "Community", href: "/community", action: () => openCommunityPage(true), community: true },
+    { label: "Contact", href: "#contact", action: () => scrollHomeTarget("contact") }
+  ].forEach((item) => {
     const link = document.createElement("a");
-    link.href = "#products";
-    link.dataset.categoryNav = group.key;
-    link.textContent = group.title;
+    link.href = item.href;
+    link.textContent = item.label;
+    if (item.community) {
+      link.dataset.communityLink = "";
+    }
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      openCategoryCatalog(group.key);
+      item.action();
     });
     nav.append(link);
   });
@@ -404,6 +440,11 @@ function updateActiveCategoryNav() {
   document.querySelectorAll("[data-category-nav]").forEach((link) => {
     link.classList.toggle("active", link.dataset.categoryNav === state.activeCategory);
     link.setAttribute("aria-current", link.dataset.categoryNav === state.activeCategory ? "true" : "false");
+  });
+  document.querySelectorAll("[data-community-link]").forEach((link) => {
+    const active = document.body.classList.contains("is-community-mode");
+    link.classList.toggle("active", active);
+    link.setAttribute("aria-current", active ? "page" : "false");
   });
 }
 
@@ -499,6 +540,701 @@ async function loadNewArrivalItems() {
   } catch (error) {
     setGridState("New Arrivals Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
   }
+}
+
+function scrollHomeTarget(targetId) {
+  showCommunityMode(false);
+  showProfileMode(false);
+  setCatalogMode(false);
+  requestAnimationFrame(() => {
+    document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function showCommunityMode(show, updatePath = false) {
+  const view = document.querySelector("[data-community-view]");
+  if (view) {
+    view.hidden = !show;
+  }
+  document.body.classList.toggle("is-community-mode", show);
+  if (show) {
+    document.body.classList.remove("is-catalog-mode", "is-profile-mode");
+    document.querySelector("[data-catalog-panel]").hidden = true;
+    document.querySelector("[data-home-products]").hidden = true;
+    document.querySelectorAll("[data-home-section]").forEach((section) => {
+      section.hidden = true;
+    });
+    if (updatePath && window.location.pathname !== "/community") {
+      window.history.pushState({ view: "community" }, "", "/community");
+    }
+    updateActiveCategoryNav();
+    updateCommunityAuthState();
+    loadCommunityDiscussions();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  document.querySelectorAll("[data-home-section]").forEach((section) => {
+    section.hidden = false;
+  });
+  const homeProducts = document.querySelector("[data-home-products]");
+  if (homeProducts) {
+    homeProducts.hidden = false;
+  }
+  updateActiveCategoryNav();
+}
+
+function openCommunityPage(updatePath = true) {
+  showCommunityMode(true, updatePath);
+}
+
+function updateCommunityAuthState() {
+  const isLoggedIn = Boolean(customerState.account);
+  document.querySelector("[data-community-guest-card]")?.toggleAttribute("hidden", isLoggedIn);
+  document.querySelector("[data-community-start]")?.classList.toggle("is-disabled", !isLoggedIn);
+}
+
+function showCommunityAuthPrompt() {
+  const prompt = document.querySelector("[data-community-auth-prompt]");
+  if (prompt) {
+    prompt.hidden = false;
+  }
+}
+
+function hideCommunityAuthPrompt() {
+  const prompt = document.querySelector("[data-community-auth-prompt]");
+  if (prompt) {
+    prompt.hidden = true;
+  }
+}
+
+function requireCommunityLogin() {
+  if (customerState.account) {
+    return true;
+  }
+  showCommunityAuthPrompt();
+  return false;
+}
+
+function getCommunityMessage() {
+  return document.querySelector("[data-community-message]");
+}
+
+function setCommunityStateCard(title, detail) {
+  const posts = document.querySelector("[data-community-posts]");
+  if (!posts) {
+    return;
+  }
+  const card = document.createElement("article");
+  card.className = "community-state-card";
+  card.append(createTextElement("h3", title), createTextElement("p", detail));
+  posts.replaceChildren(card);
+}
+
+async function loadCommunityDiscussions(force = false) {
+  if (communityState.isLoading || (communityState.isLoaded && !force)) {
+    return;
+  }
+
+  communityState.isLoading = true;
+  setCommunityStateCard("Loading Community", "Checking approved SarapMagBike discussions.");
+
+  try {
+    const query = new URLSearchParams();
+    if (communityState.search) {
+      query.set("search", communityState.search);
+    }
+    if (communityState.selectedCategory !== "all") {
+      query.set("category", communityState.selectedCategory);
+    }
+    const suffix = query.toString() ? `?${query}` : "";
+    const [config, categories, posts] = await Promise.all([
+      apiRequest("/api/public/community/config"),
+      apiRequest("/api/public/community/categories"),
+      apiRequest(`/api/public/community/posts${suffix}`)
+    ]);
+    communityState.config = config;
+    communityState.categories = categories;
+    communityState.posts = sortCommunityPosts(posts);
+    communityState.isLoaded = true;
+    renderCommunityCategories();
+    renderCommunityPosts();
+    renderCommunityConfig();
+  } catch (error) {
+    setCommunityStateCard("Community Unavailable", "SMBSystem public community API is not reachable. Try again after the API is running.");
+  } finally {
+    communityState.isLoading = false;
+  }
+}
+
+function renderCommunityConfig() {
+  const warning = document.querySelector("[data-community-warning]");
+  if (warning && communityState.config?.privacyWarning) {
+    warning.textContent = communityState.config.privacyWarning;
+  }
+}
+
+function renderCommunityCategories() {
+  const select = document.querySelector("[data-community-category]");
+  if (!select) {
+    return;
+  }
+
+  const currentValue = select.value || "all";
+  select.replaceChildren(new Option("All categories", "all"));
+  communityState.categories.forEach((category) => {
+    select.append(new Option(category.name, category.slug));
+  });
+  select.value = communityState.categories.some((category) => category.slug === currentValue) ? currentValue : "all";
+  communityState.selectedCategorySlugs = communityState.selectedCategorySlugs.filter((slug) =>
+    communityState.categories.some((category) => category.slug === slug)
+  );
+  renderCommunityComposerCategories();
+}
+
+function renderCommunityComposerCategories() {
+  const container = document.querySelector("[data-community-composer-categories]");
+  if (!container) {
+    return;
+  }
+
+  container.replaceChildren();
+  communityState.categories.forEach((category) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.textContent = category.name;
+    chip.dataset.categorySlug = category.slug;
+    chip.className = communityState.selectedCategorySlugs.includes(category.slug) ? "active" : "";
+    chip.setAttribute("aria-pressed", String(communityState.selectedCategorySlugs.includes(category.slug)));
+    chip.addEventListener("click", () => toggleCommunityComposerCategory(category.slug));
+    container.append(chip);
+  });
+}
+
+function toggleCommunityComposerCategory(slug) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+
+  if (communityState.selectedCategorySlugs.includes(slug)) {
+    communityState.selectedCategorySlugs = communityState.selectedCategorySlugs.filter((item) => item !== slug);
+  } else {
+    communityState.selectedCategorySlugs = [...communityState.selectedCategorySlugs, slug];
+  }
+  renderCommunityComposerCategories();
+  updateCommunityComposerState();
+}
+
+function renderCommunityPosts() {
+  const posts = document.querySelector("[data-community-posts]");
+  if (!posts) {
+    return;
+  }
+
+  communityState.posts = sortCommunityPosts(communityState.posts);
+  posts.replaceChildren();
+  if (communityState.posts.length === 0) {
+    setCommunityStateCard("No Discussions Yet", "Start with a product question, service concern, bike check, or ride invite.");
+    return;
+  }
+
+  communityState.posts.forEach((post) => posts.append(renderCommunityPostCard(post)));
+}
+
+function renderCommunityPostCard(post) {
+  const card = document.createElement("article");
+  card.className = "community-post-card";
+  card.dataset.communityPostId = post.id;
+
+  const meta = document.createElement("div");
+  meta.className = "community-post-meta";
+  const author = post.authorName || post.author?.displayName || "SarapMagBike rider";
+  const categories = Array.isArray(post.categories) && post.categories.length > 0
+    ? post.categories
+    : [{ name: post.categoryName || post.category?.name || "Discussion", slug: post.categorySlug || "discussion" }];
+  const categoryLabel = categories.map((category) => category.name).join(" / ");
+  meta.append(
+    createTextElement("span", categoryLabel),
+    createTextElement("span", author),
+    createTextElement("span", formatCommunityTime(post.createdAt))
+  );
+  if (post.status === "resolved") {
+    meta.append(createTextElement("span", "Resolved"));
+  }
+
+  const body = createTextElement("p", post.body, "community-post-body");
+  card.append(meta, body);
+
+  if (Array.isArray(post.media) && post.media.length > 0) {
+    const media = document.createElement("div");
+    media.className = "community-media-grid";
+    post.media.forEach((photo) => {
+      const image = document.createElement("img");
+      image.alt = photo.fileName || "Discussion photo";
+      image.loading = "lazy";
+      image.src = normalizeApiUrl(photo.url);
+      media.append(image);
+    });
+    card.append(media);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "community-post-actions";
+  actions.append(
+    createCommunityActionButton(`Like (${post.likeCount || post.reactionCount || 0})`, () => toggleCommunityReaction(post.id)),
+    createCommunityActionButton("Reply", () => focusCommunityReply(card)),
+    createCommunityActionButton("Report", () => reportCommunityPost(post.id))
+  );
+  card.append(actions);
+
+  const comments = document.createElement("div");
+  comments.className = "community-comments";
+  (post.comments || []).forEach((comment) => comments.append(renderCommunityComment(comment)));
+  card.append(comments);
+
+  const replyForm = document.createElement("form");
+  replyForm.className = "community-reply-form";
+  replyForm.innerHTML = `
+    <input name="body" maxlength="1000" placeholder="Reply to this discussion">
+    <button type="submit">Reply</button>
+  `;
+  replyForm.addEventListener("submit", (event) => submitCommunityComment(event, post.id));
+  card.append(replyForm);
+
+  return card;
+}
+
+function getCommunityActivityTime(post) {
+  return Date.parse(post?.lastActivityAt || post?.createdAt || "") || 0;
+}
+
+function sortCommunityPosts(posts) {
+  return [...(posts || [])].sort((first, second) => {
+    const pinnedDelta = Number(Boolean(second?.isPinned)) - Number(Boolean(first?.isPinned));
+    if (pinnedDelta !== 0) {
+      return pinnedDelta;
+    }
+
+    const activityDelta = getCommunityActivityTime(second) - getCommunityActivityTime(first);
+    if (activityDelta !== 0) {
+      return activityDelta;
+    }
+
+    return (Date.parse(second?.createdAt || "") || 0) - (Date.parse(first?.createdAt || "") || 0);
+  });
+}
+
+function communityPostMatchesCurrentFilter(post) {
+  if (!post) {
+    return false;
+  }
+
+  const selectedCategory = communityState.selectedCategory || "all";
+  if (selectedCategory !== "all") {
+    const categories = Array.isArray(post.categories) ? post.categories : [];
+    const hasSelectedCategory = categories.some((category) => category.slug === selectedCategory) ||
+      post.categorySlug === selectedCategory;
+    if (!hasSelectedCategory) {
+      return false;
+    }
+  }
+
+  const search = (communityState.search || "").trim().toLowerCase();
+  if (!search) {
+    return true;
+  }
+
+  const categoryText = (Array.isArray(post.categories) ? post.categories : [])
+    .map((category) => category.name)
+    .join(" ");
+  return `${post.body || ""} ${categoryText}`.toLowerCase().includes(search);
+}
+
+function upsertCommunityPost(updatedPost) {
+  if (!updatedPost || !communityPostMatchesCurrentFilter(updatedPost)) {
+    return;
+  }
+
+  const posts = document.querySelector("[data-community-posts]");
+  if (!posts) {
+    return;
+  }
+
+  posts.querySelectorAll(".community-state-card").forEach((card) => card.remove());
+
+  const existingIndex = communityState.posts.findIndex((post) => post.id === updatedPost.id);
+  if (existingIndex >= 0) {
+    communityState.posts[existingIndex] = updatedPost;
+  } else {
+    communityState.posts.push(updatedPost);
+  }
+  communityState.posts = sortCommunityPosts(communityState.posts);
+
+  const nextCard = renderCommunityPostCard(updatedPost);
+  const currentCard = posts.querySelector(`[data-community-post-id="${CSS.escape(updatedPost.id)}"]`);
+  if (currentCard) {
+    currentCard.replaceWith(nextCard);
+  } else {
+    posts.append(nextCard);
+  }
+
+  communityState.posts.forEach((post) => {
+    const card = posts.querySelector(`[data-community-post-id="${CSS.escape(post.id)}"]`);
+    if (card) {
+      posts.append(card);
+    }
+  });
+}
+
+function renderCommunityComment(comment) {
+  const item = document.createElement("article");
+  item.className = `community-comment${comment.isStaffReply ? " is-staff" : ""}`;
+  const authorName = comment.authorName || comment.author?.displayName || "SarapMagBike rider";
+  const avatar = renderCommunityAvatar(authorName, comment.authorAvatarUrl);
+  const content = document.createElement("div");
+  content.className = "community-comment-content";
+  const heading = document.createElement("div");
+  heading.className = "community-comment-heading";
+  heading.append(
+    createTextElement("strong", authorName),
+    createTextElement("span", comment.isStaffAnswer ? "Staff answer" : formatCommunityTime(comment.createdAt))
+  );
+  content.append(heading, createTextElement("p", comment.body));
+  item.append(avatar, content);
+  return item;
+}
+
+function renderCommunityAvatar(name, avatarUrl) {
+  const avatar = document.createElement("div");
+  avatar.className = "community-comment-avatar";
+  const normalizedUrl = normalizeApiUrl(avatarUrl);
+  if (normalizedUrl) {
+    const image = document.createElement("img");
+    image.src = normalizedUrl;
+    image.alt = `${name} avatar`;
+    avatar.append(image);
+    return avatar;
+  }
+
+  avatar.textContent = getCommunityInitials(name);
+  return avatar;
+}
+
+function getCommunityInitials(name) {
+  return String(name || "SMB")
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.slice(0, 1).toUpperCase())
+    .join("") || "SMB";
+}
+
+function createCommunityActionButton(label, onClick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.addEventListener("click", onClick);
+  return button;
+}
+
+function focusCommunityReply(card) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+  const input = card.querySelector(".community-reply-form input");
+  if (input) {
+    input.focus();
+  }
+}
+
+async function submitCommunityPost(event) {
+  event.preventDefault();
+  if (!requireCommunityLogin()) {
+    return;
+  }
+
+  const form = event.currentTarget;
+  const message = getCommunityMessage();
+  setMessage(message, "Posting discussion...");
+
+  try {
+    if (communityState.selectedCategorySlugs.length === 0) {
+      throw new Error("Select at least one discussion category.");
+    }
+    const payload = {
+      body: form.elements.body.value.trim(),
+      categorySlugs: communityState.selectedCategorySlugs,
+      photos: communityState.photoUploads.map(({ base64, contentType, fileName }) => ({ base64, contentType, fileName }))
+    };
+    const created = await apiRequest("/api/public/community/posts", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+    form.reset();
+    resetCommunityComposerState();
+    setMessage(message, created.status === "pending_review"
+      ? "Discussion sent for staff review."
+      : "Discussion posted.", "success");
+    if (created.status !== "pending_review" && communityPostMatchesCurrentFilter(created)) {
+      upsertCommunityPost(created);
+    }
+  } catch (error) {
+    setMessage(message, error.message || "Unable to post discussion.", "error");
+  }
+}
+
+async function submitCommunityComment(event, postId) {
+  event.preventDefault();
+  if (!requireCommunityLogin()) {
+    return;
+  }
+
+  const form = event.currentTarget;
+  const input = form.elements.body;
+  const body = input.value.trim();
+  if (!body) {
+    return;
+  }
+
+  try {
+    const updatedPost = await apiRequest(`/api/public/community/posts/${postId}/comments`, {
+      method: "POST",
+      body: JSON.stringify({ body })
+    });
+    input.value = "";
+    upsertCommunityPost(updatedPost);
+  } catch (error) {
+    alert(error.message || "Unable to reply.");
+  }
+}
+
+async function toggleCommunityReaction(postId) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+  try {
+    await apiRequest(`/api/public/community/posts/${postId}/reaction`, {
+      method: "POST",
+      body: JSON.stringify({ reactionType: "like" })
+    });
+    communityState.isLoaded = false;
+    await loadCommunityDiscussions(true);
+  } catch (error) {
+    alert(error.message || "Unable to update reaction.");
+  }
+}
+
+async function reportCommunityPost(postId) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+  const reason = window.prompt("Why are you reporting this discussion?");
+  if (!reason || !reason.trim()) {
+    return;
+  }
+  try {
+    await apiRequest("/api/public/community/reports", {
+      method: "POST",
+      body: JSON.stringify({ postId, reason: reason.trim() })
+    });
+    alert("Report sent to SarapMagBike staff.");
+  } catch (error) {
+    alert(error.message || "Unable to send report.");
+  }
+}
+
+async function readCommunityPhotos(fileList) {
+  const files = Array.from(fileList || []);
+  const config = communityState.config || {};
+  const maxFiles = config.maxPhotosPerPost || 3;
+  const maxSize = config.maxPhotoBytes || config.maxPhotoSizeBytes || 2_000_000;
+  const allowedTypes = config.allowedImageTypes || config.allowedImageContentTypes || ["image/jpeg", "image/png", "image/webp"];
+
+  if (files.length > maxFiles) {
+    throw new Error(`Upload up to ${maxFiles} photos only.`);
+  }
+
+  return Promise.all(files.map(async (file) => {
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error("Photos must be JPG, PNG, or WebP.");
+    }
+    if (file.size > maxSize) {
+      throw new Error("Each photo must be 2 MB or smaller.");
+    }
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("Photo could not be read."));
+      reader.readAsDataURL(file);
+    });
+    const [, base64 = ""] = dataUrl.split(",");
+    return {
+      base64,
+      contentType: file.type,
+      fileName: file.name,
+      previewUrl: dataUrl
+    };
+  }));
+}
+
+async function handleCommunityPhotoChange(event) {
+  const input = event.currentTarget;
+  const message = getCommunityMessage();
+  if (!requireCommunityLogin()) {
+    input.value = "";
+    return;
+  }
+
+  try {
+    communityState.photoUploads = await readCommunityPhotos(input.files);
+    renderCommunityPhotoPreviews();
+    updateCommunityComposerState();
+    setMessage(message, "");
+  } catch (error) {
+    communityState.photoUploads = [];
+    input.value = "";
+    renderCommunityPhotoPreviews();
+    updateCommunityComposerState();
+    setMessage(message, error.message || "Unable to read photos.", "error");
+  }
+}
+
+function renderCommunityPhotoPreviews() {
+  const container = document.querySelector("[data-community-photo-previews]");
+  if (!container) {
+    return;
+  }
+
+  container.replaceChildren();
+  communityState.photoUploads.forEach((photo, index) => {
+    const item = document.createElement("div");
+    item.className = "community-photo-preview";
+    const image = document.createElement("img");
+    image.src = photo.previewUrl;
+    image.alt = photo.fileName || `Selected photo ${index + 1}`;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.textContent = "Remove";
+    remove.addEventListener("click", () => removeCommunityPhoto(index));
+    item.append(image, remove);
+    container.append(item);
+  });
+}
+
+function removeCommunityPhoto(index) {
+  communityState.photoUploads = communityState.photoUploads.filter((_, itemIndex) => itemIndex !== index);
+  const input = document.querySelector("[data-community-composer] input[type='file']");
+  if (input) {
+    input.value = "";
+  }
+  renderCommunityPhotoPreviews();
+  updateCommunityComposerState();
+}
+
+function resetCommunityComposerState() {
+  communityState.photoUploads = [];
+  communityState.selectedCategorySlugs = [];
+  renderCommunityPhotoPreviews();
+  renderCommunityComposerCategories();
+  const composer = document.querySelector("[data-community-composer]");
+  composer?.classList.remove("is-composing", "has-draft");
+}
+
+function updateCommunityComposerState() {
+  const composer = document.querySelector("[data-community-composer]");
+  const textarea = composer?.querySelector("textarea");
+  if (!composer || !textarea) {
+    return;
+  }
+
+  const hasDraft = Boolean(textarea.value.trim()) ||
+    communityState.photoUploads.length > 0 ||
+    communityState.selectedCategorySlugs.length > 0;
+  composer.classList.toggle("has-draft", hasDraft);
+}
+
+function setCommunityComposerActive(active) {
+  const composer = document.querySelector("[data-community-composer]");
+  if (!composer) {
+    return;
+  }
+  composer.classList.toggle("is-composing", active);
+}
+
+function formatCommunityTime(value) {
+  if (!value) {
+    return "";
+  }
+  return new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
+}
+
+function bindCommunityUi() {
+  document.querySelector("[data-community-composer]")?.addEventListener("submit", submitCommunityPost);
+  document.querySelector("[data-community-start]")?.addEventListener("click", () => {
+    if (!requireCommunityLogin()) {
+      return;
+    }
+    document.querySelector("[data-community-composer] textarea")?.focus();
+  });
+  document.querySelector("[data-community-login]")?.addEventListener("click", () => {
+    document.querySelector("[data-customer-login-form] input[name='username']")?.focus();
+  });
+  document.querySelector("[data-community-register]")?.addEventListener("click", openRegisterForm);
+  document.querySelector("[data-community-prompt-close]")?.addEventListener("click", hideCommunityAuthPrompt);
+  document.querySelector("[data-community-prompt-login]")?.addEventListener("click", () => {
+    hideCommunityAuthPrompt();
+    document.querySelector("[data-customer-login-form] input[name='username']")?.focus();
+  });
+  document.querySelector("[data-community-prompt-register]")?.addEventListener("click", () => {
+    hideCommunityAuthPrompt();
+    openRegisterForm();
+  });
+  document.querySelector("[data-community-composer] textarea")?.addEventListener("focus", () => {
+    requireCommunityLogin();
+    setCommunityComposerActive(true);
+  });
+  document.querySelector("[data-community-composer] textarea")?.addEventListener("input", updateCommunityComposerState);
+  document.querySelector("[data-community-composer]")?.addEventListener("focusout", (event) => {
+    const form = event.currentTarget;
+    window.setTimeout(() => {
+      if (!form.contains(document.activeElement)) {
+        setCommunityComposerActive(false);
+        updateCommunityComposerState();
+      }
+    }, 0);
+  });
+  document.querySelector("[data-community-composer] input[type='file']")?.addEventListener("click", (event) => {
+    if (!customerState.account) {
+      event.preventDefault();
+      showCommunityAuthPrompt();
+    }
+  });
+  document.querySelector("[data-community-composer] input[type='file']")?.addEventListener("change", handleCommunityPhotoChange);
+  document.querySelector("[data-community-search]")?.addEventListener("input", (event) => {
+    communityState.search = event.target.value.trim();
+    window.clearTimeout(communityState.searchTimer);
+    communityState.searchTimer = window.setTimeout(() => loadCommunityDiscussions(true), 300);
+  });
+  document.querySelector("[data-community-category]")?.addEventListener("change", (event) => {
+    communityState.selectedCategory = event.target.value;
+    loadCommunityDiscussions(true);
+  });
+  document.querySelectorAll("[data-community-link]").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      openCommunityPage(true);
+    });
+  });
+  window.addEventListener("popstate", () => {
+    if (window.location.pathname === "/community") {
+      openCommunityPage(false);
+    } else {
+      returnToHome();
+    }
+  });
 }
 
 function bindCatalogUi() {
@@ -616,6 +1352,13 @@ function setMessage(element, message, type = "") {
 
 function showProfileMode(show) {
   document.body.classList.toggle("is-profile-mode", show);
+  if (show) {
+    document.body.classList.remove("is-community-mode", "is-catalog-mode");
+    const communityView = document.querySelector("[data-community-view]");
+    if (communityView) {
+      communityView.hidden = true;
+    }
+  }
   const profileView = document.querySelector("[data-profile-view]");
   if (profileView) {
     profileView.hidden = !show;
@@ -657,6 +1400,7 @@ function updateCustomerHeader() {
       ? customerState.profile.riderTypes.join(", ")
       : "Not set";
   }
+  updateCommunityAuthState();
 }
 
 function setPasswordFieldsVisible(visible) {
@@ -881,6 +1625,7 @@ async function submitProfile(event) {
 async function loginCustomer(event) {
   event.preventDefault();
   const form = event.currentTarget;
+  const wasInCommunity = document.body.classList.contains("is-community-mode");
   try {
     customerState.account = await apiRequest("/api/public/customer-account/login", {
       method: "POST",
@@ -892,7 +1637,11 @@ async function loginCustomer(event) {
     });
     form.reset();
     updateCustomerHeader();
-    returnToHome();
+    if (wasInCommunity) {
+      openCommunityPage(false);
+    } else {
+      returnToHome();
+    }
   } catch (error) {
     alert("Unable to log in. Check your username and password.");
   }
@@ -1029,7 +1778,11 @@ function bindCustomerAccountUi() {
 function startCatalog() {
   bindCustomerAccountUi();
   bindCatalogUi();
+  bindCommunityUi();
   loadNewArrivalItems();
+  if (window.location.pathname === "/community") {
+    openCommunityPage(false);
+  }
 }
 
 if (document.readyState === "loading") {

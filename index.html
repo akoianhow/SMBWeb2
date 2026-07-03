@@ -85,7 +85,7 @@
       <div class="lock-box" aria-hidden="true">Lock</div>
     </div>
 
-    <nav class="wrap main-nav" aria-label="Product categories" data-category-nav-list>
+    <nav class="wrap main-nav" aria-label="Website navigation" data-category-nav-list>
     </nav>
 
     <main id="top" class="wrap content">
@@ -210,6 +210,7 @@
           <h1>Bikes, Parts & Bike Service</h1>
           <span>Message us to confirm stock, prices, service queue, and Shopee/Lazada orders.</span>
           <a href="#contact">Check Stock</a>
+          <a href="/community" data-community-link>Community</a>
         </div>
         <div class="slide-pages" aria-hidden="true">
           <span class="active">1</span>
@@ -345,7 +346,75 @@
           <a href="#contact">Contact the shop</a>
         </article>
       </section>
+
+      <section id="community" class="community-section" data-community-view hidden>
+        <div class="community-heading">
+          <div>
+            <p>Community Discussions</p>
+            <h1>Ask bike questions, share ride updates, and get SarapMagBike staff answers.</h1>
+          </div>
+          <button type="button" data-community-start>Start Discussion</button>
+        </div>
+
+        <div class="community-layout">
+          <aside class="community-sidebar">
+            <div class="community-login-card" data-community-guest-card>
+              <h2>Join the discussion</h2>
+              <p>Guests can read approved discussions. Log in or create an account to post, reply, like, report, or upload photos.</p>
+              <button type="button" data-community-login>Log in</button>
+              <button type="button" data-community-register>Create account</button>
+            </div>
+            <div class="community-filters">
+              <label>
+                Search
+                <input type="search" data-community-search placeholder="Bike questions, rides, services">
+              </label>
+              <label>
+                Category
+                <select data-community-category>
+                  <option value="all">All categories</option>
+                </select>
+              </label>
+            </div>
+          </aside>
+
+          <div class="community-feed">
+            <form class="community-composer" data-community-composer>
+              <textarea name="body" maxlength="2000" placeholder="What’s your bike question?"></textarea>
+              <p data-community-warning>Do not post order numbers, payment details, phone numbers, addresses, or private service concerns.</p>
+              <div class="community-composer-categories" data-community-composer-categories aria-label="Discussion categories"></div>
+              <div class="community-photo-previews" data-community-photo-previews aria-label="Selected photos"></div>
+              <div class="community-composer-actions">
+                <label>
+                  Photo
+                  <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                </label>
+                <button type="submit">Post</button>
+              </div>
+              <p class="community-message" data-community-message role="status"></p>
+            </form>
+            <div class="community-posts" data-community-posts>
+              <article class="community-state-card">
+                <h3>Loading Community</h3>
+                <p>Checking approved SarapMagBike discussions.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <div class="community-auth-prompt" data-community-auth-prompt hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-auth-title">
+        <h2 id="community-auth-title">Please log in or create an account to join the discussion.</h2>
+        <p>Guests can read approved posts, but an account is required to start discussions, reply, like, report, or upload photos.</p>
+        <div>
+          <button type="button" data-community-prompt-login>Log in</button>
+          <button type="button" data-community-prompt-register>Create account</button>
+          <button type="button" data-community-prompt-close>Close</button>
+        </div>
+      </div>
+    </div>
 
     <footer id="footer" class="footer">
       <div class="wrap footer-main">

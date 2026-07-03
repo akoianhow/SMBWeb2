@@ -1434,6 +1434,8 @@ body.is-catalog-mode .product-section {
 .community-composer button,
 .community-post-actions button,
 .community-reply-form button,
+.community-comment-actions button,
+.community-comment-reply-form button,
 .community-auth-prompt button {
   min-height: 36px;
   padding: 0 14px;
@@ -1653,6 +1655,7 @@ body.is-catalog-mode .product-section {
 
 .community-post-meta,
 .community-post-actions,
+.community-comment-actions,
 .community-comment-heading {
   display: flex;
   align-items: center;
@@ -1695,12 +1698,14 @@ body.is-catalog-mode .product-section {
   border: 1px solid #dddddd;
 }
 
-.community-post-actions {
+.community-post-actions,
+.community-comment-actions {
   gap: 14px;
   margin-top: 8px;
 }
 
-.community-post-actions button {
+.community-post-actions button,
+.community-comment-actions button {
   min-height: auto;
   padding: 0;
   color: #4b4b4b;
@@ -1712,7 +1717,9 @@ body.is-catalog-mode .product-section {
 }
 
 .community-post-actions button:hover,
-.community-post-actions button:focus-visible {
+.community-post-actions button:focus-visible,
+.community-comment-actions button:hover,
+.community-comment-actions button:focus-visible {
   color: var(--red);
   text-decoration: underline;
 }
@@ -1730,6 +1737,10 @@ body.is-catalog-mode .product-section {
   padding: 10px;
   border-left: 4px solid #d8d8d8;
   background: #f7f7f7;
+}
+
+.community-comment-content {
+  min-width: 0;
 }
 
 .community-comment.is-staff {
@@ -1765,11 +1776,27 @@ body.is-catalog-mode .product-section {
   color: #333333;
 }
 
-.community-reply-form {
+.community-comment-replies {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.community-comment-replies .community-comment {
+  padding: 8px;
+  background: #ffffff;
+}
+
+.community-reply-form,
+.community-comment-reply-form {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 8px;
   margin-top: 12px;
+}
+
+.community-comment-reply-form[hidden] {
+  display: none;
 }
 
 .community-auth-prompt {

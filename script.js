@@ -792,7 +792,9 @@ function renderCommunityPostCard(post) {
 
   const comments = document.createElement("div");
   comments.className = "community-comments";
-  (post.comments || []).forEach((comment) => comments.append(renderCommunityComment(comment)));
+  renderCommunityCommentTree(post).forEach((commentNode) => {
+    comments.append(renderCommunityComment(commentNode.comment, post.id, commentNode.children));
+  });
   card.append(comments);
 
   const replyForm = document.createElement("form");
@@ -805,6 +807,24 @@ function renderCommunityPostCard(post) {
   card.append(replyForm);
 
   return card;
+}
+
+function renderCommunityCommentTree(post) {
+  const comments = Array.isArray(post.comments) ? post.comments : [];
+  const nodes = new Map(comments.map((comment) => [comment.id, { comment, children: [] }]));
+  const roots = [];
+
+  comments.forEach((comment) => {
+    const node = nodes.get(comment.id);
+    const parentNode = comment.parentCommentId ? nodes.get(comment.parentCommentId) : null;
+    if (parentNode) {
+      parentNode.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
 }
 
 function getCommunityActivityTime(post) {
@@ -899,9 +919,10 @@ function upsertCommunityPost(updatedPost, options = {}) {
   }
 }
 
-function renderCommunityComment(comment) {
+function renderCommunityComment(comment, postId, childNodes = []) {
   const item = document.createElement("article");
   item.className = `community-comment${comment.isStaffReply ? " is-staff" : ""}`;
+  item.dataset.communityCommentId = comment.id;
   const authorName = comment.authorName || comment.author?.displayName || "SarapMagBike rider";
   const avatar = renderCommunityAvatar(authorName, comment.authorAvatarUrl);
   const content = document.createElement("div");
@@ -913,6 +934,33 @@ function renderCommunityComment(comment) {
     createTextElement("span", comment.isStaffAnswer ? "Staff answer" : formatCommunityTime(comment.createdAt))
   );
   content.append(heading, createTextElement("p", comment.body));
+  const actions = document.createElement("div");
+  actions.className = "community-comment-actions";
+  actions.append(
+    createCommunityActionButton(getCommunityCommentLikeLabel(comment), () => toggleCommunityCommentReaction(comment.id), {
+      className: "community-comment-like-action",
+      pressed: Boolean(comment.likedByMe)
+    }),
+    createCommunityActionButton("Reply", () => showCommunityCommentReplyForm(item))
+  );
+  content.append(actions);
+  if (childNodes.length > 0) {
+    const children = document.createElement("div");
+    children.className = "community-comment-replies";
+    childNodes.forEach((childNode) => {
+      children.append(renderCommunityComment(childNode.comment, postId, childNode.children));
+    });
+    content.append(children);
+  }
+  const replyForm = document.createElement("form");
+  replyForm.className = "community-comment-reply-form";
+  replyForm.hidden = true;
+  replyForm.innerHTML = `
+    <input name="body" maxlength="1000" placeholder="Reply to this comment">
+    <button type="submit">Reply</button>
+  `;
+  replyForm.addEventListener("submit", (event) => submitCommunityComment(event, postId, comment.id));
+  content.append(replyForm);
   item.append(avatar, content);
   return item;
 }
@@ -946,6 +994,10 @@ function getCommunityLikeLabel(post) {
   return `Like (${post?.likeCount || post?.reactionCount || 0})`;
 }
 
+function getCommunityCommentLikeLabel(comment) {
+  return `Like (${comment?.likeCount || 0})`;
+}
+
 function createCommunityActionButton(label, onClick, options = {}) {
   const button = document.createElement("button");
   button.type = "button";
@@ -977,6 +1029,39 @@ function updateCommunityReactionLabel(updatedPost) {
 
   likeButton.textContent = getCommunityLikeLabel(updatedPost);
   likeButton.setAttribute("aria-pressed", String(Boolean(updatedPost.likedByMe)));
+}
+
+function updateCommunityCommentReactionLabel(updatedPost, commentId) {
+  if (!updatedPost) {
+    return;
+  }
+
+  const existingIndex = communityState.posts.findIndex((post) => post.id === updatedPost.id);
+  if (existingIndex >= 0) {
+    communityState.posts[existingIndex] = updatedPost;
+  }
+
+  const updatedComment = (updatedPost.comments || []).find((comment) => comment.id === commentId);
+  const likeButton = document.querySelector(`[data-community-comment-id="${CSS.escape(commentId)}"] .community-comment-like-action`);
+  if (!updatedComment || !likeButton) {
+    return;
+  }
+
+  likeButton.textContent = getCommunityCommentLikeLabel(updatedComment);
+  likeButton.setAttribute("aria-pressed", String(Boolean(updatedComment.likedByMe)));
+}
+
+function showCommunityCommentReplyForm(commentItem) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+
+  const form = commentItem.querySelector(":scope > .community-comment-content > .community-comment-reply-form");
+  const input = form?.querySelector("input");
+  if (form && input) {
+    form.hidden = false;
+    input.focus();
+  }
 }
 
 function focusCommunityReply(card) {
@@ -1025,7 +1110,7 @@ async function submitCommunityPost(event) {
   }
 }
 
-async function submitCommunityComment(event, postId) {
+async function submitCommunityComment(event, postId, parentCommentId = null) {
   event.preventDefault();
   if (!requireCommunityLogin()) {
     return;
@@ -1041,9 +1126,10 @@ async function submitCommunityComment(event, postId) {
   try {
     const updatedPost = await apiRequest(`/api/public/community/posts/${postId}/comments`, {
       method: "POST",
-      body: JSON.stringify({ body })
+      body: JSON.stringify({ body, parentCommentId })
     });
     input.value = "";
+    form.hidden = Boolean(parentCommentId);
     upsertCommunityPost(updatedPost, { placement: "preserve" });
   } catch (error) {
     alert(error.message || "Unable to reply.");
@@ -1062,6 +1148,21 @@ async function toggleCommunityReaction(postId) {
     updateCommunityReactionLabel(updatedPost);
   } catch (error) {
     alert(error.message || "Unable to update reaction.");
+  }
+}
+
+async function toggleCommunityCommentReaction(commentId) {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+  try {
+    const updatedPost = await apiRequest(`/api/public/community/comments/${commentId}/reaction`, {
+      method: "POST",
+      body: JSON.stringify({ reactionType: "like" })
+    });
+    updateCommunityCommentReactionLabel(updatedPost, commentId);
+  } catch (error) {
+    alert(error.message || "Unable to update comment reaction.");
   }
 }
 

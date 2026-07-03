@@ -7,50 +7,19 @@ const pesoFormatter = new Intl.NumberFormat("en-PH", {
   style: "currency"
 });
 
-const categoryGroups = {
-  "bike-frames": {
-    title: "Bike & Frames",
-    groupName: "BIKE & FRAMES",
-    groupNames: ["Bike & Frames", "Bikes & Frames"],
-    webCategories: ["MTB", "Road", "Gravel", "Folding", "Starter Builds", "Shop Assembled Option"],
-    filters: ["All", "MTB", "Road", "Gravel", "Folding", "Starter Builds", "Shop Assembled Option"]
-  },
-  "parts-components": {
-    title: "Parts & Components",
-    groupName: "PARTS & COMPONENTS",
-    groupNames: ["Parts & Components"],
-    webCategories: ["Drivetrain", "Brakes", "Cockpit", "Forks", "Wheelsets", "Upgrade Parts"],
-    filters: ["All", "Drivetrain", "Brakes", "Cockpit", "Forks", "Wheelsets", "Upgrade Parts"]
-  },
-  "tires-tubes": {
-    title: "Tires & Tubes",
-    groupName: "TIRES & TUBES",
-    groupNames: ["Tires & Tubes"],
-    webCategories: ["MTB", "Road", "Gravel", "Folding Bike Tires", "Inner Tubes", "Repair Essentials"],
-    filters: ["All", "MTB", "Road", "Gravel", "Folding Bike Tires", "Inner Tubes", "Repair Essentials"]
-  },
-  "cycling-clothing": {
-    title: "Cycling Clothing",
-    groupName: "CYCLING CLOTHING",
-    groupNames: ["Cycling Clothing"],
-    webCategories: ["Jerseys", "Shorts", "Gloves", "Ride Apparel", "Everyday Shop Gear"],
-    filters: ["All", "Jerseys", "Shorts", "Gloves", "Ride Apparel", "Everyday Shop Gear"]
-  },
-  "helmets-sunglasses": {
-    title: "Helmets & Sunglasses",
-    groupName: "HELMETS & SUNGLASSES",
-    groupNames: ["Helmets & Sunglasses"],
-    webCategories: ["Safety Gear", "Helmets", "Eyewear", "Lights", "Bags", "Daily Ride Essentials"],
-    filters: ["All", "Safety Gear", "Helmets", "Eyewear", "Lights", "Bags", "Daily Ride Essentials"]
-  }
+const legacyCategoryTargets = {
+  "bike-frames": ["Bike & Frames", "Bikes & Frames"],
+  "parts-components": ["Parts & Components"],
+  "tires-tubes": ["Tires & Tubes"],
+  "cycling-clothing": ["Cycling Clothing"],
+  "helmets-sunglasses": ["Helmets & Sunglasses"]
 };
 
 const state = {
   activeCategory: null,
   activeSubcategory: "All",
+  categoryGroups: [],
   items: [],
-  page: 1,
-  pageSize: 5,
   sort: "price-asc"
 };
 
@@ -123,6 +92,10 @@ function normalizeText(value) {
     .replace(/&/g, "and")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function slugify(value) {
+  return normalizeText(value).replace(/\s+/g, "-");
 }
 
 function normalizeImageUrl(mainImageUrl) {
@@ -226,6 +199,15 @@ function renderProductPhoto(item) {
   return photo;
 }
 
+function getAvailabilityLabel(item) {
+  const stockStatus = normalizeText(item.stockStatus || item.availabilityLabel);
+  if (stockStatus.includes("out of stock") || stockStatus.includes("sold out") || stockStatus.includes("unavailable")) {
+    return "OUT OF STOCK";
+  }
+
+  return "AVAILABLE";
+}
+
 function renderWebItemCard(item) {
   const card = document.createElement("article");
   card.className = "product-card";
@@ -245,9 +227,11 @@ function renderWebItemCard(item) {
   ].filter(Boolean).join(" / ");
 
   const action = document.createElement("a");
+  const availabilityLabel = getAvailabilityLabel(item);
   action.href = "#contact";
-  action.textContent = "Ask Availability";
-  action.setAttribute("aria-label", `Ask availability for ${item.itemDescription || "this item"}`);
+  action.textContent = availabilityLabel;
+  action.className = availabilityLabel === "OUT OF STOCK" ? "is-out-of-stock" : "is-available";
+  action.setAttribute("aria-label", `${availabilityLabel} status for ${item.itemDescription || "this item"}`);
 
   card.append(
     renderProductPhoto(item),
@@ -271,6 +255,8 @@ async function loadWebItems() {
   }
 
   state.items = await response.json();
+  state.categoryGroups = buildCategoryGroups(state.items);
+  renderCategoryNav();
   return state.items;
 }
 
@@ -286,20 +272,66 @@ function getItemCategoryGroup(item) {
   return item.categoryGroupName || item.categoryGroup || item.publicCategoryGroup || item.webCategoryGroup;
 }
 
+function sortByName(a, b) {
+  return a.localeCompare(b, "en", { sensitivity: "base" });
+}
+
+function buildCategoryGroups(items) {
+  const groups = new Map();
+
+  items.filter(isPublicProduct).forEach((item) => {
+    const groupName = String(getItemCategoryGroup(item) || "").trim();
+    if (!groupName) {
+      return;
+    }
+
+    const key = slugify(groupName);
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        title: groupName,
+        normalizedTitle: normalizeText(groupName),
+        webCategoryMap: new Map()
+      });
+    }
+
+    const webCategory = String(getItemWebCategory(item) || "").trim();
+    if (webCategory) {
+      groups.get(key).webCategoryMap.set(normalizeText(webCategory), webCategory);
+    }
+  });
+
+  return Array.from(groups.values())
+    .map((group) => ({
+      key: group.key,
+      title: group.title,
+      normalizedTitle: group.normalizedTitle,
+      filters: ["All", ...Array.from(group.webCategoryMap.values()).sort(sortByName)]
+    }))
+    .sort((a, b) => sortByName(a.title, b.title));
+}
+
+function getCategoryGroup(categoryKey) {
+  return state.categoryGroups.find((group) => group.key === categoryKey);
+}
+
+function resolveCategoryKey(categoryKey) {
+  if (getCategoryGroup(categoryKey)) {
+    return categoryKey;
+  }
+
+  const targets = legacyCategoryTargets[categoryKey] || [categoryKey];
+  const normalizedTargets = targets.map(normalizeText);
+  return state.categoryGroups.find((group) => normalizedTargets.includes(group.normalizedTitle))?.key || null;
+}
+
 function itemMatchesCategory(item, categoryKey) {
-  const group = categoryGroups[categoryKey];
+  const group = getCategoryGroup(categoryKey);
   if (!group) {
     return false;
   }
 
-  const categoryGroup = normalizeText(getItemCategoryGroup(item));
-  const validCategoryGroups = [...group.groupNames, group.groupName, group.title].map(normalizeText);
-  if (!validCategoryGroups.includes(categoryGroup)) {
-    return false;
-  }
-
-  const webCategory = normalizeText(getItemWebCategory(item));
-  return group.webCategories.some((category) => normalizeText(category) === webCategory);
+  return normalizeText(getItemCategoryGroup(item)) === group.normalizedTitle;
 }
 
 function itemMatchesSubcategory(item) {
@@ -330,22 +362,54 @@ function getCatalogItems() {
 function setCatalogMode(isCatalogMode) {
   document.body.classList.toggle("is-catalog-mode", isCatalogMode);
   document.querySelector("[data-catalog-panel]").hidden = !isCatalogMode;
-  document.querySelector("[data-catalog-pagination]").hidden = !isCatalogMode;
   document.querySelector("[data-home-products]").hidden = isCatalogMode;
   document.querySelectorAll("[data-home-section]").forEach((section) => {
     section.hidden = isCatalogMode;
   });
 }
 
+function returnToHome() {
+  setCatalogMode(false);
+  state.activeCategory = null;
+  state.activeSubcategory = "All";
+  updateActiveCategoryNav();
+  loadNewArrivalItems();
+  showProfileMode(false);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function renderCategoryNav() {
+  const nav = document.querySelector("[data-category-nav-list]");
+  if (!nav) {
+    return;
+  }
+
+  nav.replaceChildren();
+  state.categoryGroups.forEach((group) => {
+    const link = document.createElement("a");
+    link.href = "#products";
+    link.dataset.categoryNav = group.key;
+    link.textContent = group.title;
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      openCategoryCatalog(group.key);
+    });
+    nav.append(link);
+  });
+
+  updateActiveCategoryNav();
+}
+
 function updateActiveCategoryNav() {
   document.querySelectorAll("[data-category-nav]").forEach((link) => {
     link.classList.toggle("active", link.dataset.categoryNav === state.activeCategory);
+    link.setAttribute("aria-current", link.dataset.categoryNav === state.activeCategory ? "true" : "false");
   });
 }
 
 function renderSubcategoryFilters() {
   const filters = document.querySelector("[data-subcategory-filters]");
-  const group = categoryGroups[state.activeCategory];
+  const group = getCategoryGroup(state.activeCategory);
   if (!filters || !group) {
     return;
   }
@@ -358,98 +422,55 @@ function renderSubcategoryFilters() {
     button.className = filter === state.activeSubcategory ? "active" : "";
     button.addEventListener("click", () => {
       state.activeSubcategory = filter;
-      state.page = 1;
       renderCatalog();
     });
     filters.append(button);
   });
 }
 
-function updateCatalogControls(totalItems, totalPages, visibleCount) {
-  document.querySelectorAll("[data-page-size]").forEach((button) => {
-    const value = button.dataset.pageSize === "all" ? "all" : Number(button.dataset.pageSize);
-    button.classList.toggle("active", value === state.pageSize);
-  });
-
+function updateCatalogControls() {
   const sortSelect = document.querySelector("[data-sort-select]");
   if (sortSelect) {
     sortSelect.value = state.sort;
-  }
-
-  const numbers = document.querySelector("[data-page-numbers]");
-  if (numbers) {
-    numbers.replaceChildren();
-    for (let index = 1; index <= totalPages; index += 1) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.textContent = String(index);
-      button.className = index === state.page ? "active" : "";
-      button.addEventListener("click", () => {
-        state.page = index;
-        renderCatalog();
-      });
-      numbers.append(button);
-    }
-  }
-
-  document.querySelectorAll("[data-page-action]").forEach((button) => {
-    const isPrev = button.dataset.pageAction === "prev";
-    button.disabled = isPrev ? state.page <= 1 : state.page >= totalPages;
-  });
-
-  const resultCount = document.querySelector("[data-result-count]");
-  const group = categoryGroups[state.activeCategory];
-  if (resultCount && group) {
-    const pageStart = totalItems === 0 ? 0 : (state.page - 1) * visibleCount + 1;
-    const pageEnd = state.pageSize === "all" ? totalItems : Math.min(state.page * visibleCount, totalItems);
-    resultCount.textContent = `Showing ${pageStart}-${pageEnd} of ${totalItems} ${group.title} products`;
   }
 }
 
 function renderCatalog() {
   const grid = getWebItemsGrid();
-  const group = categoryGroups[state.activeCategory];
+  const group = getCategoryGroup(state.activeCategory);
   if (!grid || !group) {
     return;
   }
 
-  document.querySelector("[data-catalog-title]").textContent = group.title;
   document.querySelector("[data-stock-note]").textContent = "Stocks and prices may change. Message us to confirm before visiting or ordering.";
   renderSubcategoryFilters();
   updateActiveCategoryNav();
 
   const items = getCatalogItems();
-  const visibleCount = state.pageSize === "all" ? Math.max(items.length, 1) : state.pageSize;
-  const totalPages = Math.max(1, Math.ceil(items.length / visibleCount));
-  state.page = Math.min(state.page, totalPages);
-
-  const pageItems = state.pageSize === "all"
-    ? items
-    : items.slice((state.page - 1) * visibleCount, state.page * visibleCount);
 
   grid.replaceChildren();
-  if (pageItems.length === 0) {
+  if (items.length === 0) {
     setGridState(`No ${group.title} Found`, "No publicly available products found for this category right now. Message us to check latest stock.");
   } else {
-    pageItems.forEach((item) => grid.append(renderWebItemCard(item)));
+    items.forEach((item) => grid.append(renderWebItemCard(item)));
   }
 
-  updateCatalogControls(items.length, totalPages, visibleCount);
+  updateCatalogControls();
 }
 
 async function openCategoryCatalog(categoryKey) {
-  if (!categoryGroups[categoryKey]) {
-    return;
-  }
-
-  state.activeCategory = categoryKey;
   state.activeSubcategory = "All";
-  state.page = 1;
   setCatalogMode(true);
-  setGridState("Loading Catalog", `Checking SMBSystem ${categoryGroups[categoryKey].title} items for Quezon City.`);
+  setGridState("Loading Catalog", "Checking SMBSystem catalog items for Quezon City.");
 
   try {
     await loadWebItems();
+    const resolvedCategoryKey = resolveCategoryKey(categoryKey);
+    if (!resolvedCategoryKey) {
+      setGridState("Category Unavailable", "No public SMBSystem catalog items are available for this category right now.");
+      return;
+    }
+    state.activeCategory = resolvedCategoryKey;
     renderCatalog();
   } catch (error) {
     setGridState("Catalog Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
@@ -481,6 +502,11 @@ async function loadNewArrivalItems() {
 }
 
 function bindCatalogUi() {
+  document.querySelector(".logo")?.addEventListener("click", (event) => {
+    event.preventDefault();
+    returnToHome();
+  });
+
   document.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
       event.preventDefault();
@@ -504,33 +530,9 @@ function bindCatalogUi() {
     });
   });
 
-  document.querySelector("[data-back-to-categories]")?.addEventListener("click", () => {
-    setCatalogMode(false);
-    state.activeCategory = null;
-    updateActiveCategoryNav();
-    loadNewArrivalItems();
-    document.querySelector("#bikes")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
-
-  document.querySelectorAll("[data-page-size]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.pageSize = button.dataset.pageSize === "all" ? "all" : Number(button.dataset.pageSize);
-      state.page = 1;
-      renderCatalog();
-    });
-  });
-
   document.querySelector("[data-sort-select]")?.addEventListener("change", (event) => {
     state.sort = event.target.value;
-    state.page = 1;
     renderCatalog();
-  });
-
-  document.querySelectorAll("[data-page-action]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.page += button.dataset.pageAction === "prev" ? -1 : 1;
-      renderCatalog();
-    });
   });
 }
 
@@ -557,6 +559,52 @@ function getChangePasswordForm() {
   return document.querySelector("[data-change-password-form]");
 }
 
+function normalizeProfileImageUrl(url) {
+  if (!url) {
+    return "";
+  }
+  return url.startsWith("/") ? `${getApiBaseUrl()}${url}` : url;
+}
+
+function getAccountInitials(account = customerState.account) {
+  const source = account?.username || account?.email || "SMB";
+  return source
+    .split(/[\s._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part.slice(0, 1).toUpperCase())
+    .join("") || "SMB";
+}
+
+function renderAvatar(container, account = customerState.account) {
+  if (!container) {
+    return;
+  }
+
+  container.replaceChildren();
+  const imageUrl = normalizeProfileImageUrl(account?.profilePictureUrl || customerState.profile?.profilePictureUrl);
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.alt = `${account?.username || "Customer"} profile picture`;
+    image.src = imageUrl;
+    container.append(image);
+    return;
+  }
+
+  container.textContent = getAccountInitials(account);
+}
+
+function setAccountMenuOpen(open) {
+  const menu = document.querySelector("[data-account-menu]");
+  const toggle = document.querySelector("[data-account-menu-toggle]");
+  if (menu) {
+    menu.hidden = !open;
+  }
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+  }
+}
+
 function setMessage(element, message, type = "") {
   if (!element) {
     return;
@@ -581,6 +629,9 @@ function updateCustomerHeader() {
   const loginForm = getCustomerLoginForm();
   const sessionPanel = getCustomerSessionPanel();
   const greeting = document.querySelector("[data-customer-greeting]");
+  const email = document.querySelector("[data-account-email]");
+  const hometown = document.querySelector("[data-account-hometown]");
+  const riderTypes = document.querySelector("[data-account-rider-types]");
   const isLoggedIn = Boolean(customerState.account);
 
   if (loginForm) {
@@ -589,8 +640,22 @@ function updateCustomerHeader() {
   if (sessionPanel) {
     sessionPanel.hidden = !isLoggedIn;
   }
+  setAccountMenuOpen(false);
+  renderAvatar(document.querySelector("[data-account-avatar]"));
+  renderAvatar(document.querySelector("[data-account-menu-avatar]"));
   if (greeting && customerState.account) {
     greeting.textContent = customerState.account.username;
+  }
+  if (email) {
+    email.textContent = customerState.profile?.email || customerState.account?.email || "Email not set";
+  }
+  if (hometown) {
+    hometown.textContent = customerState.profile?.hometown || "Not set";
+  }
+  if (riderTypes) {
+    riderTypes.textContent = customerState.profile?.riderTypes?.length
+      ? customerState.profile.riderTypes.join(", ")
+      : "Not set";
   }
 }
 
@@ -679,6 +744,7 @@ function openRegisterForm() {
 }
 
 async function openEditProfileForm() {
+  setAccountMenuOpen(false);
   customerState.mode = "edit";
   const form = getProfileForm();
   const title = document.querySelector("[data-profile-title]");
@@ -826,7 +892,7 @@ async function loginCustomer(event) {
     });
     form.reset();
     updateCustomerHeader();
-    await openEditProfileForm();
+    returnToHome();
   } catch (error) {
     alert("Unable to log in. Check your username and password.");
   }
@@ -836,8 +902,37 @@ async function logoutCustomer() {
   await apiRequest("/api/public/customer-account/logout", { method: "POST" }).catch(() => null);
   customerState.account = null;
   customerState.profile = null;
+  setAccountMenuOpen(false);
   updateCustomerHeader();
   showProfileMode(false);
+}
+
+async function toggleAccountMenu() {
+  const menu = document.querySelector("[data-account-menu]");
+  if (!menu || !customerState.account) {
+    return;
+  }
+
+  const shouldOpen = menu.hidden;
+  setAccountMenuOpen(shouldOpen);
+  if (!shouldOpen || customerState.profile) {
+    updateCustomerHeader();
+    setAccountMenuOpen(shouldOpen);
+    return;
+  }
+
+  try {
+    customerState.profile = await apiRequest("/api/public/customer-account/profile");
+    customerState.account = {
+      ...customerState.account,
+      email: customerState.profile.email,
+      profilePictureUrl: customerState.profile.profilePictureUrl
+    };
+  } catch {
+    // Keep the compact account menu usable even when profile details cannot be loaded.
+  }
+  updateCustomerHeader();
+  setAccountMenuOpen(true);
 }
 
 async function restoreCustomerSession() {
@@ -875,9 +970,16 @@ async function submitChangePassword(event) {
 function bindCustomerAccountUi() {
   getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
   document.querySelector("[data-open-register]")?.addEventListener("click", openRegisterForm);
+  document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
   document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
   document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-close-profile]")?.addEventListener("click", () => showProfileMode(false));
+  document.addEventListener("click", (event) => {
+    const sessionPanel = getCustomerSessionPanel();
+    if (sessionPanel && !sessionPanel.contains(event.target)) {
+      setAccountMenuOpen(false);
+    }
+  });
   getProfileForm()?.addEventListener("submit", submitProfile);
   getChangePasswordForm()?.addEventListener("submit", submitChangePassword);
   document.querySelector("[data-open-change-password]")?.addEventListener("click", () => {

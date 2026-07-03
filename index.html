@@ -37,9 +37,32 @@
             <button type="button" data-open-register>Register</button>
           </form>
           <div class="customer-session" data-customer-session hidden>
-            <span data-customer-greeting>Account</span>
-            <button type="button" data-edit-profile>Edit Profile</button>
-            <button type="button" data-logout>Logout</button>
+            <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
+              <span data-account-avatar>SMB</span>
+            </button>
+            <div class="account-menu" data-account-menu hidden>
+              <div class="account-menu-header">
+                <span data-account-menu-avatar>SMB</span>
+                <div>
+                  <strong data-customer-greeting>Account</strong>
+                  <p data-account-email></p>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt>Hometown</dt>
+                  <dd data-account-hometown>Not set</dd>
+                </div>
+                <div>
+                  <dt>Rider type</dt>
+                  <dd data-account-rider-types>Not set</dd>
+                </div>
+              </dl>
+              <div class="account-menu-actions">
+                <button type="button" data-edit-profile>Edit Profile</button>
+                <button type="button" data-logout>Logout</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -62,14 +85,7 @@
       <div class="lock-box" aria-hidden="true">Lock</div>
     </div>
 
-    <nav class="wrap main-nav" aria-label="Product categories">
-      <a href="#products" data-category-nav="bike-frames">Bike & Frames</a>
-      <a href="#products" data-category-nav="parts-components">Parts & Components</a>
-      <a href="#products" data-category-nav="tires-tubes">Tires & Tubes</a>
-      <a href="#products" data-category-nav="cycling-clothing">Cycling Clothing</a>
-      <a href="#products" data-category-nav="helmets-sunglasses">Helmets & Sunglasses</a>
-      <a href="#services">Services</a>
-      <a href="#online">Shopee / Lazada Orders</a>
+    <nav class="wrap main-nav" aria-label="Product categories" data-category-nav-list>
     </nav>
 
     <main id="top" class="wrap content">
@@ -244,27 +260,9 @@
         </div>
 
         <div class="catalog-panel" data-catalog-panel hidden>
-          <div class="catalog-hero">
-            <div>
-              <h1 data-catalog-title>Bike & Frames</h1>
-              <p>
-                <strong>Quezon City catalog</strong>
-                <span>Stocks and prices may change. Message us to confirm before visiting or ordering.</span>
-              </p>
-            </div>
-            <button type="button" data-back-to-categories>Back to Categories</button>
-          </div>
-
           <div class="catalog-toolbar">
             <div class="subcategory-filters" data-subcategory-filters aria-label="Subcategory filters"></div>
             <div class="catalog-controls" aria-label="Catalog controls">
-              <fieldset>
-                <legend>Show</legend>
-                <button type="button" data-page-size="5">5</button>
-                <button type="button" data-page-size="10">10</button>
-                <button type="button" data-page-size="15">15</button>
-                <button type="button" data-page-size="all">All</button>
-              </fieldset>
               <label>
                 Sort by:
                 <select data-sort-select>
@@ -288,12 +286,6 @@
           </article>
         </div>
 
-        <div class="catalog-pagination" data-catalog-pagination hidden>
-          <button type="button" data-page-action="prev">Previous</button>
-          <div data-page-numbers></div>
-          <button type="button" data-page-action="next">Next</button>
-          <span data-result-count></span>
-        </div>
       </section>
 
       <section class="banner-row" aria-label="Promotions" data-home-section>
@@ -396,6 +388,7 @@
       </div>
     </footer>
 
-    <script src="script.js?v=20260702-web-category-filter"></script>
+    <script src="config.js?v=20260703-staging-api"></script>
+    <script src="script.js?v=20260703-customer-account-catalog"></script>
   </body>
 </html>

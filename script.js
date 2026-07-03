@@ -850,7 +850,7 @@ function communityPostMatchesCurrentFilter(post) {
   return `${post.body || ""} ${categoryText}`.toLowerCase().includes(search);
 }
 
-function upsertCommunityPost(updatedPost) {
+function upsertCommunityPost(updatedPost, options = {}) {
   if (!updatedPost || !communityPostMatchesCurrentFilter(updatedPost)) {
     return;
   }
@@ -862,28 +862,38 @@ function upsertCommunityPost(updatedPost) {
 
   posts.querySelectorAll(".community-state-card").forEach((card) => card.remove());
 
+  const placement = options.placement || "sorted";
   const existingIndex = communityState.posts.findIndex((post) => post.id === updatedPost.id);
   if (existingIndex >= 0) {
     communityState.posts[existingIndex] = updatedPost;
   } else {
-    communityState.posts.push(updatedPost);
+    communityState.posts = placement === "top"
+      ? [updatedPost, ...communityState.posts]
+      : [...communityState.posts, updatedPost];
   }
-  communityState.posts = sortCommunityPosts(communityState.posts);
+
+  if (placement === "sorted") {
+    communityState.posts = sortCommunityPosts(communityState.posts);
+  }
 
   const nextCard = renderCommunityPostCard(updatedPost);
   const currentCard = posts.querySelector(`[data-community-post-id="${CSS.escape(updatedPost.id)}"]`);
   if (currentCard) {
     currentCard.replaceWith(nextCard);
+  } else if (placement === "top") {
+    posts.prepend(nextCard);
   } else {
     posts.append(nextCard);
   }
 
-  communityState.posts.forEach((post) => {
-    const card = posts.querySelector(`[data-community-post-id="${CSS.escape(post.id)}"]`);
-    if (card) {
-      posts.append(card);
-    }
-  });
+  if (placement !== "preserve") {
+    communityState.posts.forEach((post) => {
+      const card = posts.querySelector(`[data-community-post-id="${CSS.escape(post.id)}"]`);
+      if (card) {
+        posts.append(card);
+      }
+    });
+  }
 }
 
 function renderCommunityComment(comment) {
@@ -976,7 +986,7 @@ async function submitCommunityPost(event) {
       ? "Discussion sent for staff review."
       : "Discussion posted.", "success");
     if (created.status !== "pending_review" && communityPostMatchesCurrentFilter(created)) {
-      upsertCommunityPost(created);
+      upsertCommunityPost(created, { placement: "top" });
     }
   } catch (error) {
     setMessage(message, error.message || "Unable to post discussion.", "error");
@@ -1002,7 +1012,7 @@ async function submitCommunityComment(event, postId) {
       body: JSON.stringify({ body })
     });
     input.value = "";
-    upsertCommunityPost(updatedPost);
+    upsertCommunityPost(updatedPost, { placement: "preserve" });
   } catch (error) {
     alert(error.message || "Unable to reply.");
   }

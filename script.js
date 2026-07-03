@@ -781,7 +781,10 @@ function renderCommunityPostCard(post) {
   const actions = document.createElement("div");
   actions.className = "community-post-actions";
   actions.append(
-    createCommunityActionButton(`Like (${post.likeCount || post.reactionCount || 0})`, () => toggleCommunityReaction(post.id)),
+    createCommunityActionButton(getCommunityLikeLabel(post), () => toggleCommunityReaction(post.id), {
+      className: "community-like-action",
+      pressed: Boolean(post.likedByMe)
+    }),
     createCommunityActionButton("Reply", () => focusCommunityReply(card)),
     createCommunityActionButton("Report", () => reportCommunityPost(post.id))
   );
@@ -939,12 +942,41 @@ function getCommunityInitials(name) {
     .join("") || "SMB";
 }
 
-function createCommunityActionButton(label, onClick) {
+function getCommunityLikeLabel(post) {
+  return `Like (${post?.likeCount || post?.reactionCount || 0})`;
+}
+
+function createCommunityActionButton(label, onClick, options = {}) {
   const button = document.createElement("button");
   button.type = "button";
   button.textContent = label;
+  if (options.className) {
+    button.className = options.className;
+  }
+  if (typeof options.pressed === "boolean") {
+    button.setAttribute("aria-pressed", String(options.pressed));
+  }
   button.addEventListener("click", onClick);
   return button;
+}
+
+function updateCommunityReactionLabel(updatedPost) {
+  if (!updatedPost) {
+    return;
+  }
+
+  const existingIndex = communityState.posts.findIndex((post) => post.id === updatedPost.id);
+  if (existingIndex >= 0) {
+    communityState.posts[existingIndex] = updatedPost;
+  }
+
+  const likeButton = document.querySelector(`[data-community-post-id="${CSS.escape(updatedPost.id)}"] .community-like-action`);
+  if (!likeButton) {
+    return;
+  }
+
+  likeButton.textContent = getCommunityLikeLabel(updatedPost);
+  likeButton.setAttribute("aria-pressed", String(Boolean(updatedPost.likedByMe)));
 }
 
 function focusCommunityReply(card) {
@@ -1023,12 +1055,11 @@ async function toggleCommunityReaction(postId) {
     return;
   }
   try {
-    await apiRequest(`/api/public/community/posts/${postId}/reaction`, {
+    const updatedPost = await apiRequest(`/api/public/community/posts/${postId}/reaction`, {
       method: "POST",
       body: JSON.stringify({ reactionType: "like" })
     });
-    communityState.isLoaded = false;
-    await loadCommunityDiscussions(true);
+    updateCommunityReactionLabel(updatedPost);
   } catch (error) {
     alert(error.message || "Unable to update reaction.");
   }

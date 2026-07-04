@@ -16,6 +16,14 @@ For every SMBWeb2 feature, first check whether the underlying SMBSystem API alre
 
 Default branch context for SMBWeb2 is Quezon City unless the user explicitly says a different branch should be used. Public website data and SMBSystem API calls should use the Quezon City branch context by default.
 
+## Mobile Experience Rule
+
+SMBWeb2 must behave like a purpose-built mobile catalog app whenever the visitor is on a mobile phone. This applies to all customer-facing features: homepage, catalog browsing, category views, product cards, services, contact/branch information, community discussions, customer login/register/profile, surveys, footer/navigation areas, and future public pages.
+
+Do not create a separate mobile website, duplicate mobile pages, a separate SMBWeb2 database, or separate mobile business logic. Use the same SMBWeb2 pages, shared JavaScript, and SMBSystem API source of truth, with responsive layouts and mobile-specific UI patterns.
+
+Mobile layouts should prioritize fast customer actions: search, browse catalog, check availability, view services, contact the right branch, join community discussions, and complete forms. Use compact sticky headers, bottom navigation where useful, touch-friendly buttons, horizontal category/filter chips, mobile-sized modals/drawers, readable cards, short text blocks, and no overlapping fixed elements. Desktop/tablet layouts should remain intact unless a shared issue needs correction.
+
 ## Branch Contact Details
 
 Use these branch details consistently in SMBWeb2 copy, branch/location selectors, contact sections, and future SMBSystem-backed public data checks:

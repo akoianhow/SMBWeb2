@@ -75,6 +75,10 @@
         <span class="logo-word">SARAPMAG<span>BIKE</span></span>
         <span class="logo-tag">QC | PAMPANGA</span>
       </a>
+      <div class="mobile-header-actions" aria-label="Mobile quick actions">
+        <a href="#products">Catalog</a>
+        <a href="services.html">Services</a>
+      </div>
       <form class="search-form">
         <input type="search" aria-label="Search" placeholder="Search bikes, parts, service">
         <button type="button">Search</button>
@@ -208,10 +212,10 @@
         <div class="slide-image"></div>
         <div class="hero-message">
           <p>SarapMagBike Shop</p>
-          <h1>Bikes, Parts & Bike Service</h1>
+          <h1>Shop Bikes, Parts & Service</h1>
           <span>Message us to confirm stock, prices, service queue, and Shopee/Lazada orders.</span>
-          <a href="#contact">Check Stock</a>
-          <a href="/community" data-community-link>Community</a>
+          <a href="#products">Browse Catalog</a>
+          <a href="#community" data-community-link>Community</a>
         </div>
         <div class="slide-pages" aria-hidden="true">
           <span class="active">1</span>
@@ -288,6 +292,16 @@
           </article>
         </div>
 
+      </section>
+
+      <section class="mobile-service-strip" aria-label="Mobile service shortcuts" data-home-section>
+        <div>
+          <p>Bike service</p>
+          <h2>Book a workshop queue</h2>
+        </div>
+        <a href="services.html">Tune-up</a>
+        <a href="services.html">Wash</a>
+        <a href="services.html">Overhaul</a>
       </section>
 
       <section class="banner-row" aria-label="Promotions" data-home-section>
@@ -517,7 +531,15 @@
       </div>
     </footer>
 
+    <nav class="mobile-bottom-nav" aria-label="Mobile catalog navigation">
+      <a href="#top" data-mobile-nav="home" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
+      <a href="#products" class="active" data-mobile-nav="catalog" aria-label="Catalog"><span aria-hidden="true">▦</span>Catalog</a>
+      <a href="services.html" data-mobile-nav="services" aria-label="Services"><span aria-hidden="true">⚙</span>Services</a>
+      <a href="#community" data-community-link data-mobile-nav="community" aria-label="Community"><span aria-hidden="true">◴</span>Community</a>
+      <a href="#top" data-open-profile data-mobile-nav="account" aria-label="Account"><span aria-hidden="true">◉</span>Account</a>
+    </nav>
+
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260704-scramble-labels"></script>
+    <script src="script.js?v=20260704-mobile-all"></script>
   </body>
 </html>

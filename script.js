@@ -743,9 +743,16 @@ function getCatalogItems() {
   });
 }
 
+function setMobileNavActive(key) {
+  document.querySelectorAll("[data-mobile-nav]").forEach((link) => {
+    link.classList.toggle("active", link.dataset.mobileNav === key);
+  });
+}
+
 function setCatalogMode(isCatalogMode) {
   document.body.classList.remove("is-community-mode");
   document.body.classList.toggle("is-catalog-mode", isCatalogMode);
+  setMobileNavActive(isCatalogMode ? "catalog" : "home");
   document.querySelector("[data-community-view]")?.setAttribute("hidden", "");
   document.querySelector("[data-catalog-panel]").hidden = !isCatalogMode;
   document.querySelector("[data-home-products]").hidden = isCatalogMode;
@@ -797,7 +804,7 @@ function renderCategoryNav() {
     { label: "Products", href: isServicesPage ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
     { label: "Services", href: "services.html", action: goToServices, active: isServicesPage },
     { label: "Rides", href: isServicesPage ? "index.html#online" : "#online", action: () => goToHomeTarget("online") },
-    { label: "Community", href: isServicesPage ? "index.html#community" : "/community", action: () => isServicesPage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage },
+    { label: "Community", href: isServicesPage ? "index.html#community" : "#community", action: () => isServicesPage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage },
     { label: "Survey", href: "survey.html", action: () => window.location.href = "survey.html" },
     { label: "Contact", href: isServicesPage ? "#contact" : "#contact", action: () => isServicesPage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
   ].forEach((item) => {
@@ -1012,14 +1019,15 @@ function showCommunityMode(show, updatePath = false) {
   }
   document.body.classList.toggle("is-community-mode", show);
   if (show) {
+    setMobileNavActive("community");
     document.body.classList.remove("is-catalog-mode", "is-profile-mode");
     document.querySelector("[data-catalog-panel]").hidden = true;
     document.querySelector("[data-home-products]").hidden = true;
     document.querySelectorAll("[data-home-section]").forEach((section) => {
       section.hidden = true;
     });
-    if (updatePath && window.location.pathname !== "/community") {
-      window.history.pushState({ view: "community" }, "", "/community");
+    if (updatePath && window.location.hash !== "#community") {
+      window.history.pushState({ view: "community" }, "", "#community");
     }
     updateActiveCategoryNav();
     updateCommunityAuthState();
@@ -2657,7 +2665,32 @@ function showProfileMode(show) {
     profileView.hidden = !show;
   }
   if (show) {
+    setMobileNavActive("account");
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+}
+
+function hasProfileSurface() {
+  return Boolean(document.querySelector("[data-profile-view]") && getProfileForm());
+}
+
+function routeToProfileSurface(mode = "register") {
+  const target = mode === "edit" ? "profile-edit" : "profile-register";
+  window.location.href = `index.html#${target}`;
+}
+
+function handleProfileDeepLink() {
+  if (!hasProfileSurface()) {
+    return;
+  }
+
+  if (window.location.hash === "#profile-edit") {
+    openEditProfileForm();
+    return;
+  }
+
+  if (window.location.hash === "#profile-register") {
+    openRegisterForm();
   }
 }
 
@@ -2754,6 +2787,11 @@ function fillProfileForm(profile) {
 }
 
 function openRegisterForm() {
+  if (!hasProfileSurface()) {
+    routeToProfileSurface("register");
+    return;
+  }
+
   customerState.mode = "register";
   const form = getProfileForm();
   const title = document.querySelector("[data-profile-title]");
@@ -2785,6 +2823,11 @@ function openRegisterForm() {
 }
 
 async function openEditProfileForm() {
+  if (!hasProfileSurface()) {
+    routeToProfileSurface("edit");
+    return;
+  }
+
   setAccountMenuOpen(false);
   customerState.mode = "edit";
   const form = getProfileForm();
@@ -3016,6 +3059,16 @@ async function submitChangePassword(event) {
 function bindCustomerAccountUi() {
   getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
   document.querySelector("[data-open-register]")?.addEventListener("click", openRegisterForm);
+  document.querySelectorAll("[data-open-profile]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (customerState.account) {
+        openEditProfileForm();
+        return;
+      }
+      openRegisterForm();
+    });
+  });
   document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
   document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
   document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
@@ -3070,6 +3123,7 @@ function bindCustomerAccountUi() {
   });
 
   restoreCustomerSession();
+  window.setTimeout(handleProfileDeepLink, 0);
 }
 
 async function startCatalog() {
@@ -3084,7 +3138,7 @@ async function startCatalog() {
   bindServiceFilters();
   bindCommunityUi();
   loadHomeProductItems();
-  if (window.location.pathname === "/community") {
+  if (window.location.pathname === "/community" || window.location.hash === "#community") {
     openCommunityPage(false);
   }
 }

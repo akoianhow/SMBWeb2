@@ -340,6 +340,24 @@ async function apiRequest(path, options = {}) {
   return JSON.parse(text);
 }
 
+async function enforcePublicWebsiteMode() {
+  if (window.location.pathname.endsWith("/coming-soon.html")) {
+    return false;
+  }
+
+  try {
+    const status = await apiRequest("/api/public/site-status?branch=Quezon%20City");
+    if (status?.isComingSoon) {
+      window.location.replace("coming-soon.html");
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
 function getProductPrice(item) {
   const salePrice = Number(item.discountedPrice ?? item.salePrice);
   const retailPrice = Number(item.retailPrice ?? item.srp ?? item.price);
@@ -2866,7 +2884,11 @@ function bindCustomerAccountUi() {
   restoreCustomerSession();
 }
 
-function startCatalog() {
+async function startCatalog() {
+  if (await enforcePublicWebsiteMode()) {
+    return;
+  }
+
   renderCategoryNav();
   bindCustomerAccountUi();
   bindCatalogUi();

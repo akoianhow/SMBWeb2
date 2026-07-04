@@ -69,7 +69,7 @@ function getApiBaseUrl() {
   }
 
   if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
-    if (window.location.port === "5173" || window.location.port === "5174") {
+    if (window.location.port === "5173" || window.location.port === "5174" || window.location.port === "8001") {
       return "";
     }
 

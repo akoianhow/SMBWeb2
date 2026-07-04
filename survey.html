@@ -9,7 +9,7 @@
     >
     <title>Customer Survey | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260704-survey">
+    <link rel="stylesheet" href="styles.css?v=20260705-survey-mobile">
   </head>
   <body class="survey-page">
     <div class="page-bg"></div>
@@ -34,8 +34,20 @@
           <p>
             Help us improve our shop, service, stock, and customer support. This should take less than two minutes.
           </p>
+          <div class="survey-mobile-summary" aria-label="Survey summary">
+            <span>2 min</span>
+            <span>9 questions</span>
+            <span>No payment details</span>
+          </div>
         </div>
       </section>
+
+      <nav class="survey-mobile-jump" aria-label="Survey sections">
+        <a href="#survey-visit">Visit</a>
+        <a href="#survey-ratings">Ratings</a>
+        <a href="#survey-comments">Comments</a>
+        <a href="#survey-contact">Contact</a>
+      </nav>
 
       <section class="survey-layout" aria-label="Customer survey form">
         <aside class="survey-goals">
@@ -51,7 +63,7 @@
         <form class="survey-form" data-survey-form>
           <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
 
-          <fieldset>
+          <fieldset id="survey-visit">
             <legend>1. Branch visited <span>*</span></legend>
             <div class="survey-choice-grid two">
               <label><input type="radio" name="branch" value="Quezon City" required> Quezon City</label>
@@ -69,7 +81,7 @@
             </div>
           </fieldset>
 
-          <div class="survey-rating-grid">
+          <div id="survey-ratings" class="survey-rating-grid">
             <fieldset class="survey-rating">
               <legend>3. Overall experience <span>*</span></legend>
               <div aria-label="Overall experience rating from 1 to 5">
@@ -116,7 +128,7 @@
             </fieldset>
           </div>
 
-          <div class="survey-text-grid">
+          <div id="survey-comments" class="survey-text-grid">
             <label>
               7. What did we do well?
               <textarea name="well" rows="4" maxlength="500" placeholder="Tell us what you liked..."></textarea>
@@ -136,7 +148,7 @@
             </div>
           </fieldset>
 
-          <div class="survey-contact-grid">
+          <div id="survey-contact" class="survey-contact-grid">
             <label>
               Name <small>optional</small>
               <input type="text" name="customerName" autocomplete="name" maxlength="80" placeholder="Your name">
@@ -191,7 +203,7 @@
       <a href="index.html#top" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
       <a href="index.html#products" aria-label="Catalog"><span aria-hidden="true">▦</span>Catalog</a>
       <a href="services.html" aria-label="Services"><span aria-hidden="true">⚙</span>Services</a>
-      <a href="#contact" class="active" aria-label="Survey"><span aria-hidden="true">◴</span>Survey</a>
+      <a href="#survey-visit" class="active" aria-label="Survey"><span aria-hidden="true">◴</span>Survey</a>
       <a href="index.html#contact" aria-label="Contact"><span aria-hidden="true">◉</span>Contact</a>
     </nav>
 

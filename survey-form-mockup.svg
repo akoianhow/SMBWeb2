@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1200" viewBox="0 0 1440 1200" role="img" aria-labelledby="title desc">
+  <title id="title">SarapMagBike Customer Experience Survey Mockup</title>
+  <desc id="desc">Website mockup for a customer survey form with branch, visit purpose, ratings, comments, recommendation, and contact fields.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f6f7f8}.card{fill:#fff;stroke:#d9dde3;stroke-width:1.4}.soft{fill:#f8faf9;stroke:#d9dde3;stroke-width:1.2}
+      .ink{fill:#1f2329;font-family:Inter,Arial,sans-serif}.muted{fill:#667085;font-family:Inter,Arial,sans-serif}.red{fill:#e30613}.green{fill:#0b6b32}
+      .h1{font-size:42px;font-weight:800}.h2{font-size:23px;font-weight:800}.body{font-size:20px}.small{font-size:15px}.label{font-size:19px;font-weight:800}
+      .chip{fill:#fff;stroke:#cfd5dc;stroke-width:1.5}.chipText{font-size:16px;fill:#252a31;font-family:Inter,Arial,sans-serif}
+      .ratingText{font-size:16px;fill:#252a31;font-family:Inter,Arial,sans-serif;font-weight:700}
+    </style>
+  </defs>
+  <rect class="bg" width="1440" height="1200"/>
+  <rect x="0" y="0" width="1440" height="92" fill="#fff" stroke="#d9dde3"/>
+  <circle cx="58" cy="46" r="28" fill="#111827"/>
+  <path d="M42 50h28l-19 22h24" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="102" y="39" class="ink" font-size="31" font-weight="900">SARAP<tspan class="red">MAG</tspan>BIKE</text>
+  <text x="181" y="68" class="ink" font-size="14" font-weight="900" letter-spacing="8">SHOP</text>
+  <text x="432" y="55" class="ink" font-size="17" font-weight="700">Home</text>
+  <text x="525" y="55" class="ink" font-size="17" font-weight="700">Bikes &amp; Parts</text>
+  <text x="674" y="55" class="ink" font-size="17" font-weight="700">Services</text>
+  <text x="786" y="55" class="ink" font-size="17" font-weight="700">Contact</text>
+  <circle cx="1085" cy="46" r="10" class="red"/><text x="1105" y="53" class="ink" font-size="16" font-weight="700">Quezon City</text>
+  <circle cx="1225" cy="46" r="10" class="red"/><text x="1245" y="53" class="ink" font-size="16" font-weight="700">Pampanga</text>
+
+  <rect x="42" y="120" width="420" height="1038" rx="10" class="card"/>
+  <text x="74" y="184" class="ink h1">Customer Experience</text>
+  <text x="74" y="232" class="ink h1">Survey</text>
+  <rect x="74" y="255" width="76" height="5" rx="3" class="red"/>
+  <text x="74" y="298" class="ink body">Help us improve our shop, service,</text>
+  <text x="74" y="329" class="ink body">stock, and online ordering experience.</text>
+  <text x="74" y="381" class="muted body">Your feedback helps SarapMagBike Shop</text>
+  <text x="74" y="412" class="muted body">serve customers better in-store, online,</text>
+  <text x="74" y="443" class="muted body">and on marketplaces.</text>
+  <line x1="74" y1="485" x2="430" y2="485" stroke="#d9dde3"/>
+  <text x="74" y="535" class="ink h2">Why we ask</text>
+  <g transform="translate(74 570)">
+    <rect width="66" height="66" rx="8" fill="#eff8ed" stroke="#bdd8b8"/><text x="22" y="43" class="green" font-size="35">□</text>
+    <text x="88" y="22" class="ink" font-size="18" font-weight="800">Better stock planning</text>
+    <text x="88" y="51" class="muted" font-size="17">We stock what you need.</text>
+  </g>
+  <g transform="translate(74 675)">
+    <rect width="66" height="66" rx="8" fill="#eff8ed" stroke="#bdd8b8"/><text x="16" y="43" class="green" font-size="35">✓</text>
+    <text x="88" y="22" class="ink" font-size="18" font-weight="800">Faster service jobs</text>
+    <text x="88" y="51" class="muted" font-size="17">Improve turnaround time.</text>
+  </g>
+  <g transform="translate(74 780)">
+    <rect width="66" height="66" rx="8" fill="#eff8ed" stroke="#bdd8b8"/><text x="18" y="43" class="green" font-size="35">□</text>
+    <text x="88" y="22" class="ink" font-size="18" font-weight="800">Improved Shopee/Lazada support</text>
+    <text x="88" y="51" class="muted" font-size="17">Fix ordering issues faster.</text>
+  </g>
+  <g transform="translate(74 885)">
+    <rect width="66" height="66" rx="8" fill="#eff8ed" stroke="#bdd8b8"/><text x="18" y="43" class="green" font-size="35">○</text>
+    <text x="88" y="22" class="ink" font-size="18" font-weight="800">Staff coaching</text>
+    <text x="88" y="51" class="muted" font-size="17">Recognize strengths and train gaps.</text>
+  </g>
+  <rect x="74" y="1000" width="356" height="92" rx="8" fill="#f1faf0" stroke="#b7d7b5"/>
+  <text x="116" y="1035" class="green" font-size="34">✓</text>
+  <text x="168" y="1034" class="green" font-size="18" font-weight="800">No sensitive payment details.</text>
+  <text x="168" y="1065" class="muted" font-size="16">Feedback is reviewed before action.</text>
+
+  <rect x="500" y="120" width="898" height="1038" rx="10" class="card"/>
+  <text x="542" y="164" class="ink label">1. Branch visited <tspan class="red">*</tspan></text>
+  <rect x="542" y="184" width="250" height="52" rx="8" class="chip"/><text x="620" y="218" class="chipText">Quezon City</text>
+  <rect x="816" y="184" width="250" height="52" rx="8" class="chip"/><text x="900" y="218" class="chipText">Pampanga</text>
+  <rect x="1090" y="184" width="250" height="52" rx="8" class="chip"/><text x="1180" y="218" class="chipText">Online order</text>
+
+  <text x="542" y="284" class="ink label">2. Visit purpose <tspan class="red">*</tspan></text>
+  <rect x="542" y="304" width="155" height="72" rx="8" class="chip"/><text x="590" y="333" class="chipText">Buy bike</text><text x="585" y="357" class="chipText">or parts</text>
+  <rect x="710" y="304" width="155" height="72" rx="8" class="chip"/><text x="764" y="333" class="chipText">Bike</text><text x="754" y="357" class="chipText">service</text>
+  <rect x="878" y="304" width="155" height="72" rx="8" class="chip"/><text x="930" y="333" class="chipText">Check</text><text x="912" y="357" class="chipText">availability</text>
+  <rect x="1046" y="304" width="155" height="72" rx="8" class="chip"/><text x="1074" y="333" class="chipText">Shopee or</text><text x="1073" y="357" class="chipText">Lazada order</text>
+  <rect x="1214" y="304" width="126" height="72" rx="8" class="chip"/><text x="1240" y="333" class="chipText">Coffee or</text><text x="1240" y="357" class="chipText">hangout</text>
+
+  <g transform="translate(542 430)">
+    <text class="ink label">3. Overall experience <tspan class="red">*</tspan></text>
+    <text x="196" y="34" class="red small">Poor</text><text x="578" y="34" class="green small">Excellent</text>
+    <text x="260" y="0" class="ratingText">1</text><text x="328" y="0" class="ratingText">2</text><text x="396" y="0" class="ratingText">3</text><text x="464" y="0" class="ratingText">4</text><text x="532" y="0" class="ratingText">5</text>
+    <circle cx="263" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="331" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="399" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="467" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="535" cy="28" r="10" fill="#fff" stroke="#98a2b3"/>
+  </g>
+  <g transform="translate(542 520)">
+    <text class="ink label">4. Staff helpfulness <tspan class="red">*</tspan></text>
+    <text x="196" y="34" class="red small">Poor</text><text x="578" y="34" class="green small">Excellent</text>
+    <text x="260" y="0" class="ratingText">1</text><text x="328" y="0" class="ratingText">2</text><text x="396" y="0" class="ratingText">3</text><text x="464" y="0" class="ratingText">4</text><text x="532" y="0" class="ratingText">5</text>
+    <circle cx="263" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="331" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="399" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="467" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="535" cy="28" r="10" fill="#fff" stroke="#98a2b3"/>
+  </g>
+  <g transform="translate(542 610)">
+    <text class="ink label">5. Stock availability <tspan class="red">*</tspan></text>
+    <text x="196" y="34" class="red small">Poor</text><text x="578" y="34" class="green small">Excellent</text>
+    <text x="260" y="0" class="ratingText">1</text><text x="328" y="0" class="ratingText">2</text><text x="396" y="0" class="ratingText">3</text><text x="464" y="0" class="ratingText">4</text><text x="532" y="0" class="ratingText">5</text>
+    <circle cx="263" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="331" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="399" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="467" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="535" cy="28" r="10" fill="#fff" stroke="#98a2b3"/>
+  </g>
+  <g transform="translate(542 700)">
+    <text class="ink label">6. Service quality <tspan class="red">*</tspan></text>
+    <text x="196" y="34" class="red small">Poor</text><text x="578" y="34" class="green small">Excellent</text>
+    <text x="260" y="0" class="ratingText">1</text><text x="328" y="0" class="ratingText">2</text><text x="396" y="0" class="ratingText">3</text><text x="464" y="0" class="ratingText">4</text><text x="532" y="0" class="ratingText">5</text>
+    <circle cx="263" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="331" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="399" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="467" cy="28" r="10" fill="#fff" stroke="#98a2b3"/><circle cx="535" cy="28" r="10" fill="#fff" stroke="#98a2b3"/>
+  </g>
+
+  <text x="542" y="815" class="ink label">7. What did we do well?</text>
+  <rect x="542" y="833" width="365" height="94" rx="8" class="soft"/><text x="560" y="864" class="muted" font-size="17">Tell us what you liked...</text><text x="850" y="908" class="muted small">0/500</text>
+  <text x="938" y="815" class="ink label">8. What should we improve?</text>
+  <rect x="938" y="833" width="402" height="94" rx="8" class="soft"/><text x="956" y="864" class="muted" font-size="17">Share your suggestions...</text><text x="1282" y="908" class="muted small">0/500</text>
+
+  <text x="542" y="973" class="ink label">9. Would you recommend SarapMagBike? <tspan class="red">*</tspan></text>
+  <rect x="542" y="992" width="250" height="48" rx="8" class="chip"/><circle cx="620" cy="1016" r="9" fill="#fff" stroke="#15803d" stroke-width="2"/><text x="650" y="1023" class="chipText">Yes</text>
+  <rect x="816" y="992" width="250" height="48" rx="8" class="chip"/><circle cx="894" cy="1016" r="9" fill="#fff" stroke="#f97316" stroke-width="2"/><text x="924" y="1023" class="chipText">Maybe</text>
+  <rect x="1090" y="992" width="250" height="48" rx="8" class="chip"/><circle cx="1168" cy="1016" r="9" fill="#fff" stroke="#e30613" stroke-width="2"/><text x="1198" y="1023" class="chipText">No</text>
+
+  <text x="542" y="1080" class="ink label">10. Name (optional)</text>
+  <text x="892" y="1080" class="ink label">11. Phone or email (optional)</text>
+  <rect x="542" y="1098" width="315" height="42" rx="8" class="soft"/><text x="560" y="1125" class="muted" font-size="16">Your name</text>
+  <rect x="892" y="1098" width="448" height="42" rx="8" class="soft"/><text x="910" y="1125" class="muted" font-size="16">0912 345 6789 or email@example.com</text>
+  <rect x="542" y="1162" width="390" height="44" rx="8" class="red"/>
+  <text x="680" y="1191" fill="#fff" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="800">Submit Feedback</text>
+</svg>

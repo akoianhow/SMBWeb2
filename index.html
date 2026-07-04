@@ -19,6 +19,7 @@
         <nav aria-label="Utility navigation">
           <a href="#contact">Contact Us</a>
           <a href="services.html">Book Service</a>
+          <a href="survey.html">Survey</a>
         </nav>
         <div class="topbar-options">
           <span>English</span>
@@ -255,9 +256,9 @@
 
       <section id="products" class="product-section">
         <div class="product-tabs" aria-label="Product lists" data-home-products>
-          <span class="active">New Arrivals</span>
-          <span>Popular</span>
-          <span>Service Picks</span>
+          <button class="active" type="button" data-home-product-filter="new" aria-pressed="true">New Arrivals</button>
+          <button type="button" data-home-product-filter="popular" aria-pressed="false">Popular</button>
+          <button type="button" data-home-product-filter="sale" aria-pressed="false">Promos</button>
         </div>
 
         <div class="catalog-panel" data-catalog-panel hidden>
@@ -483,6 +484,7 @@
           <h2>Information</h2>
           <a href="#products">New products</a>
           <a href="services.html">Bike service</a>
+          <a href="survey.html">Customer survey</a>
           <a href="#online">Online orders</a>
           <a href="#contact">Contact us</a>
         </div>
@@ -516,6 +518,6 @@
     </footer>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260704-website-mode"></script>
+    <script src="script.js?v=20260704-scramble-labels"></script>
   </body>
 </html>

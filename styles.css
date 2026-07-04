@@ -508,7 +508,7 @@ p {
 
 .main-nav {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
   height: 61px;
   margin-top: 0;
   background: #252525;
@@ -575,6 +575,338 @@ body.is-community-mode .main-nav a.active {
 
 body.is-catalog-mode .content {
   padding-top: 0;
+}
+
+.survey-page .header-main {
+  grid-template-columns: 310px 1fr 176px 42px;
+}
+
+.survey-header-note {
+  align-self: start;
+  display: grid;
+  gap: 4px;
+  margin-top: 30px;
+  padding: 11px 14px;
+  color: #222222;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #d4d4d4;
+}
+
+.survey-header-note strong {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.survey-header-note span {
+  color: #666666;
+  font-size: 12px;
+}
+
+.survey-content {
+  padding-bottom: 46px;
+}
+
+.survey-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: stretch;
+  margin-bottom: 20px;
+}
+
+.survey-hero > div,
+.survey-hero > aside,
+.survey-goals,
+.survey-form {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #d7d7d7;
+}
+
+.survey-hero > div {
+  padding: 30px;
+}
+
+.survey-hero h1 {
+  margin-bottom: 10px;
+  color: #191919;
+  font-size: clamp(34px, 5vw, 54px);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.survey-hero p:not(.section-eyebrow) {
+  max-width: 620px;
+  margin-bottom: 0;
+  color: #555555;
+  font-size: 15px;
+}
+
+.survey-hero > aside {
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 24px;
+  border-top: 5px solid #156b2f;
+}
+
+.survey-hero > aside strong {
+  color: #156b2f;
+  font-size: 16px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.survey-hero > aside span {
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.survey-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.survey-goals {
+  position: sticky;
+  top: 16px;
+  padding: 22px;
+}
+
+.survey-goals h2 {
+  margin-bottom: 16px;
+  color: #202020;
+  font-size: 21px;
+  text-transform: uppercase;
+}
+
+.survey-goals ul {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.survey-goals li {
+  display: grid;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 4px solid var(--red);
+}
+
+.survey-goals strong {
+  color: #222222;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.survey-goals span {
+  color: #666666;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.survey-form {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+}
+
+.survey-form fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.survey-form legend,
+.survey-form label {
+  color: #202020;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.survey-form legend {
+  margin-bottom: 10px;
+}
+
+.survey-form legend span {
+  color: var(--red);
+}
+
+.survey-form small {
+  color: #777777;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: none;
+}
+
+.survey-choice-grid,
+.survey-contact-grid,
+.survey-text-grid,
+.survey-rating-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.survey-choice-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.survey-choice-grid.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.survey-choice-grid.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.survey-choice-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 12px;
+  background: #f7f7f7;
+  border: 1px solid #d5d5d5;
+  cursor: pointer;
+}
+
+.survey-choice-grid label:has(input:checked) {
+  color: #ffffff;
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.survey-rating-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.survey-rating {
+  padding: 14px;
+  background: #f8f8f8;
+  border: 1px solid #dddddd;
+}
+
+.survey-rating div {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.survey-rating label {
+  display: block;
+}
+
+.survey-rating input {
+  position: absolute;
+  opacity: 0;
+}
+
+.survey-rating span {
+  display: grid;
+  place-items: center;
+  min-height: 38px;
+  color: #333333;
+  background: #ffffff;
+  border: 1px solid #cfcfcf;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.survey-rating input:focus-visible + span {
+  outline: 3px solid rgba(223, 32, 39, 0.28);
+}
+
+.survey-rating input:checked + span {
+  color: #ffffff;
+  background: var(--red);
+  border-color: var(--red);
+}
+
+.survey-text-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.survey-text-grid label,
+.survey-contact-grid label {
+  display: grid;
+  gap: 8px;
+}
+
+.survey-text-grid textarea,
+.survey-contact-grid input {
+  width: 100%;
+  border: 1px solid #d4d4d4;
+  color: #222222;
+  background: #ffffff;
+  font: inherit;
+}
+
+.survey-text-grid textarea {
+  min-height: 104px;
+  resize: vertical;
+  padding: 12px;
+}
+
+.survey-contact-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.survey-contact-grid input {
+  height: 44px;
+  padding: 0 12px;
+}
+
+.survey-submit-row {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding-top: 4px;
+}
+
+.survey-submit-row button {
+  min-height: 48px;
+  border: 0;
+  color: #ffffff;
+  background: var(--red);
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.survey-submit-row button:hover,
+.survey-submit-row button:focus-visible {
+  background: var(--red-dark);
+}
+
+.survey-submit-row button:disabled {
+  background: #8a8a8a;
+  cursor: wait;
+}
+
+.survey-submit-row p {
+  margin: 0;
+  color: #666666;
+  font-size: 13px;
+}
+
+.survey-submit-row p.is-success {
+  color: #156b2f;
+  font-weight: 800;
+}
+
+.survey-submit-row p.is-error {
+  color: var(--red-dark);
+  font-weight: 800;
 }
 
 .hero-slider {
@@ -1051,7 +1383,8 @@ body.is-catalog-mode .product-section {
   margin-bottom: 10px;
 }
 
-.product-tabs span {
+.product-tabs button {
+  border: 0;
   display: grid;
   place-items: center;
   height: 51px;
@@ -1060,10 +1393,24 @@ body.is-catalog-mode .product-section {
   background: #6b6b6b;
   font-size: 18px;
   font-weight: 700;
+  font-family: inherit;
   text-transform: uppercase;
+  cursor: pointer;
 }
 
-.product-tabs .active {
+.product-tabs button:focus-visible {
+  outline: 3px solid rgba(237, 28, 36, 0.3);
+  outline-offset: 3px;
+}
+
+.product-tabs button:hover,
+.product-tabs button:focus-visible {
+  background: #545454;
+}
+
+.product-tabs .active,
+.product-tabs .active:hover,
+.product-tabs .active:focus-visible {
   background: var(--red);
 }
 
@@ -2928,6 +3275,14 @@ body.is-catalog-mode .product-section {
     padding-bottom: 14px;
   }
 
+  .survey-page .header-main {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-header-note {
+    margin-top: 0;
+  }
+
   .search-form {
     width: 100%;
     margin: 0;
@@ -2966,6 +3321,19 @@ body.is-catalog-mode .product-section {
   .info-panels,
   .footer-main {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .survey-hero,
+  .survey-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-goals {
+    position: static;
+  }
+
+  .survey-choice-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .profile-grid {
@@ -3036,6 +3404,40 @@ body.is-catalog-mode .product-section {
     grid-template-columns: 1fr;
   }
 
+  .survey-content {
+    padding-top: 20px;
+  }
+
+  .survey-hero > div,
+  .survey-hero > aside,
+  .survey-goals,
+  .survey-form {
+    padding: 18px;
+  }
+
+  .survey-hero h1 {
+    font-size: 32px;
+  }
+
+  .survey-choice-grid,
+  .survey-choice-grid.two,
+  .survey-choice-grid.three,
+  .survey-rating-grid,
+  .survey-text-grid,
+  .survey-contact-grid,
+  .survey-submit-row {
+    grid-template-columns: 1fr;
+  }
+
+  .survey-rating div {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .survey-choice-grid label,
+  .survey-rating span {
+    min-height: 46px;
+  }
+
   .service-menu-hero > div:first-child {
     padding: 22px 18px;
   }
@@ -3068,7 +3470,7 @@ body.is-catalog-mode .product-section {
     height: auto;
   }
 
-  .product-tabs span {
+  .product-tabs button {
     height: 44px;
   }
 

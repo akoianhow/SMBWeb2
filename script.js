@@ -19,12 +19,69 @@ const state = {
   activeCategory: null,
   activeSubcategory: "All",
   categoryGroups: [],
+  homeProductList: "new",
   items: [],
   sort: "price-asc"
 };
 
 const productImageGalleryState = new WeakMap();
 const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+const scrambleLabelState = new WeakMap();
+const activeScrambleHoverLabels = new WeakSet();
+const scrambleCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+const scrambleLabelSelector = [
+  ".topbar a",
+  ".cart-box strong",
+  ".cart-box span",
+  ".hero-message h1",
+  ".hero-message p",
+  ".hero-message a",
+  ".main-nav a",
+  ".feature-card h2",
+  ".feature-card a",
+  ".product-tabs button",
+  ".product-card h3",
+  ".sale-banner h2",
+  ".sale-banner a",
+  ".info-panels h2",
+  ".service-list h3",
+  ".section-eyebrow",
+  ".service-menu-hero h1",
+  ".service-actions a",
+  ".service-category-chips button",
+  ".service-card span",
+  ".service-card h2",
+  ".service-card a",
+  ".service-help-row h2",
+  ".footer-grid h2",
+  ".footer-grid a"
+].join(", ");
+const homeProductLists = {
+  new: {
+    emptyDetail: "Mark items as Display on Web and New Item in SMBSystem to show them here.",
+    emptyTitle: "No New Arrivals Yet",
+    loadingTitle: "Loading New Arrivals",
+    note: "New arrivals are loaded from SMBSystem items marked Display on Web and New Item. Stocks and prices may change. Message us to confirm before visiting or ordering.",
+    unavailableTitle: "New Arrivals Unavailable",
+    filter: (item) => Boolean(item.isNew)
+  },
+  popular: {
+    emptyDetail: "Mark items as Display on Web and Popular in SMBSystem to show them here.",
+    emptyTitle: "No Popular Items Yet",
+    loadingTitle: "Loading Popular Items",
+    note: "Popular items are loaded from SMBSystem items marked Display on Web and Popular. Stocks and prices may change. Message us to confirm before visiting or ordering.",
+    unavailableTitle: "Popular Items Unavailable",
+    filter: (item) => Boolean(item.isPopular)
+  },
+  sale: {
+    emptyDetail: "Mark items as Display on Web and Sale in SMBSystem to show promos here.",
+    emptyTitle: "No Promos Yet",
+    loadingTitle: "Loading Promos",
+    note: "Promos are loaded from SMBSystem items marked Display on Web and Sale. Stocks and prices may change. Message us to confirm before visiting or ordering.",
+    unavailableTitle: "Promos Unavailable",
+    filter: (item) => Boolean(item.isOnSale)
+  }
+};
 
 const communityState = {
   categories: [],
@@ -86,6 +143,109 @@ function createTextElement(tagName, text, className) {
     element.className = className;
   }
   return element;
+}
+
+function isScrambleCharacter(character) {
+  return /[A-Za-z0-9]/.test(character);
+}
+
+function getRandomScrambleCharacter(original) {
+  const randomCharacter = scrambleCharacters[Math.floor(Math.random() * scrambleCharacters.length)];
+  return original === original.toLowerCase() ? randomCharacter.toLowerCase() : randomCharacter;
+}
+
+function findScrambleLabel(target) {
+  if (!(target instanceof Element)) {
+    return null;
+  }
+
+  const label = target.closest(scrambleLabelSelector);
+  if (!label || label.closest("[data-profile-view], [data-community-view], [data-community-auth-prompt], [data-community-thread-modal], [data-community-photo-modal], [data-community-edit-modal]")) {
+    return null;
+  }
+
+  return label;
+}
+
+function runScrambleLabel(label) {
+  if (!label || prefersReducedMotion?.matches || scrambleLabelState.has(label) || activeScrambleHoverLabels.has(label)) {
+    return;
+  }
+
+  const originalHtml = label.innerHTML;
+  const originalText = label.textContent || "";
+  if (!originalText.trim()) {
+    return;
+  }
+
+  let frame = 0;
+  const state = {
+    animationId: null,
+    originalHtml,
+    originalText
+  };
+  scrambleLabelState.set(label, state);
+  activeScrambleHoverLabels.add(label);
+  label.classList.add("is-letter-scrambling");
+
+  const tick = () => {
+    const revealCount = Math.floor(frame / 2);
+    label.textContent = Array.from(originalText, (character, index) => {
+      if (!isScrambleCharacter(character) || index < revealCount) {
+        return character;
+      }
+
+      return getRandomScrambleCharacter(character);
+    }).join("");
+
+    frame += 1;
+    if (revealCount >= originalText.length) {
+      label.innerHTML = originalHtml;
+      label.classList.remove("is-letter-scrambling");
+      scrambleLabelState.delete(label);
+      return;
+    }
+
+    state.animationId = window.requestAnimationFrame(tick);
+  };
+
+  tick();
+}
+
+function bindScrambleLabels() {
+  const startScramble = (event) => {
+    const label = findScrambleLabel(event.target);
+    if (!label || label.contains(event.relatedTarget)) {
+      return;
+    }
+
+    runScrambleLabel(label);
+  };
+
+  const clearScrambleHover = (event) => {
+    const label = findScrambleLabel(event.target);
+    if (!label || label.contains(event.relatedTarget)) {
+      return;
+    }
+
+    activeScrambleHoverLabels.delete(label);
+  };
+
+  document.addEventListener("pointerover", startScramble);
+  document.addEventListener("mouseover", startScramble);
+  document.addEventListener("pointerout", clearScrambleHover);
+  document.addEventListener("mouseout", clearScrambleHover);
+
+  document.addEventListener("focusin", (event) => {
+    runScrambleLabel(findScrambleLabel(event.target));
+  });
+
+  document.addEventListener("focusout", (event) => {
+    const label = findScrambleLabel(event.target);
+    if (label) {
+      activeScrambleHoverLabels.delete(label);
+    }
+  });
 }
 
 function getWebItemsGrid() {
@@ -341,7 +501,7 @@ async function apiRequest(path, options = {}) {
 }
 
 async function enforcePublicWebsiteMode() {
-  if (window.location.pathname.endsWith("/coming-soon.html")) {
+  if (window.location.pathname.endsWith("/coming-soon.html") || window.location.pathname.endsWith("/survey.html")) {
     return false;
   }
 
@@ -600,7 +760,7 @@ function returnToHome() {
   state.activeCategory = null;
   state.activeSubcategory = "All";
   updateActiveCategoryNav();
-  loadNewArrivalItems();
+  loadHomeProductItems(state.homeProductList);
   showProfileMode(false);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -638,6 +798,7 @@ function renderCategoryNav() {
     { label: "Services", href: "services.html", action: goToServices, active: isServicesPage },
     { label: "Rides", href: isServicesPage ? "index.html#online" : "#online", action: () => goToHomeTarget("online") },
     { label: "Community", href: isServicesPage ? "index.html#community" : "/community", action: () => isServicesPage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage },
+    { label: "Survey", href: "survey.html", action: () => window.location.href = "survey.html" },
     { label: "Contact", href: isServicesPage ? "#contact" : "#contact", action: () => isServicesPage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
   ].forEach((item) => {
     const link = document.createElement("a");
@@ -795,25 +956,43 @@ async function openCategoryCatalog(categoryKey) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-async function loadNewArrivalItems() {
+function getHomeProductListConfig(filterKey) {
+  return homeProductLists[filterKey] || homeProductLists.new;
+}
+
+function updateHomeProductTabs(filterKey) {
+  document.querySelectorAll("[data-home-product-filter]").forEach((button) => {
+    const isActive = button.dataset.homeProductFilter === filterKey;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+async function loadHomeProductItems(filterKey = state.homeProductList) {
   const webItemsGrid = getWebItemsGrid();
   if (!webItemsGrid) {
     return;
   }
 
+  state.homeProductList = homeProductLists[filterKey] ? filterKey : "new";
+  const config = getHomeProductListConfig(state.homeProductList);
+  updateHomeProductTabs(state.homeProductList);
+  document.querySelector("[data-stock-note]").textContent = config.note;
+  setGridState(config.loadingTitle, "Checking SMBSystem web catalog items for Quezon City.");
+
   try {
     await loadWebItems();
-    const newItems = state.items.filter((item) => isPublicProduct(item) && item.isNew).slice(0, 8);
+    const filteredItems = state.items.filter((item) => isPublicProduct(item) && config.filter(item)).slice(0, 8);
     webItemsGrid.replaceChildren();
 
-    if (newItems.length === 0) {
-      setGridState("No New Arrivals Yet", "Mark items as Display on Web and New Item in SMBSystem to show them here.");
+    if (filteredItems.length === 0) {
+      setGridState(config.emptyTitle, config.emptyDetail);
       return;
     }
 
-    newItems.forEach((item) => webItemsGrid.append(renderWebItemCard(item)));
+    filteredItems.forEach((item) => webItemsGrid.append(renderWebItemCard(item)));
   } catch (error) {
-    setGridState("New Arrivals Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
+    setGridState(config.unavailableTitle, "SMBSystem public catalog is not reachable. Try again after the API is running.");
   }
 }
 
@@ -2371,6 +2550,15 @@ function bindCatalogUi() {
     });
   });
 
+  document.querySelectorAll("[data-home-product-filter]").forEach((button) => {
+    button.addEventListener("click", () => {
+      setCatalogMode(false);
+      showProfileMode(false);
+      showCommunityMode(false);
+      loadHomeProductItems(button.dataset.homeProductFilter);
+    });
+  });
+
   document.querySelector("[data-sort-select]")?.addEventListener("change", (event) => {
     state.sort = event.target.value;
     renderCatalog();
@@ -2889,12 +3077,13 @@ async function startCatalog() {
     return;
   }
 
+  bindScrambleLabels();
   renderCategoryNav();
   bindCustomerAccountUi();
   bindCatalogUi();
   bindServiceFilters();
   bindCommunityUi();
-  loadNewArrivalItems();
+  loadHomeProductItems();
   if (window.location.pathname === "/community") {
     openCommunityPage(false);
   }

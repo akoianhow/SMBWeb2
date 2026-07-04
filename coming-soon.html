@@ -268,12 +268,13 @@
 
       .main-nav {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
         min-height: 61px;
         background: #252525;
       }
 
-      .main-nav span {
+      .main-nav span,
+      .main-nav a {
         display: grid;
         place-items: center;
         color: var(--white);
@@ -285,6 +286,11 @@
       }
 
       .main-nav span:first-child {
+        background: var(--red);
+      }
+
+      .main-nav a:hover,
+      .main-nav a:focus-visible {
         background: var(--red);
       }
 
@@ -560,6 +566,7 @@
         <nav aria-label="Utility navigation">
           <a href="#contact">Contact Us</a>
           <a href="#branches">Branches</a>
+          <a href="survey.html">Survey</a>
         </nav>
         <div class="topbar-options">
           <span>English</span>
@@ -585,14 +592,15 @@
       <div class="lock-box" aria-hidden="true">Lock</div>
     </div>
 
-    <nav class="wrap main-nav" aria-label="Website navigation">
-      <span>Bikes</span>
-      <span>Parts</span>
-      <span>Services</span>
-      <span>Apparel</span>
-      <span>Community</span>
-      <span>Contact</span>
-    </nav>
+      <nav class="wrap main-nav" aria-label="Website navigation">
+        <span>Bikes</span>
+        <span>Parts</span>
+        <span>Services</span>
+        <span>Apparel</span>
+        <span>Community</span>
+        <a href="survey.html">Survey</a>
+        <span>Contact</span>
+      </nav>
 
     <main class="wrap content">
       <section class="hero" aria-label="SarapMagBike website coming soon">
@@ -602,7 +610,7 @@
           <h1>Coming Soon</h1>
           <strong>SarapMagBike Shop website is getting ready. Message us for bike sales, parts, accessories, apparel, service queue, and online order concerns.</strong>
           <div class="hero-actions">
-            <a href="https://www.facebook.com/search/top?q=sarapmagbike" target="_blank" rel="noreferrer">Message Us</a>
+            <a href="survey.html">Take Survey</a>
             <a href="#branches">Visit Our Branches</a>
           </div>
         </div>

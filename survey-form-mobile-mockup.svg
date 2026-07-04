@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="1220" viewBox="0 0 390 1220" role="img" aria-labelledby="title desc">
+  <title id="title">SarapMagBike Mobile Customer Survey Mockup</title>
+  <desc id="desc">Mobile webpage mockup for a SarapMagBike customer experience survey.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f6f7f8}.surface{fill:#fff}.line{stroke:#dde2e8;stroke-width:1}.card{fill:#fff;stroke:#dde2e8;stroke-width:1.2}.soft{fill:#f9fafb;stroke:#d4dae2;stroke-width:1.2}
+      .ink{fill:#161a22;font-family:Inter,Arial,sans-serif}.muted{fill:#667085;font-family:Inter,Arial,sans-serif}.red{fill:#e30613}.green{fill:#0b6b32}
+      .h1{font-size:25px;font-weight:850}.body{font-size:15px}.small{font-size:12px}.label{font-size:16px;font-weight:800}.chipText{font-size:13px;font-weight:750;font-family:Inter,Arial,sans-serif;fill:#242933}
+    </style>
+  </defs>
+  <rect class="bg" width="390" height="1220"/>
+  <rect x="0" y="0" width="390" height="76" class="surface"/>
+  <circle cx="35" cy="38" r="20" fill="#111827"/>
+  <path d="M25 40h19L31 55h18" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="66" y="35" class="ink" font-size="19" font-weight="900">SARAP<tspan class="red">MAG</tspan>BIKE</text>
+  <text x="141" y="56" class="ink" font-size="10" font-weight="900" letter-spacing="7">SHOP</text>
+  <rect x="337" y="26" width="28" height="4" rx="2" fill="#28313d"/>
+  <rect x="337" y="36" width="28" height="4" rx="2" fill="#28313d"/>
+  <rect x="337" y="46" width="28" height="4" rx="2" fill="#28313d"/>
+  <rect x="0" y="75" width="120" height="3" class="red"/>
+
+  <g transform="translate(18 104)">
+    <rect x="0" y="0" width="48" height="48" rx="8" fill="#fff" stroke="#d4dae2"/>
+    <path d="M19 13h15v23H14V18h5z" fill="none" stroke="#e30613" stroke-width="2"/>
+    <circle cx="32" cy="32" r="7" fill="#fff" stroke="#e30613" stroke-width="2"/>
+    <path d="M29 32l2 2 4-5" fill="none" stroke="#e30613" stroke-width="2" stroke-linecap="round"/>
+    <text x="64" y="27" class="ink h1">Customer Experience</text>
+    <text x="64" y="58" class="ink h1">Survey</text>
+    <text x="64" y="86" class="muted body">Help us improve our shop, service, stock,</text>
+    <text x="64" y="107" class="muted body">and online ordering experience.</text>
+  </g>
+
+  <line x1="18" y1="242" x2="372" y2="242" class="line"/>
+
+  <text x="18" y="278" class="ink label">1. Branch visited <tspan class="red">*</tspan></text>
+  <rect x="18" y="296" width="111" height="48" rx="8" fill="#fff" stroke="#e30613" stroke-width="1.4"/>
+  <circle cx="36" cy="320" r="8" fill="#fff" stroke="#e30613" stroke-width="2"/><circle cx="36" cy="320" r="4" class="red"/>
+  <text x="51" y="325" class="chipText">Quezon City</text>
+  <rect x="139" y="296" width="111" height="48" rx="8" class="card"/>
+  <circle cx="157" cy="320" r="8" fill="#fff" stroke="#98a2b3" stroke-width="1.6"/>
+  <text x="179" y="325" class="chipText">Pampanga</text>
+  <rect x="260" y="296" width="112" height="48" rx="8" class="card"/>
+  <circle cx="278" cy="320" r="8" fill="#fff" stroke="#98a2b3" stroke-width="1.6"/>
+  <text x="300" y="325" class="chipText">Online</text>
+
+  <text x="18" y="384" class="ink label">2. Visit purpose <tspan class="red">*</tspan></text>
+  <g transform="translate(18 402)">
+    <rect width="104" height="70" rx="8" class="card"/><text x="52" y="29" text-anchor="middle" class="red" font-size="22">○</text><text x="52" y="50" text-anchor="middle" class="chipText">Buy parts</text>
+    <rect x="124" width="104" height="70" rx="8" class="card"/><text x="176" y="29" text-anchor="middle" class="red" font-size="22">✓</text><text x="176" y="50" text-anchor="middle" class="chipText">Bike service</text>
+    <rect x="248" width="104" height="70" rx="8" class="card"/><text x="300" y="29" text-anchor="middle" class="red" font-size="22">⌕</text><text x="300" y="50" text-anchor="middle" class="chipText">Check stock</text>
+    <rect y="82" width="166" height="48" rx="8" class="card"/><text x="83" y="31" text-anchor="middle" class="chipText">Shopee/Lazada order</text>
+    <rect x="186" y="82" width="166" height="48" rx="8" class="card"/><text x="269" y="31" text-anchor="middle" class="chipText">Coffee or hangout</text>
+  </g>
+
+  <rect x="18" y="558" width="354" height="250" rx="10" class="card"/>
+  <g transform="translate(34 590)">
+    <text class="ink label">3. Overall experience <tspan class="red">*</tspan></text>
+    <text x="0" y="41" class="red small">Poor</text><text x="266" y="41" class="green small">Excellent</text>
+    <g transform="translate(83 21)">
+      <text x="0" y="-6" class="chipText">1</text><text x="43" y="-6" class="chipText">2</text><text x="86" y="-6" class="chipText">3</text><text x="129" y="-6" class="chipText">4</text><text x="172" y="-6" class="chipText">5</text>
+      <circle cx="4" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="47" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="90" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="133" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="176" cy="20" r="8" fill="#fff" stroke="#98a2b3"/>
+    </g>
+  </g>
+  <line x1="18" y1="648" x2="372" y2="648" class="line"/>
+  <g transform="translate(34 682)">
+    <text class="ink label">4. Staff helpfulness <tspan class="red">*</tspan></text>
+    <text x="0" y="41" class="red small">Poor</text><text x="266" y="41" class="green small">Excellent</text>
+    <g transform="translate(83 21)"><text x="0" y="-6" class="chipText">1</text><text x="43" y="-6" class="chipText">2</text><text x="86" y="-6" class="chipText">3</text><text x="129" y="-6" class="chipText">4</text><text x="172" y="-6" class="chipText">5</text><circle cx="4" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="47" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="90" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="133" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="176" cy="20" r="8" fill="#fff" stroke="#98a2b3"/></g>
+  </g>
+  <line x1="18" y1="740" x2="372" y2="740" class="line"/>
+  <g transform="translate(34 774)">
+    <text class="ink label">5. Stock availability <tspan class="red">*</tspan></text>
+    <text x="0" y="41" class="red small">Poor</text><text x="266" y="41" class="green small">Excellent</text>
+    <g transform="translate(83 21)"><text x="0" y="-6" class="chipText">1</text><text x="43" y="-6" class="chipText">2</text><text x="86" y="-6" class="chipText">3</text><text x="129" y="-6" class="chipText">4</text><text x="172" y="-6" class="chipText">5</text><circle cx="4" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="47" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="90" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="133" cy="20" r="8" fill="#fff" stroke="#98a2b3"/><circle cx="176" cy="20" r="8" fill="#fff" stroke="#98a2b3"/></g>
+  </g>
+
+  <text x="18" y="858" class="ink label">6. Service quality <tspan class="red">*</tspan></text>
+  <rect x="18" y="876" width="354" height="52" rx="8" class="soft"/>
+  <text x="41" y="906" class="red small">Poor</text><text x="295" y="906" class="green small">Excellent</text>
+  <text x="116" y="897" class="chipText">1</text><text x="159" y="897" class="chipText">2</text><text x="202" y="897" class="chipText">3</text><text x="245" y="897" class="chipText">4</text><text x="288" y="897" class="chipText">5</text>
+
+  <text x="18" y="970" class="ink label">7. What did we do well?</text>
+  <rect x="18" y="988" width="354" height="74" rx="8" class="soft"/>
+  <text x="34" y="1017" class="muted body">Tell us what you liked...</text>
+  <text x="326" y="1046" class="muted small">0/500</text>
+
+  <text x="18" y="1100" class="ink label">8. What should we improve?</text>
+  <rect x="18" y="1118" width="354" height="74" rx="8" class="soft"/>
+  <text x="34" y="1147" class="muted body">Share your suggestions...</text>
+  <text x="326" y="1176" class="muted small">0/500</text>
+</svg>

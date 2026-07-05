@@ -266,6 +266,12 @@
         content: "";
       }
 
+      .mobile-header-actions,
+      .mobile-status-strip,
+      .mobile-bottom-nav {
+        display: none;
+      }
+
       .main-nav {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
@@ -558,6 +564,327 @@
           text-align: center;
         }
       }
+
+      @media (max-width: 640px) {
+        html {
+          scroll-padding-bottom: 78px;
+        }
+
+        body {
+          padding-bottom: 74px;
+          background: #f2f3f4;
+          font-size: 12px;
+        }
+
+        body::before {
+          content: none;
+        }
+
+        .wrap {
+          max-width: calc(100vw - 20px);
+        }
+
+        .topbar,
+        .main-nav,
+        .search-form,
+        .message-box,
+        .lock-box,
+        .slide-pages,
+        .footer-bottom .wrap {
+          display: none;
+        }
+
+        .header-main {
+          position: sticky;
+          top: 0;
+          z-index: 40;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 9px 10px;
+          align-items: center;
+          min-height: 0;
+          max-width: 100%;
+          padding: 9px 10px 10px;
+          background: rgba(255, 255, 255, 0.98);
+          border-bottom: 1px solid #dedede;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+          display: grid;
+          grid-template-columns: 42px minmax(0, 1fr);
+          grid-template-rows: auto auto;
+          column-gap: 8px;
+          align-items: center;
+          width: auto;
+          height: auto;
+          min-width: 0;
+          padding: 0;
+        }
+
+        .logo img {
+          position: static;
+          grid-row: 1 / span 2;
+          width: 42px;
+          height: 42px;
+        }
+
+        .logo-word {
+          min-width: 0;
+          padding-top: 0;
+          font-size: 18px;
+          line-height: 0.92;
+          white-space: nowrap;
+        }
+
+        .logo-tag {
+          display: inline-flex;
+          width: fit-content;
+          min-height: 20px;
+          align-items: center;
+          margin-top: 3px;
+          padding: 0 8px;
+          color: #222222;
+          background: #f2f2f2;
+          border: 1px solid #dddddd;
+          border-radius: 999px;
+          font-size: 9px;
+        }
+
+        .mobile-header-actions {
+          display: flex;
+          gap: 6px;
+          justify-content: flex-end;
+        }
+
+        .mobile-header-actions a {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px;
+          padding: 0 9px;
+          color: #ffffff;
+          background: #202020;
+          border-radius: 8px;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .mobile-header-actions a:first-child {
+          background: var(--red);
+        }
+
+        .content {
+          max-width: 100%;
+          padding-top: 10px;
+        }
+
+        .hero {
+          min-height: 368px;
+          border: 1px solid #e0e0e0;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
+        .hero-image {
+          background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.78), rgba(0, 0, 0, 0.24) 62%, rgba(0, 0, 0, 0.72)),
+            url("assets/hero-bikes.png") center right / cover no-repeat;
+        }
+
+        .hero-message {
+          position: absolute;
+          inset: auto 12px 12px;
+          display: grid;
+          gap: 8px;
+          width: auto;
+          padding: 0;
+          background: transparent;
+          transform: none;
+        }
+
+        .hero-message p {
+          margin-bottom: 0;
+          color: #f2f2f2;
+          font-size: 10px;
+        }
+
+        .hero-message h1 {
+          max-width: 250px;
+          margin-bottom: 0;
+          font-size: 34px;
+          line-height: 0.9;
+        }
+
+        .hero-message strong {
+          max-width: 318px;
+          margin-bottom: 0;
+          color: #f4f4f4;
+          font-size: 12px;
+        }
+
+        .hero-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .hero-actions a {
+          min-height: 40px;
+          padding: 0 10px;
+          border-radius: 8px;
+          font-size: 10px;
+          text-align: center;
+        }
+
+        .mobile-status-strip {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 8px;
+          align-items: center;
+          margin: 12px 0 0;
+          padding: 12px;
+          background: #ffffff;
+          border: 1px solid #dedede;
+          border-radius: 8px;
+        }
+
+        .mobile-status-strip p,
+        .mobile-status-strip strong {
+          margin: 0;
+        }
+
+        .mobile-status-strip p {
+          color: var(--red);
+          font-size: 9px;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .mobile-status-strip strong {
+          display: block;
+          color: #191919;
+          font-size: 13px;
+          line-height: 1.15;
+          text-transform: uppercase;
+        }
+
+        .mobile-status-strip a {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 34px;
+          padding: 0 10px;
+          color: #ffffff;
+          background: var(--red);
+          border-radius: 8px;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform: uppercase;
+          white-space: nowrap;
+        }
+
+        .feature-tiles {
+          display: flex;
+          gap: 8px;
+          max-width: 100%;
+          margin: 12px 0 0;
+          padding: 0 0 4px;
+          overflow-x: auto;
+          scroll-snap-type: x proximity;
+        }
+
+        .feature-card {
+          flex: 0 0 132px;
+          min-height: 116px;
+          padding: 52px 9px 9px;
+          border-radius: 8px;
+          background-size: auto, 230% 230%;
+          scroll-snap-align: start;
+        }
+
+        .feature-card h2 {
+          margin-bottom: 6px;
+          font-size: 16px;
+          line-height: 0.96;
+        }
+
+        .feature-card p {
+          margin-bottom: 0;
+          font-size: 9px;
+          line-height: 1.25;
+        }
+
+        .branch-strip {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          margin: 12px 0 18px;
+        }
+
+        .branch-card {
+          padding: 14px;
+          border-left: 0;
+          border-top: 4px solid var(--red);
+          border-radius: 8px;
+        }
+
+        .branch-card h2 {
+          font-size: 14px;
+        }
+
+        .branch-card p {
+          font-size: 12px;
+          line-height: 1.4;
+        }
+
+        .mobile-bottom-nav {
+          position: fixed;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 50;
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          min-height: 64px;
+          padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+          background: rgba(255, 255, 255, 0.98);
+          border-top: 1px solid #d8d8d8;
+          box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .mobile-bottom-nav a {
+          display: grid;
+          gap: 2px;
+          place-items: center;
+          min-width: 0;
+          color: #343434;
+          font-size: 9px;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .mobile-bottom-nav span {
+          display: grid;
+          place-items: center;
+          width: 26px;
+          height: 24px;
+          color: #ffffff;
+          background: #2a2a2a;
+          border-radius: 8px;
+          font-size: 14px;
+          line-height: 1;
+        }
+
+        .mobile-bottom-nav a.active {
+          color: var(--red);
+        }
+
+        .mobile-bottom-nav a.active span {
+          background: var(--red);
+        }
+      }
     </style>
   </head>
   <body>
@@ -581,6 +908,10 @@
         <span class="logo-word">SARAPMAG<span>BIKE</span></span>
         <span class="logo-tag">QC | PAMPANGA</span>
       </a>
+      <div class="mobile-header-actions" aria-label="Mobile quick actions">
+        <a href="#branches">Branches</a>
+        <a href="survey.html">Survey</a>
+      </div>
       <form class="search-form" action="#contact">
         <input type="search" aria-label="Search" placeholder="Search bikes, parts, service" disabled>
         <button type="submit">Search</button>
@@ -622,6 +953,14 @@
         </div>
       </section>
 
+      <section class="mobile-status-strip" aria-label="Mobile coming soon status">
+        <div>
+          <p>Website tune-up</p>
+          <strong>Catalog is getting ready</strong>
+        </div>
+        <a href="#branches">Contact</a>
+      </section>
+
       <section class="feature-tiles" aria-label="Shop categories">
         <article class="feature-card">
           <h2>Bikes & Frames</h2>
@@ -661,6 +1000,14 @@
         <span>YPP Enterprises OPC</span>
       </div>
     </footer>
+
+    <nav class="mobile-bottom-nav" aria-label="Mobile coming soon navigation">
+      <a href="coming-soon.html" class="active" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
+      <a href="#branches" aria-label="Branches"><span aria-hidden="true">▦</span>Branches</a>
+      <a href="#contact" aria-label="Contact"><span aria-hidden="true">◉</span>Contact</a>
+      <a href="survey.html" aria-label="Survey"><span aria-hidden="true">◴</span>Survey</a>
+      <a href="https://www.facebook.com/sarapmagbikeshop" target="_blank" rel="noreferrer" aria-label="Message"><span aria-hidden="true">✉</span>Message</a>
+    </nav>
 
     <script>
       document.querySelector("#year").textContent = new Date().getFullYear();

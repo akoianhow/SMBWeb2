@@ -4335,6 +4335,11 @@ body.is-catalog-mode .product-section {
   }
 
   .community-heading,
+  .community-filters {
+    display: none;
+  }
+
+  .community-heading,
   .community-layout {
     width: calc(100% - 20px);
   }
@@ -4423,9 +4428,7 @@ body.is-catalog-mode .product-section {
   }
 
   .community-filters {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
+    display: none;
   }
 
   .community-filters label {

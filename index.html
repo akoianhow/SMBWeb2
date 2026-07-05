@@ -377,6 +377,26 @@
               <h2>Join the discussion</h2>
               <p>Guests can read approved discussions. Log in or create an account to post, reply, like, report, or upload photos.</p>
               <button type="button" data-community-login>Log in</button>
+              <form class="community-login-form" data-community-login-form hidden>
+                <div class="community-login-brand">
+                  <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+                  <div>
+                    <strong>SarapMagBike Account</strong>
+                    <span>Log in to join community discussions.</span>
+                  </div>
+                </div>
+                <label>
+                  Username
+                  <input type="text" name="username" autocomplete="username" required>
+                </label>
+                <label>
+                  Password
+                  <input type="password" name="password" autocomplete="current-password" required>
+                </label>
+                <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <button type="submit">Log in</button>
+                <p data-community-login-message role="status"></p>
+              </form>
               <button type="button" data-community-register>Create account</button>
             </div>
             <div class="community-filters">

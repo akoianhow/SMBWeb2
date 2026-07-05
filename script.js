@@ -1070,6 +1070,16 @@ function hideCommunityAuthPrompt() {
   }
 }
 
+function openCommunityLoginForm() {
+  openCommunityPage(false);
+  const form = document.querySelector("[data-community-login-form]");
+  if (form) {
+    form.hidden = false;
+    form.querySelector("input[name='username']")?.focus();
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 function requireCommunityLogin() {
   if (customerState.account) {
     return true;
@@ -2410,14 +2420,13 @@ function bindCommunityUi() {
     }
     document.querySelector("[data-community-composer] textarea")?.focus();
   });
-  document.querySelector("[data-community-login]")?.addEventListener("click", () => {
-    document.querySelector("[data-customer-login-form] input[name='username']")?.focus();
-  });
+  document.querySelector("[data-community-login]")?.addEventListener("click", openCommunityLoginForm);
+  document.querySelector("[data-community-login-form]")?.addEventListener("submit", loginCustomer);
   document.querySelector("[data-community-register]")?.addEventListener("click", openRegisterForm);
   document.querySelector("[data-community-prompt-close]")?.addEventListener("click", hideCommunityAuthPrompt);
   document.querySelector("[data-community-prompt-login]")?.addEventListener("click", () => {
     hideCommunityAuthPrompt();
-    document.querySelector("[data-customer-login-form] input[name='username']")?.focus();
+    openCommunityLoginForm();
   });
   document.querySelector("[data-community-prompt-register]")?.addEventListener("click", () => {
     hideCommunityAuthPrompt();
@@ -2966,6 +2975,13 @@ async function loginCustomer(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const wasInCommunity = document.body.classList.contains("is-community-mode");
+  const message = form.querySelector("[data-community-login-message]");
+  const submitButton = form.querySelector("button[type='submit']");
+  setMessage(message, "", "");
+  if (submitButton) {
+    submitButton.disabled = true;
+    submitButton.textContent = "Logging in...";
+  }
   try {
     customerState.account = await apiRequest("/api/public/customer-account/login", {
       method: "POST",
@@ -2977,13 +2993,23 @@ async function loginCustomer(event) {
     });
     form.reset();
     updateCustomerHeader();
+    setMessage(message, "Logged in.", "success");
     if (wasInCommunity) {
       openCommunityPage(false);
     } else {
       returnToHome();
     }
   } catch (error) {
-    alert("Unable to log in. Check your username and password.");
+    if (message) {
+      setMessage(message, "Unable to log in. Check your username and password.", "error");
+    } else {
+      alert("Unable to log in. Check your username and password.");
+    }
+  } finally {
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "Log in";
+    }
   }
 }
 

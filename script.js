@@ -102,6 +102,9 @@ const communityState = {
   selectedCategorySlugs: []
 };
 
+const GENERAL_CATEGORY_SLUGS = ["general", "community-tips"];
+const GENERAL_CATEGORY_LABEL = "GENERAL";
+
 if (year) {
   year.textContent = new Date().getFullYear();
 }
@@ -1158,6 +1161,28 @@ function renderCommunityConfig() {
   }
 }
 
+function isGeneralCommunityCategory(category) {
+  return GENERAL_CATEGORY_SLUGS.includes(String(category?.slug || "").toLowerCase());
+}
+
+function getDefaultCommunityCategorySlug() {
+  return communityState.categories.find(isGeneralCommunityCategory)?.slug || "";
+}
+
+function getCommunityCategoriesForUi() {
+  const general = communityState.categories.find(isGeneralCommunityCategory);
+  const normalizedGeneral = general ? { ...general, name: GENERAL_CATEGORY_LABEL } : null;
+  const others = communityState.categories.filter((category) => !isGeneralCommunityCategory(category));
+  return normalizedGeneral ? [normalizedGeneral, ...others] : others;
+}
+
+function ensureDefaultCommunityComposerCategory() {
+  const defaultSlug = getDefaultCommunityCategorySlug();
+  if (defaultSlug && communityState.selectedCategorySlugs.length === 0) {
+    communityState.selectedCategorySlugs = [defaultSlug];
+  }
+}
+
 function renderCommunityCategories() {
   const select = document.querySelector("[data-community-category]");
   if (!select) {
@@ -1166,13 +1191,14 @@ function renderCommunityCategories() {
 
   const currentValue = select.value || "all";
   select.replaceChildren(new Option("All categories", "all"));
-  communityState.categories.forEach((category) => {
+  getCommunityCategoriesForUi().forEach((category) => {
     select.append(new Option(category.name, category.slug));
   });
   select.value = communityState.categories.some((category) => category.slug === currentValue) ? currentValue : "all";
   communityState.selectedCategorySlugs = communityState.selectedCategorySlugs.filter((slug) =>
     communityState.categories.some((category) => category.slug === slug)
   );
+  ensureDefaultCommunityComposerCategory();
   renderCommunityComposerCategories();
 }
 
@@ -1183,7 +1209,7 @@ function renderCommunityComposerCategories() {
   }
 
   container.replaceChildren();
-  communityState.categories.forEach((category) => {
+  getCommunityCategoriesForUi().forEach((category) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.textContent = category.name;
@@ -2374,6 +2400,7 @@ function removeCommunityPhoto(index) {
 function resetCommunityComposerState() {
   communityState.photoUploads = [];
   communityState.selectedCategorySlugs = [];
+  ensureDefaultCommunityComposerCategory();
   renderCommunityPhotoPreviews();
   renderCommunityComposerCategories();
   const composer = document.querySelector("[data-community-composer]");
@@ -2663,6 +2690,17 @@ function setAccountMenuOpen(open) {
   }
 }
 
+function setComingSoonHeaderMenuOpen(open) {
+  const menu = document.querySelector("[data-coming-soon-header-menu]");
+  const toggle = document.querySelector("[data-coming-soon-header-menu-toggle]");
+  if (menu) {
+    menu.hidden = !open;
+  }
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+  }
+}
+
 function setMessage(element, message, type = "") {
   if (!element) {
     return;
@@ -2722,6 +2760,16 @@ function updateCustomerHeader() {
   const email = document.querySelector("[data-account-email]");
   const hometown = document.querySelector("[data-account-hometown]");
   const riderTypes = document.querySelector("[data-account-rider-types]");
+  const comingSoonGuest = document.querySelector("[data-coming-soon-account-guest]");
+  const comingSoonMember = document.querySelector("[data-coming-soon-account-member]");
+  const comingSoonName = document.querySelector("[data-coming-soon-account-name]");
+  const comingSoonRegisterAction = document.querySelector("[data-coming-soon-register-action]");
+  const comingSoonHeaderRegister = document.querySelector("[data-coming-soon-header-register]");
+  const comingSoonHeaderSession = document.querySelector("[data-coming-soon-header-session]");
+  const comingSoonHeaderName = document.querySelector("[data-coming-soon-header-name]");
+  const comingSoonHeaderEmail = document.querySelector("[data-coming-soon-header-email]");
+  const communityComposerAvatar = document.querySelector("[data-community-composer-avatar]");
+  const communityComposer = document.querySelector("[data-community-composer]");
   const isLoggedIn = Boolean(customerState.account);
 
   if (loginForm) {
@@ -2730,9 +2778,43 @@ function updateCustomerHeader() {
   if (sessionPanel) {
     sessionPanel.hidden = !isLoggedIn;
   }
+  if (comingSoonHeaderRegister) {
+    comingSoonHeaderRegister.hidden = isLoggedIn;
+  }
+  if (comingSoonHeaderSession) {
+    comingSoonHeaderSession.hidden = !isLoggedIn;
+  }
+  if (comingSoonGuest) {
+    comingSoonGuest.hidden = isLoggedIn;
+  }
+  if (comingSoonMember) {
+    comingSoonMember.hidden = !isLoggedIn;
+  }
+  if (comingSoonName) {
+    comingSoonName.textContent = customerState.account?.username || customerState.account?.email || "Customer";
+  }
+  if (comingSoonHeaderName) {
+    comingSoonHeaderName.textContent = customerState.account?.username || customerState.account?.email || "Customer";
+  }
+  if (comingSoonHeaderEmail) {
+    comingSoonHeaderEmail.textContent = customerState.profile?.email || customerState.account?.email || "";
+  }
+  if (comingSoonRegisterAction) {
+    comingSoonRegisterAction.hidden = isLoggedIn;
+  }
+  if (communityComposerAvatar) {
+    communityComposerAvatar.hidden = !isLoggedIn;
+  }
+  if (communityComposer) {
+    communityComposer.classList.toggle("has-customer-avatar", isLoggedIn);
+  }
   setAccountMenuOpen(false);
+  setComingSoonHeaderMenuOpen(false);
   renderAvatar(document.querySelector("[data-account-avatar]"));
   renderAvatar(document.querySelector("[data-account-menu-avatar]"));
+  renderAvatar(document.querySelector("[data-coming-soon-account-avatar]"));
+  renderAvatar(document.querySelector("[data-coming-soon-header-avatar]"));
+  renderAvatar(communityComposerAvatar);
   if (greeting && customerState.account) {
     greeting.textContent = customerState.account.username;
   }
@@ -3066,6 +3148,33 @@ async function toggleAccountMenu() {
   setAccountMenuOpen(true);
 }
 
+async function toggleComingSoonHeaderMenu(event) {
+  event?.stopPropagation();
+  const menu = document.querySelector("[data-coming-soon-header-menu]");
+  if (!menu || !customerState.account) {
+    return;
+  }
+
+  const shouldOpen = menu.hidden;
+  setComingSoonHeaderMenuOpen(shouldOpen);
+  if (!shouldOpen || customerState.profile) {
+    return;
+  }
+
+  try {
+    customerState.profile = await apiRequest("/api/public/customer-account/profile");
+    customerState.account = {
+      ...customerState.account,
+      email: customerState.profile.email,
+      profilePictureUrl: customerState.profile.profilePictureUrl
+    };
+    updateCustomerHeader();
+    setComingSoonHeaderMenuOpen(true);
+  } catch {
+    setComingSoonHeaderMenuOpen(true);
+  }
+}
+
 async function restoreCustomerSession() {
   try {
     customerState.account = await apiRequest("/api/public/customer-account/session");
@@ -3114,13 +3223,19 @@ function bindCustomerAccountUi() {
     });
   });
   document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
+  document.querySelector("[data-coming-soon-header-menu-toggle]")?.addEventListener("click", toggleComingSoonHeaderMenu);
   document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
   document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
+  document.querySelector("[data-coming-soon-header-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-close-profile]")?.addEventListener("click", () => showProfileMode(false));
   document.addEventListener("click", (event) => {
     const sessionPanel = getCustomerSessionPanel();
     if (sessionPanel && !sessionPanel.contains(event.target)) {
       setAccountMenuOpen(false);
+    }
+    const comingSoonHeaderSession = document.querySelector("[data-coming-soon-header-session]");
+    if (comingSoonHeaderSession && !comingSoonHeaderSession.contains(event.target)) {
+      setComingSoonHeaderMenuOpen(false);
     }
   });
   getProfileForm()?.addEventListener("submit", submitProfile);

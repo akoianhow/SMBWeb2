@@ -544,6 +544,155 @@
         background: #202020;
       }
 
+      .coming-soon-header-register,
+      .coming-soon-header-avatar-button {
+        display: inline-grid;
+        place-items: center;
+        min-height: 34px;
+        border: 0;
+        color: #ffffff;
+        background: #202020;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .coming-soon-header-register {
+        padding: 0 9px;
+      }
+
+      .coming-soon-header-session {
+        position: relative;
+      }
+
+      .coming-soon-header-avatar-button {
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+        padding: 0;
+        border-radius: 50%;
+        overflow: hidden;
+      }
+
+      .coming-soon-header-avatar-button span {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        color: #ffffff;
+        background: #202020;
+        border-radius: 50%;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .coming-soon-header-avatar-button img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .coming-soon-header-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 0;
+        z-index: 80;
+        width: min(260px, calc(100vw - 32px));
+        padding: 14px;
+        color: #202020;
+        background: #ffffff;
+        border: 1px solid #d7d7d7;
+        border-radius: 8px;
+        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.18);
+      }
+
+      .coming-soon-header-menu strong,
+      .coming-soon-header-menu span {
+        display: block;
+      }
+
+      .coming-soon-header-menu strong {
+        color: #1f1f1f;
+        font-size: 15px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .coming-soon-header-menu span {
+        margin-top: 2px;
+        color: #666666;
+        font-size: 12px;
+        word-break: break-word;
+      }
+
+      .coming-soon-header-menu button {
+        width: 100%;
+        min-height: 34px;
+        margin-top: 12px;
+        border: 0;
+        color: #ffffff;
+        background: var(--red);
+        border-radius: 7px;
+        font-size: 11px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .coming-soon-account-member {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .coming-soon-account-avatar,
+      .community-composer-avatar {
+        display: grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 44px;
+        height: 44px;
+        overflow: hidden;
+        color: #ffffff;
+        background: #202020;
+        border-radius: 50%;
+        font-size: 15px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .coming-soon-account-avatar img,
+      .community-composer-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .coming-soon-account-member strong {
+        display: block;
+        color: #1f1f1f;
+        font-size: 24px;
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+
+      .community-composer-field {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+      }
+
+      .community-composer.has-customer-avatar .community-composer-field {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
+      .community-composer-avatar {
+        margin-top: 2px;
+      }
+
       .coming-soon-community {
         margin-top: 18px;
       }
@@ -942,6 +1091,17 @@
           font-size: 11px;
         }
 
+        .coming-soon-account-member strong {
+          font-size: 19px;
+        }
+
+        .coming-soon-account-avatar,
+        .community-composer-avatar {
+          width: 38px;
+          height: 38px;
+          font-size: 13px;
+        }
+
         .coming-soon-community .community-heading,
         .coming-soon-community .community-layout {
           grid-template-columns: 1fr;
@@ -1060,6 +1220,17 @@
       <div class="mobile-header-actions" aria-label="Mobile quick actions">
         <a href="#branches">Branches</a>
         <a href="survey.html">Survey</a>
+        <button class="coming-soon-header-register" type="button" data-open-register data-coming-soon-header-register>Register</button>
+        <div class="coming-soon-header-session" data-coming-soon-header-session hidden>
+          <button class="coming-soon-header-avatar-button" type="button" data-coming-soon-header-menu-toggle aria-label="Open account menu" aria-expanded="false">
+            <span data-coming-soon-header-avatar>SMB</span>
+          </button>
+          <div class="coming-soon-header-menu" data-coming-soon-header-menu hidden>
+            <strong data-coming-soon-header-name>Customer</strong>
+            <span data-coming-soon-header-email></span>
+            <button type="button" data-coming-soon-header-logout>Logout</button>
+          </div>
+        </div>
       </div>
       <form class="search-form" action="#contact">
         <input type="search" aria-label="Search" placeholder="Search bikes, parts, service" disabled>
@@ -1225,13 +1396,21 @@
       </section>
 
       <section class="coming-soon-account" aria-label="Customer account access">
-        <div>
+        <div data-coming-soon-account-guest>
           <p>Customer accounts are open</p>
           <h2>Register, log in, and join the discussion</h2>
           <span>Catalog transactions are still paused, but customer profiles and community discussions are available.</span>
         </div>
+        <div class="coming-soon-account-member" data-coming-soon-account-member hidden>
+          <span class="coming-soon-account-avatar" data-coming-soon-account-avatar>SMB</span>
+          <div>
+            <p>Welcome back</p>
+            <strong data-coming-soon-account-name>Customer</strong>
+            <span>Community discussions are open while the catalog is getting ready.</span>
+          </div>
+        </div>
         <div class="coming-soon-account-actions">
-          <button type="button" data-open-register>Create Account</button>
+          <button type="button" data-open-register data-coming-soon-register-action>Create Account</button>
           <a href="#community" data-community-link>Community</a>
         </div>
       </section>
@@ -1321,7 +1500,10 @@
 
           <div class="community-feed">
             <form class="community-composer" data-community-composer>
-              <textarea name="body" maxlength="2000" placeholder="What's on your mind?"></textarea>
+              <div class="community-composer-field">
+                <span class="community-composer-avatar" data-community-composer-avatar hidden>SMB</span>
+                <textarea name="body" maxlength="2000" placeholder="What's on your mind?"></textarea>
+              </div>
               <p data-community-warning>Do not post order numbers, payment details, phone numbers, addresses, or private service concerns.</p>
               <div class="community-composer-categories" data-community-composer-categories aria-label="Discussion categories"></div>
               <div class="community-photo-previews" data-community-photo-previews aria-label="Selected photos"></div>
@@ -1373,7 +1555,7 @@
     <div class="community-photo-modal" data-community-photo-modal hidden>
       <div role="dialog" aria-modal="true" aria-label="Post photo viewer">
         <div class="community-photo-stage">
-          <button class="community-photo-close" type="button" data-community-photo-close aria-label="Close photo viewer">x</button>
+          <button class="community-photo-close" type="button" data-community-photo-close aria-label="Back to discussion">Back to Discussion</button>
           <button class="community-photo-nav community-photo-prev" type="button" data-community-photo-prev aria-label="Previous photo">‹</button>
           <figure>
             <img data-community-photo-viewer-image alt="Post photo">

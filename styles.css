@@ -2817,16 +2817,18 @@ body.is-catalog-mode .product-section {
 .community-photo-close {
   top: 12px;
   right: 12px;
-  display: grid;
-  place-items: center;
-  width: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
   height: 28px;
   min-height: 0;
-  padding: 0;
-  border-radius: 50%;
-  font-size: 14px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 10px;
   font-weight: 900;
   line-height: 1;
+  text-transform: uppercase;
 }
 
 .community-photo-nav {

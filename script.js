@@ -754,8 +754,14 @@ function setCatalogMode(isCatalogMode) {
   document.body.classList.toggle("is-catalog-mode", isCatalogMode);
   setMobileNavActive(isCatalogMode ? "catalog" : "home");
   document.querySelector("[data-community-view]")?.setAttribute("hidden", "");
-  document.querySelector("[data-catalog-panel]").hidden = !isCatalogMode;
-  document.querySelector("[data-home-products]").hidden = isCatalogMode;
+  const catalogPanel = document.querySelector("[data-catalog-panel]");
+  const homeProducts = document.querySelector("[data-home-products]");
+  if (catalogPanel) {
+    catalogPanel.hidden = !isCatalogMode;
+  }
+  if (homeProducts) {
+    homeProducts.hidden = isCatalogMode;
+  }
   document.querySelectorAll("[data-home-section]").forEach((section) => {
     section.hidden = isCatalogMode;
   });
@@ -1021,8 +1027,14 @@ function showCommunityMode(show, updatePath = false) {
   if (show) {
     setMobileNavActive("community");
     document.body.classList.remove("is-catalog-mode", "is-profile-mode");
-    document.querySelector("[data-catalog-panel]").hidden = true;
-    document.querySelector("[data-home-products]").hidden = true;
+    const catalogPanel = document.querySelector("[data-catalog-panel]");
+    const homeProducts = document.querySelector("[data-home-products]");
+    if (catalogPanel) {
+      catalogPanel.hidden = true;
+    }
+    if (homeProducts) {
+      homeProducts.hidden = true;
+    }
     document.querySelectorAll("[data-home-section]").forEach((section) => {
       section.hidden = true;
     });
@@ -2975,6 +2987,7 @@ async function loginCustomer(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const wasInCommunity = document.body.classList.contains("is-community-mode");
+  const isComingSoonPage = document.body.classList.contains("is-coming-soon-page");
   const message = form.querySelector("[data-community-login-message]");
   const submitButton = form.querySelector("button[type='submit']");
   setMessage(message, "", "");
@@ -2996,6 +3009,9 @@ async function loginCustomer(event) {
     setMessage(message, "Logged in.", "success");
     if (wasInCommunity) {
       openCommunityPage(false);
+    } else if (isComingSoonPage) {
+      showProfileMode(false);
+      loadCommunityDiscussions(true);
     } else {
       returnToHome();
     }
@@ -3084,7 +3100,9 @@ async function submitChangePassword(event) {
 
 function bindCustomerAccountUi() {
   getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
-  document.querySelector("[data-open-register]")?.addEventListener("click", openRegisterForm);
+  document.querySelectorAll("[data-open-register]").forEach((button) => {
+    button.addEventListener("click", openRegisterForm);
+  });
   document.querySelectorAll("[data-open-profile]").forEach((button) => {
     button.addEventListener("click", (event) => {
       event.preventDefault();
@@ -3164,6 +3182,10 @@ async function startCatalog() {
   bindServiceFilters();
   bindCommunityUi();
   loadHomeProductItems();
+  if (document.body.classList.contains("is-coming-soon-page") && document.querySelector("[data-community-view]")) {
+    updateCommunityAuthState();
+    loadCommunityDiscussions();
+  }
   if (window.location.pathname === "/community" || window.location.hash === "#community") {
     openCommunityPage(false);
   }

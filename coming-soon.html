@@ -9,6 +9,7 @@
     >
     <title>SarapMagBike Shop | Coming Soon</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260706-coming-soon-engagement">
     <style>
       :root {
         color-scheme: light;
@@ -481,6 +482,81 @@
         color: #171717;
       }
 
+      .coming-soon-account {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: center;
+        margin-top: 18px;
+        padding: 18px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      }
+
+      .coming-soon-account p {
+        margin-bottom: 5px;
+        color: var(--red);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .coming-soon-account h2 {
+        margin-bottom: 6px;
+        color: #1f1f1f;
+        font-size: 24px;
+        line-height: 1.05;
+        text-transform: uppercase;
+      }
+
+      .coming-soon-account span {
+        display: block;
+        max-width: 620px;
+        color: #555555;
+        font-size: 13px;
+      }
+
+      .coming-soon-account-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .coming-soon-account-actions button,
+      .coming-soon-account-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 7px;
+        background: var(--red);
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        cursor: pointer;
+      }
+
+      .coming-soon-account-actions a {
+        background: #202020;
+      }
+
+      .coming-soon-community {
+        margin-top: 18px;
+      }
+
+      .coming-soon-community .community-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+      }
+
+      .coming-soon-community .community-layout {
+        grid-template-columns: 280px minmax(0, 1fr);
+      }
+
       .footer-bottom {
         color: #dcdcdc;
         background: #222222;
@@ -839,6 +915,38 @@
           line-height: 1.4;
         }
 
+        .coming-soon-account {
+          grid-template-columns: 1fr;
+          gap: 12px;
+          margin-top: 12px;
+          padding: 14px;
+        }
+
+        .coming-soon-account h2 {
+          font-size: 19px;
+        }
+
+        .coming-soon-account span {
+          font-size: 12px;
+        }
+
+        .coming-soon-account-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .coming-soon-account-actions button,
+        .coming-soon-account-actions a {
+          min-height: 44px;
+          padding: 0 10px;
+          font-size: 11px;
+        }
+
+        .coming-soon-community .community-heading,
+        .coming-soon-community .community-layout {
+          grid-template-columns: 1fr;
+        }
+
         .mobile-bottom-nav {
           position: fixed;
           right: 0;
@@ -887,7 +995,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="is-coming-soon-page">
     <header class="topbar">
       <div class="wrap topbar-inner">
         <nav aria-label="Utility navigation">
@@ -898,6 +1006,47 @@
         <div class="topbar-options">
           <span>English</span>
           <span>Prices in PHP</span>
+          <form class="customer-login" data-customer-login-form>
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" autocomplete="username" aria-label="Customer username">
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" autocomplete="current-password" aria-label="Customer password">
+            </label>
+            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+            <button type="submit">Login</button>
+            <button type="button" data-open-register>Register</button>
+          </form>
+          <div class="customer-session" data-customer-session hidden>
+            <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
+              <span data-account-avatar>SMB</span>
+            </button>
+            <div class="account-menu" data-account-menu hidden>
+              <div class="account-menu-header">
+                <span data-account-menu-avatar>SMB</span>
+                <div>
+                  <strong data-customer-greeting>Account</strong>
+                  <p data-account-email></p>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt>Hometown</dt>
+                  <dd data-account-hometown>Not set</dd>
+                </div>
+                <div>
+                  <dt>Rider type</dt>
+                  <dd data-account-rider-types>Not set</dd>
+                </div>
+              </dl>
+              <div class="account-menu-actions">
+                <button type="button" data-edit-profile>Edit Profile</button>
+                <button type="button" data-logout>Logout</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </header>
@@ -933,7 +1082,121 @@
         <span>Contact</span>
       </nav>
 
-    <main class="wrap content">
+    <main id="top" class="wrap content">
+      <section class="customer-profile-view" data-profile-view hidden>
+        <div class="profile-shell">
+          <div class="profile-heading">
+            <div>
+              <p data-profile-eyebrow>Customer account</p>
+              <h1 data-profile-title>Create your SarapMagBike profile</h1>
+            </div>
+            <button type="button" data-close-profile>Back to Website</button>
+          </div>
+
+          <form class="profile-form" data-profile-form>
+            <div class="profile-photo-field">
+              <div class="profile-photo-preview" data-profile-photo-preview>SMB</div>
+              <label>
+                Profile picture
+                <input type="file" name="profilePicture" accept="image/jpeg,image/png,image/webp">
+              </label>
+              <p>JPG, PNG, or WebP. Maximum 1 MB.</p>
+            </div>
+
+            <div class="profile-grid">
+              <label>
+                Username
+                <input type="text" name="username" autocomplete="username" required>
+              </label>
+              <label>
+                Email
+                <input type="email" name="email" autocomplete="email" required>
+              </label>
+              <label>
+                Hometown
+                <input type="text" name="hometown" autocomplete="address-level2">
+              </label>
+              <label>
+                Birthday
+                <input type="date" name="birthday">
+              </label>
+            </div>
+
+            <div class="profile-grid" data-password-fields>
+              <label>
+                Password
+                <span class="password-control">
+                  <input type="password" name="password" autocomplete="new-password" required>
+                  <button type="button" data-toggle-password="password">Show</button>
+                </span>
+              </label>
+              <label>
+                Confirm password
+                <span class="password-control">
+                  <input type="password" name="confirmPassword" autocomplete="new-password" required>
+                  <button type="button" data-toggle-password="confirmPassword">Show</button>
+                </span>
+              </label>
+            </div>
+
+            <fieldset class="rider-types">
+              <legend>Types of bike you ride</legend>
+              <label><input type="checkbox" name="riderTypes" value="MTB"> MTB</label>
+              <label><input type="checkbox" name="riderTypes" value="Road bike"> Road bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Gravel Bike"> Gravel Bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Folding"> Folding</label>
+              <label><input type="checkbox" name="riderTypes" value="Hybrid"> Hybrid</label>
+              <label><input type="checkbox" name="riderTypes" value="Others"> Others</label>
+            </fieldset>
+
+            <label class="consent-line">
+              <input type="checkbox" name="marketingConsent">
+              I agree to receive account and service messages from SarapMagBike.
+            </label>
+
+            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+
+            <div class="profile-actions">
+              <button type="submit" data-profile-submit>Create Profile</button>
+              <button type="button" data-open-change-password hidden>Change Password</button>
+            </div>
+            <p class="profile-message" data-profile-message role="status"></p>
+          </form>
+
+          <form class="change-password-form" data-change-password-form hidden>
+            <h2>Change password</h2>
+            <div class="profile-grid">
+              <label>
+                Current password
+                <span class="password-control">
+                  <input type="password" name="currentPassword" autocomplete="current-password">
+                  <button type="button" data-toggle-password="currentPassword">Show</button>
+                </span>
+              </label>
+              <label>
+                New password
+                <span class="password-control">
+                  <input type="password" name="newPassword" autocomplete="new-password">
+                  <button type="button" data-toggle-password="newPassword">Show</button>
+                </span>
+              </label>
+              <label>
+                Confirm new password
+                <span class="password-control">
+                  <input type="password" name="confirmNewPassword" autocomplete="new-password">
+                  <button type="button" data-toggle-password="confirmNewPassword">Show</button>
+                </span>
+              </label>
+            </div>
+            <div class="profile-actions">
+              <button type="submit">Save Password</button>
+              <button type="button" data-cancel-change-password>Cancel</button>
+            </div>
+            <p class="profile-message" data-password-message role="status"></p>
+          </form>
+        </div>
+      </section>
+
       <section class="hero" aria-label="SarapMagBike website coming soon">
         <div class="hero-image"></div>
         <div class="hero-message">
@@ -959,6 +1222,18 @@
           <strong>Catalog is getting ready</strong>
         </div>
         <a href="#branches">Contact</a>
+      </section>
+
+      <section class="coming-soon-account" aria-label="Customer account access">
+        <div>
+          <p>Customer accounts are open</p>
+          <h2>Register, log in, and join the discussion</h2>
+          <span>Catalog transactions are still paused, but customer profiles and community discussions are available.</span>
+        </div>
+        <div class="coming-soon-account-actions">
+          <button type="button" data-open-register>Create Account</button>
+          <a href="#community">Community</a>
+        </div>
       </section>
 
       <section class="feature-tiles" aria-label="Shop categories">
@@ -992,7 +1267,153 @@
           <p><strong>Phone:</strong> 0939.933.3391</p>
         </article>
       </section>
+
+      <section id="community" class="community-section coming-soon-community" data-community-view>
+        <div class="community-heading">
+          <div>
+            <p>Community Discussions</p>
+            <h1>Ask bike questions, share ride updates, and get SarapMagBike staff answers.</h1>
+          </div>
+          <button type="button" data-community-start>Start Discussion</button>
+        </div>
+
+        <div class="community-layout">
+          <aside class="community-sidebar">
+            <div class="community-login-card" data-community-guest-card>
+              <h2>Join the discussion</h2>
+              <p>Guests can read approved discussions. Log in or create an account to post, reply, like, report, or upload photos.</p>
+              <button type="button" data-community-login>Log in</button>
+              <form class="community-login-form" data-community-login-form hidden>
+                <div class="community-login-brand">
+                  <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+                  <div>
+                    <strong>SarapMagBike Account</strong>
+                    <span>Log in to join community discussions.</span>
+                  </div>
+                </div>
+                <label>
+                  Username
+                  <input type="text" name="username" autocomplete="username" required>
+                </label>
+                <label>
+                  Password
+                  <input type="password" name="password" autocomplete="current-password" required>
+                </label>
+                <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+                <button type="submit">Log in</button>
+                <p data-community-login-message role="status"></p>
+              </form>
+              <button type="button" data-community-register>Create account</button>
+            </div>
+            <div class="community-filters">
+              <label>
+                Search
+                <input type="search" data-community-search placeholder="Bike questions, rides, services">
+              </label>
+              <label>
+                Category
+                <select data-community-category>
+                  <option value="all">All categories</option>
+                </select>
+              </label>
+            </div>
+          </aside>
+
+          <div class="community-feed">
+            <form class="community-composer" data-community-composer>
+              <textarea name="body" maxlength="2000" placeholder="What's on your mind?"></textarea>
+              <p data-community-warning>Do not post order numbers, payment details, phone numbers, addresses, or private service concerns.</p>
+              <div class="community-composer-categories" data-community-composer-categories aria-label="Discussion categories"></div>
+              <div class="community-photo-previews" data-community-photo-previews aria-label="Selected photos"></div>
+              <div class="community-composer-actions">
+                <label>
+                  Photo
+                  <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
+                </label>
+                <button type="submit">Post</button>
+              </div>
+              <p class="community-message" data-community-message role="status"></p>
+            </form>
+            <div class="community-posts" data-community-posts>
+              <article class="community-state-card">
+                <h3>Loading Community</h3>
+                <p>Checking approved SarapMagBike discussions.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
+
+    <div class="community-auth-prompt" data-community-auth-prompt hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-auth-title">
+        <h2 id="community-auth-title">Please log in or create an account to join the discussion.</h2>
+        <p>Guests can read approved posts, but an account is required to start discussions, reply, like, report, or upload photos.</p>
+        <div>
+          <button type="button" data-community-prompt-login>Log in</button>
+          <button type="button" data-community-prompt-register>Create account</button>
+          <button type="button" data-community-prompt-close>Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="community-thread-modal" data-community-thread-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-thread-title">
+        <div class="community-thread-header">
+          <div>
+            <p>Discussion Thread</p>
+            <h2 id="community-thread-title">Community replies</h2>
+          </div>
+          <button type="button" data-community-thread-close>Close</button>
+        </div>
+        <div class="community-thread-content" data-community-thread-content></div>
+      </div>
+    </div>
+
+    <div class="community-photo-modal" data-community-photo-modal hidden>
+      <div role="dialog" aria-modal="true" aria-label="Post photo viewer">
+        <div class="community-photo-stage">
+          <button class="community-photo-close" type="button" data-community-photo-close aria-label="Close photo viewer">x</button>
+          <button class="community-photo-nav community-photo-prev" type="button" data-community-photo-prev aria-label="Previous photo">‹</button>
+          <figure>
+            <img data-community-photo-viewer-image alt="Post photo">
+            <figcaption data-community-photo-counter></figcaption>
+          </figure>
+          <button class="community-photo-nav community-photo-next" type="button" data-community-photo-next aria-label="Next photo">›</button>
+        </div>
+        <aside class="community-photo-panel" data-community-photo-panel></aside>
+      </div>
+    </div>
+
+    <div class="community-edit-modal" data-community-edit-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-edit-title">
+        <div class="community-thread-header">
+          <div>
+            <p>Edit Post</p>
+            <h2 id="community-edit-title">Update your discussion</h2>
+          </div>
+          <button type="button" data-community-edit-close>Close</button>
+        </div>
+        <form class="community-edit-form" data-community-edit-form>
+          <div class="community-edit-author" data-community-edit-author></div>
+          <div class="community-edit-media" data-community-edit-media></div>
+          <textarea name="body" maxlength="2000" required></textarea>
+          <div class="community-edit-actions">
+            <button type="submit" data-community-edit-save disabled>Save Post</button>
+            <button type="button" data-community-edit-cancel>Close</button>
+          </div>
+          <div class="community-edit-confirm" data-community-edit-confirm hidden>
+            <p>You have unsaved changes.</p>
+            <div>
+              <button type="button" data-community-edit-confirm-save>Save changes</button>
+              <button type="button" data-community-edit-confirm-discard>Discard changes</button>
+              <button type="button" data-community-edit-confirm-keep>Keep editing</button>
+            </div>
+          </div>
+          <p class="community-message" data-community-edit-message role="status"></p>
+        </form>
+      </div>
+    </div>
 
     <footer class="footer-bottom">
       <div class="wrap">
@@ -1002,13 +1423,15 @@
     </footer>
 
     <nav class="mobile-bottom-nav" aria-label="Mobile coming soon navigation">
-      <a href="coming-soon.html" class="active" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
+      <a href="coming-soon.html" class="active" data-mobile-nav="home" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
       <a href="#branches" aria-label="Branches"><span aria-hidden="true">▦</span>Branches</a>
-      <a href="#contact" aria-label="Contact"><span aria-hidden="true">◉</span>Contact</a>
-      <a href="survey.html" aria-label="Survey"><span aria-hidden="true">◴</span>Survey</a>
+      <a href="#community" data-community-link data-mobile-nav="community" aria-label="Community"><span aria-hidden="true">◴</span>Community</a>
+      <a href="#top" data-open-profile data-mobile-nav="account" aria-label="Account"><span aria-hidden="true">◉</span>Account</a>
       <a href="https://www.facebook.com/sarapmagbikeshop" target="_blank" rel="noreferrer" aria-label="Message"><span aria-hidden="true">✉</span>Message</a>
     </nav>
 
+    <script src="config.js?v=20260703-staging-api"></script>
+    <script src="script.js?v=20260706-coming-soon-engagement"></script>
     <script>
       document.querySelector("#year").textContent = new Date().getFullYear();
     </script>

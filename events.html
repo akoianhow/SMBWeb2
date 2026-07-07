@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta
+      name="description"
+      content="Browse SarapMagBike rides, workshops, get-togethers, and community events in Quezon City."
+    >
+    <title>Events | SarapMagBike Shop</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260708-events">
+  </head>
+  <body class="is-events-page">
+    <div class="page-bg"></div>
+
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <nav aria-label="Utility navigation">
+          <a href="index.html#contact">Contact Us</a>
+          <a href="services.html">Book Service</a>
+          <a href="survey.html">Survey</a>
+        </nav>
+        <div class="topbar-options">
+          <span>English</span>
+          <span>Prices in PHP</span>
+          <form class="customer-login" data-customer-login-form>
+            <label>
+              <span>Username</span>
+              <input type="text" name="username" autocomplete="username" aria-label="Customer username">
+            </label>
+            <label>
+              <span>Password</span>
+              <input type="password" name="password" autocomplete="current-password" aria-label="Customer password">
+            </label>
+            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+            <button type="submit">Login</button>
+            <button type="button" data-open-register>Register</button>
+          </form>
+          <div class="customer-session" data-customer-session hidden>
+            <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
+              <span data-account-avatar>SMB</span>
+            </button>
+            <div class="account-menu" data-account-menu hidden>
+              <div class="account-menu-header">
+                <span data-account-menu-avatar>SMB</span>
+                <div>
+                  <strong data-customer-greeting>Account</strong>
+                  <p data-account-email></p>
+                </div>
+              </div>
+              <dl>
+                <div>
+                  <dt>Hometown</dt>
+                  <dd data-account-hometown>Not set</dd>
+                </div>
+                <div>
+                  <dt>Rider type</dt>
+                  <dd data-account-rider-types>Not set</dd>
+                </div>
+              </dl>
+              <div class="account-menu-actions">
+                <button type="button" data-edit-profile>Edit Profile</button>
+                <button type="button" data-logout>Logout</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap header-main">
+      <a class="logo" href="index.html#top" aria-label="SarapMagBike Shop home">
+        <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+        <span class="logo-tag">QC | PAMPANGA</span>
+      </a>
+      <div class="mobile-header-actions" aria-label="Mobile quick actions">
+        <button class="mobile-header-login" type="button" data-mobile-header-login>Login</button>
+        <button class="mobile-header-register" type="button" data-open-register data-mobile-header-register>Register</button>
+        <div class="mobile-header-session" data-mobile-header-session hidden>
+          <button class="mobile-header-avatar-button" type="button" data-mobile-header-menu-toggle aria-label="Open account menu" aria-expanded="false">
+            <span data-mobile-header-avatar>SMB</span>
+          </button>
+          <div class="mobile-header-menu" data-mobile-header-menu hidden>
+            <strong data-mobile-header-name>Customer</strong>
+            <span data-mobile-header-email></span>
+            <button type="button" data-mobile-header-logout>Logout</button>
+          </div>
+        </div>
+      </div>
+      <form class="search-form">
+        <input type="search" aria-label="Search" placeholder="Search rides, workshops, events">
+        <button type="button" data-events-search-shortcut>Search</button>
+      </form>
+      <div class="cart-box" aria-label="Message SarapMagBike">
+        <strong>Message Us</strong>
+        <span>event questions</span>
+      </div>
+      <div class="lock-box" aria-hidden="true">Lock</div>
+    </div>
+
+    <nav class="wrap main-nav" aria-label="Website navigation" data-category-nav-list></nav>
+
+    <main id="top" class="wrap content">
+      <section class="customer-profile-view" data-profile-view hidden>
+        <div class="profile-shell">
+          <div class="profile-heading">
+            <div>
+              <p data-profile-eyebrow>Customer account</p>
+              <h1 data-profile-title>Create your SarapMagBike profile</h1>
+            </div>
+            <button type="button" data-close-profile>Back to Events</button>
+          </div>
+
+          <form class="profile-form" data-profile-form>
+            <div class="profile-photo-field">
+              <div class="profile-photo-preview" data-profile-photo-preview>SMB</div>
+              <label>
+                Profile picture
+                <input type="file" name="profilePicture" accept="image/jpeg,image/png,image/webp">
+              </label>
+              <p>JPG, PNG, or WebP. Maximum 1 MB.</p>
+            </div>
+
+            <div class="profile-grid">
+              <label>Username<input type="text" name="username" autocomplete="username" required></label>
+              <label>Email<input type="email" name="email" autocomplete="email" required></label>
+              <label>Hometown<input type="text" name="hometown" autocomplete="address-level2"></label>
+              <label>Birthday<input type="date" name="birthday"></label>
+            </div>
+
+            <div class="profile-grid" data-password-fields>
+              <label>
+                Password
+                <span class="password-control">
+                  <input type="password" name="password" autocomplete="new-password" required>
+                  <button type="button" data-toggle-password="password">Show</button>
+                </span>
+              </label>
+              <label>
+                Confirm password
+                <span class="password-control">
+                  <input type="password" name="confirmPassword" autocomplete="new-password" required>
+                  <button type="button" data-toggle-password="confirmPassword">Show</button>
+                </span>
+              </label>
+            </div>
+
+            <fieldset class="rider-types">
+              <legend>Types of bike you ride</legend>
+              <label><input type="checkbox" name="riderTypes" value="MTB"> MTB</label>
+              <label><input type="checkbox" name="riderTypes" value="Road bike"> Road bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Gravel Bike"> Gravel Bike</label>
+              <label><input type="checkbox" name="riderTypes" value="Folding"> Folding</label>
+              <label><input type="checkbox" name="riderTypes" value="Hybrid"> Hybrid</label>
+              <label><input type="checkbox" name="riderTypes" value="Others"> Others</label>
+            </fieldset>
+
+            <label class="consent-line">
+              <input type="checkbox" name="marketingConsent">
+              I agree to receive account and service messages from SarapMagBike.
+            </label>
+
+            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+
+            <div class="profile-actions">
+              <button type="submit" data-profile-submit>Create Profile</button>
+              <button type="button" data-open-change-password hidden>Change Password</button>
+            </div>
+            <p class="profile-message" data-profile-message role="status"></p>
+          </form>
+
+          <form class="change-password-form" data-change-password-form hidden>
+            <h2>Change password</h2>
+            <div class="profile-grid">
+              <label>
+                Current password
+                <span class="password-control">
+                  <input type="password" name="currentPassword" autocomplete="current-password">
+                  <button type="button" data-toggle-password="currentPassword">Show</button>
+                </span>
+              </label>
+              <label>
+                New password
+                <span class="password-control">
+                  <input type="password" name="newPassword" autocomplete="new-password">
+                  <button type="button" data-toggle-password="newPassword">Show</button>
+                </span>
+              </label>
+              <label>
+                Confirm new password
+                <span class="password-control">
+                  <input type="password" name="confirmNewPassword" autocomplete="new-password">
+                  <button type="button" data-toggle-password="confirmNewPassword">Show</button>
+                </span>
+              </label>
+            </div>
+            <div class="profile-actions">
+              <button type="submit">Save Password</button>
+              <button type="button" data-cancel-change-password>Cancel</button>
+            </div>
+            <p class="profile-message" data-password-message role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="events-page" data-events-view>
+        <div class="events-heading">
+          <div>
+            <p class="section-eyebrow">SarapMagBike Events</p>
+            <h1>Rides, Workshops & Community Meetups</h1>
+            <span>Join public events backed by SMBSystem registration records. Quezon City is selected by default.</span>
+          </div>
+          <a class="events-community-link" href="index.html#community">Ask in Community</a>
+        </div>
+
+        <div class="events-toolbar" data-events-toolbar>
+          <label>
+            <span>Search events</span>
+            <input type="search" data-events-search placeholder="Search Yaya Ride, workshop, coffee loop">
+          </label>
+          <label>
+            <span>Type</span>
+            <select data-events-type>
+              <option value="all">All event types</option>
+              <option value="ride">Rides</option>
+              <option value="workshop">Workshops</option>
+              <option value="get_together">Get-togethers</option>
+            </select>
+          </label>
+          <label>
+            <span>Status</span>
+            <select data-events-status>
+              <option value="public">Public events</option>
+              <option value="open">Open</option>
+              <option value="full">Full</option>
+              <option value="closed">Closed</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
+          <button type="button" data-events-refresh>Refresh</button>
+        </div>
+
+        <div class="events-chip-row" aria-label="Event quick filters">
+          <button class="active" type="button" data-events-chip="all">All</button>
+          <button type="button" data-events-chip="ride">Rides</button>
+          <button type="button" data-events-chip="workshop">Workshops</button>
+          <button type="button" data-events-chip="get_together">Get-togethers</button>
+        </div>
+
+        <div class="events-layout" data-events-list-layout>
+          <div class="events-list" data-events-list>
+            <article class="events-state-card">
+              <h2>Loading events</h2>
+              <p>Checking SMBSystem for public rides, workshops, and get-togethers.</p>
+            </article>
+          </div>
+        </div>
+
+        <article class="event-detail-view" data-event-detail hidden>
+          <button class="event-back-button" type="button" data-events-back>Back to Events</button>
+          <div data-event-detail-content></div>
+        </article>
+      </section>
+    </main>
+
+    <div class="event-registration-modal" data-event-registration-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="event-registration-title">
+        <div class="event-modal-header">
+          <div>
+            <p>Event registration</p>
+            <h2 id="event-registration-title">Register for event</h2>
+          </div>
+          <button type="button" data-event-registration-close>Close</button>
+        </div>
+        <form class="event-registration-form" data-event-registration-form>
+          <div class="event-registration-grid">
+            <label>Participant name<input name="participantName" required readonly></label>
+            <label>Email<input name="participantEmail" type="email" readonly></label>
+            <label>
+              Bike type
+              <select name="bikeType">
+                <option value="">Select bike type</option>
+                <option value="MTB">MTB</option>
+                <option value="RB">RB</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Folding">Folding</option>
+                <option value="Others">Others</option>
+              </select>
+            </label>
+            <label>Emergency contact<input name="emergencyContactName"></label>
+            <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel"></label>
+            <div class="event-payment-fields span-2" data-event-payment-fields hidden>
+              <div class="event-payment-fee">
+                <span>Registration fee</span>
+                <strong data-event-registration-fee>PHP 0.00</strong>
+              </div>
+              <label>Proof of payment screenshot<input name="paymentProof" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+            </div>
+            <label class="span-2">Notes<textarea name="notes" placeholder="Optional ride notes for staff"></textarea></label>
+          </div>
+          <p class="event-form-note">Participant name and email come from your public customer profile. Your display name and avatar may appear in the public participant list. Emergency and contact details stay private in SMBSystem.</p>
+          <div class="event-modal-actions">
+            <button type="submit" data-event-registration-submit>Confirm Registration</button>
+            <button type="button" data-event-registration-cancel>Cancel</button>
+          </div>
+          <p class="event-registration-message" data-event-registration-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <div class="wrap footer-grid">
+        <div>
+          <h2>SarapMagBike Shop</h2>
+          <p>Bike shop, service center, online sales support, and cycling community hub for Quezon City and Pampanga riders.</p>
+        </div>
+        <div>
+          <h2>Information</h2>
+          <a href="index.html#products">New products</a>
+          <a href="services.html">Bike service</a>
+          <a href="events.html">Events</a>
+          <a href="survey.html">Customer survey</a>
+          <a href="index.html#contact">Contact us</a>
+        </div>
+        <div>
+          <h2>Customer Help</h2>
+          <a href="index.html#contact">Check stock</a>
+          <a href="index.html#contact">Book service</a>
+          <a href="index.html#community">Ask in community</a>
+          <a href="index.html#contact">Platform order help</a>
+        </div>
+        <div id="contact">
+          <h2>Store Information</h2>
+          <p>Quezon City: 44 Mindanao Ave., Bgy. Tandang Sora</p>
+          <strong>0968.356.8251</strong>
+          <a href="mailto:admin@sarapmagbike.com">admin@sarapmagbike.com</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="wrap">
+          <span>&copy; <span id="year"></span> SarapMagBike Shop</span>
+          <span>YPP Enterprises OPC</span>
+        </div>
+      </div>
+    </footer>
+
+    <nav class="mobile-bottom-nav" aria-label="Mobile events navigation">
+      <a href="index.html#top" data-mobile-nav="home" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>
+      <a href="index.html#products" data-mobile-nav="catalog" aria-label="Catalog"><span aria-hidden="true">▦</span>Catalog</a>
+      <a href="services.html" data-mobile-nav="services" aria-label="Services"><span aria-hidden="true">⚙</span>Services</a>
+      <a href="events.html" class="active" data-mobile-nav="events" aria-label="Events"><span aria-hidden="true">◴</span>Events</a>
+      <a href="#top" data-open-profile data-mobile-nav="account" aria-label="Account"><span aria-hidden="true">◉</span>Account</a>
+    </nav>
+
+    <script src="config.js?v=20260703-staging-api"></script>
+    <script src="script.js?v=20260708-events"></script>
+  </body>
+</html>

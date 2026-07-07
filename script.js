@@ -24,6 +24,21 @@ const state = {
   sort: "price-asc"
 };
 
+const branchContacts = {
+  "Quezon City": {
+    shortName: "QC",
+    address: "44 Mindanao Ave., Bgy. Tandang Sora, Quezon City",
+    phone: "0968.356.8251",
+    tel: "+639683568251"
+  },
+  Pampanga: {
+    shortName: "Pampanga",
+    address: "Emcos the Strip, McArthur Hi-way, Sto. Tomas, Pampanga",
+    phone: "0939.933.3391",
+    tel: "+639399333391"
+  }
+};
+
 const productImageGalleryState = new WeakMap();
 const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
 const scrambleLabelState = new WeakMap();
@@ -100,6 +115,16 @@ const communityState = {
   search: "",
   selectedCategory: "all",
   selectedCategorySlugs: []
+};
+
+const eventsState = {
+  activeEvent: null,
+  events: [],
+  isLoading: false,
+  search: "",
+  searchTimer: null,
+  selectedStatus: "public",
+  selectedType: "all"
 };
 
 const GENERAL_CATEGORY_SLUGS = ["general", "community-tips"];
@@ -281,6 +306,39 @@ function normalizeText(value) {
 
 function slugify(value) {
   return normalizeText(value).replace(/\s+/g, "-");
+}
+
+function getItemIdentifier(item) {
+  return item.productId
+    ?? item.id
+    ?? item.itemId
+    ?? item.inventoryItemId
+    ?? item.catalogItemId
+    ?? item.sku
+    ?? item.itemCode
+    ?? item.barcode
+    ?? slugify(item.itemDescription || item.name || "product");
+}
+
+function getItemSku(item) {
+  return item.sku || item.itemCode || item.barcode || "";
+}
+
+function getItemName(item) {
+  return item.itemDescription || item.name || item.productName || "Web catalog item";
+}
+
+function getProductDetailUrl(item) {
+  const params = new URLSearchParams();
+  const identifier = getItemIdentifier(item);
+  if (identifier) {
+    params.set("id", String(identifier));
+  }
+  const slug = slugify(getItemName(item));
+  if (slug) {
+    params.set("slug", slug);
+  }
+  return `product.html?${params.toString()}`;
 }
 
 function normalizeImageUrl(mainImageUrl) {
@@ -561,13 +619,13 @@ function renderProductPhoto(item) {
   const imageUrl = getProductImageUrls(item)[0];
 
   photo.className = "product-photo product-api-photo";
-  photo.dataset.initial = (item.itemDescription || "SMB").trim().slice(0, 1).toUpperCase();
+  photo.dataset.initial = getItemName(item).trim().slice(0, 1).toUpperCase();
 
   if (imageUrl) {
     photo.classList.add("has-image");
     const image = document.createElement("img");
     image.className = "product-photo-primary";
-    image.alt = item.itemDescription || "Web catalog item";
+    image.alt = getItemName(item);
     image.loading = "lazy";
     image.src = imageUrl;
     photo.append(image);
@@ -587,8 +645,11 @@ function getAvailabilityLabel(item) {
 
 function renderWebItemCard(item) {
   const card = document.createElement("article");
-  card.className = "product-card";
+  card.className = "product-card is-clickable";
+  card.tabIndex = 0;
   const imageUrls = getProductImageUrls(item);
+  const productName = getItemName(item);
+  const detailUrl = getProductDetailUrl(item);
 
   if (item.isNew) {
     card.append(createTextElement("span", "New", "badge"));
@@ -606,23 +667,36 @@ function renderWebItemCard(item) {
 
   const action = document.createElement("a");
   const availabilityLabel = getAvailabilityLabel(item);
-  action.href = "#contact";
-  action.textContent = availabilityLabel;
+  action.href = detailUrl;
+  action.textContent = "View Details";
   action.className = availabilityLabel === "OUT OF STOCK" ? "is-out-of-stock" : "is-available";
-  action.setAttribute("aria-label", `${availabilityLabel} status for ${item.itemDescription || "this item"}`);
+  action.setAttribute("aria-label", `View details for ${productName}`);
 
   card.append(
     renderProductPhoto(item),
-    createTextElement("h3", item.itemDescription || "Web catalog item"),
+    createTextElement("h3", productName),
     createTextElement("p", detail),
     renderPrice(item),
     action
   );
 
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) {
+      return;
+    }
+    window.location.href = detailUrl;
+  });
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || event.target.closest("a, button")) {
+      return;
+    }
+    window.location.href = detailUrl;
+  });
+
   if (imageUrls.length > 1) {
     card.classList.add("has-image-gallery");
-    card.tabIndex = 0;
-    card.setAttribute("aria-label", `${item.itemDescription || "Product"} image gallery preview`);
+    card.setAttribute("aria-label", `${productName} image gallery preview`);
     card.append(renderProductImageGallery(imageUrls));
     showProductGalleryCard(card, 0);
     bindProductImageGallery(card);
@@ -770,7 +844,7 @@ function setCatalogMode(isCatalogMode) {
   });
 }
 
-function returnToHome() {
+function returnToHome({ updatePath = false } = {}) {
   setCatalogMode(false);
   showCommunityMode(false);
   state.activeCategory = null;
@@ -778,6 +852,9 @@ function returnToHome() {
   updateActiveCategoryNav();
   loadHomeProductItems(state.homeProductList);
   showProfileMode(false);
+  if (updatePath && window.location.pathname !== "/services.html") {
+    window.history.replaceState({ view: "home" }, "", window.location.pathname || "index.html");
+  }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -788,8 +865,9 @@ function renderCategoryNav() {
   }
 
   const isServicesPage = window.location.pathname.endsWith("/services.html");
+  const isEventsPage = window.location.pathname.endsWith("/events.html");
   const goToHomeTarget = (targetId) => {
-    if (isServicesPage) {
+    if (isServicesPage || isEventsPage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
       return;
     }
@@ -809,13 +887,13 @@ function renderCategoryNav() {
 
   nav.replaceChildren();
   [
-    { label: "Home", href: isServicesPage ? "index.html" : "#top", action: () => goToHomeTarget("top") },
-    { label: "Products", href: isServicesPage ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
+    { label: "Home", href: (isServicesPage || isEventsPage) ? "index.html" : "#top", action: () => goToHomeTarget("top") },
+    { label: "Products", href: (isServicesPage || isEventsPage) ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
     { label: "Services", href: "services.html", action: goToServices, active: isServicesPage },
-    { label: "Rides", href: isServicesPage ? "index.html#online" : "#online", action: () => goToHomeTarget("online") },
-    { label: "Community", href: isServicesPage ? "index.html#community" : "#community", action: () => isServicesPage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage },
+    { label: "Events", href: "events.html", action: () => window.location.href = "events.html", active: isEventsPage },
+    { label: "Community", href: (isServicesPage || isEventsPage) ? "index.html#community" : "#community", action: () => (isServicesPage || isEventsPage) ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage && !isEventsPage },
     { label: "Survey", href: "survey.html", action: () => window.location.href = "survey.html" },
-    { label: "Contact", href: isServicesPage ? "#contact" : "#contact", action: () => isServicesPage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
+    { label: "Contact", href: isServicesPage || isEventsPage ? "#contact" : "#contact", action: () => (isServicesPage || isEventsPage) ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
   ].forEach((item) => {
     const link = document.createElement("a");
     link.href = item.href;
@@ -1089,6 +1167,9 @@ function openCommunityLoginForm() {
   openCommunityPage(false);
   const form = document.querySelector("[data-community-login-form]");
   if (form) {
+    if (form.closest("[data-community-auth-prompt]")) {
+      showCommunityAuthPrompt();
+    }
     form.hidden = false;
     form.querySelector("input[name='username']")?.focus();
     form.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1101,6 +1182,37 @@ function requireCommunityLogin() {
   }
   showCommunityAuthPrompt();
   return false;
+}
+
+function openCommunityCreateModal() {
+  if (!requireCommunityLogin()) {
+    return;
+  }
+  const modal = document.querySelector("[data-community-create-modal]");
+  const textarea = document.querySelector("[data-community-composer] textarea");
+  if (!modal) {
+    textarea?.focus();
+    return;
+  }
+  modal.hidden = false;
+  setCommunityComposerActive(true);
+  window.setTimeout(() => textarea?.focus(), 0);
+}
+
+function closeCommunityCreateModal({ resetDraft = false } = {}) {
+  const modal = document.querySelector("[data-community-create-modal]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  setCommunityComposerActive(false);
+  if (resetDraft) {
+    document.querySelector("[data-community-composer]")?.reset();
+    resetCommunityComposerState();
+    setMessage(getCommunityMessage(), "");
+  } else {
+    updateCommunityComposerState();
+  }
 }
 
 function getCommunityMessage() {
@@ -1398,6 +1510,12 @@ function renderCommunityPostCard(post) {
   const card = document.createElement("article");
   card.className = "community-post-card";
   card.dataset.communityPostId = post.id;
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("button, a, input, textarea, select, label, .community-post-menu, .community-media-grid, .community-post-actions")) {
+      return;
+    }
+    openCommunityThreadModal(post.id);
+  });
 
   const meta = renderCommunityPostHeader(post);
 
@@ -2195,6 +2313,7 @@ async function submitCommunityPost(event) {
     if (created.status !== "pending_review" && communityPostMatchesCurrentFilter(created)) {
       upsertCommunityPost(created, { placement: "top" });
     }
+    closeCommunityCreateModal();
   } catch (error) {
     setMessage(message, error.message || "Unable to post discussion.", "error");
   }
@@ -2452,12 +2571,23 @@ function formatCommunityDateTime(value) {
 }
 
 function bindCommunityUi() {
+  if (!document.querySelector("[data-community-view]")) {
+    return;
+  }
+
   document.querySelector("[data-community-composer]")?.addEventListener("submit", submitCommunityPost);
+  document.querySelector("[data-community-composer-launcher]")?.addEventListener("click", openCommunityCreateModal);
+  document.querySelector("[data-community-create-close]")?.addEventListener("click", () => closeCommunityCreateModal());
+  document.querySelector("[data-community-create-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeCommunityCreateModal();
+    }
+  });
   document.querySelector("[data-community-start]")?.addEventListener("click", () => {
     if (!requireCommunityLogin()) {
       return;
     }
-    document.querySelector("[data-community-composer] textarea")?.focus();
+    openCommunityCreateModal();
   });
   document.querySelector("[data-community-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelector("[data-community-login-form]")?.addEventListener("submit", loginCustomer);
@@ -2555,6 +2685,8 @@ function bindCommunityUi() {
       closeCommunityPhotoModal();
     } else if (!document.querySelector("[data-community-edit-modal]")?.hidden) {
       requestCloseCommunityEditModal();
+    } else if (!document.querySelector("[data-community-create-modal]")?.hidden) {
+      closeCommunityCreateModal();
     } else if (!document.querySelector("[data-community-thread-modal]")?.hidden) {
       closeCommunityThreadModal();
     }
@@ -2580,7 +2712,7 @@ function bindCatalogUi() {
       return;
     }
     event.preventDefault();
-    returnToHome();
+    returnToHome({ updatePath: true });
   });
 
   document.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
@@ -2618,6 +2750,791 @@ function bindCatalogUi() {
   document.querySelector("[data-sort-select]")?.addEventListener("change", (event) => {
     state.sort = event.target.value;
     renderCatalog();
+  });
+}
+
+function isEventsPage() {
+  return Boolean(document.querySelector("[data-events-view]"));
+}
+
+function getEventTypeLabel(value) {
+  const labels = {
+    ride: "Ride",
+    workshop: "Workshop",
+    get_together: "Get-together"
+  };
+  return labels[value] || "Event";
+}
+
+function getEventStatusLabel(value) {
+  const labels = {
+    published: "Published",
+    open: "Open",
+    full: "Full",
+    closed: "Closed",
+    completed: "Completed",
+    cancelled: "Cancelled"
+  };
+  return labels[value] || "Event";
+}
+
+function getEventStatusClass(value) {
+  if (value === "open" || value === "published") {
+    return "open";
+  }
+  if (value === "full") {
+    return "full";
+  }
+  if (value === "cancelled") {
+    return "cancelled";
+  }
+  return "closed";
+}
+
+function formatEventDate(value) {
+  if (!value) {
+    return "Date TBA";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Date TBA";
+  }
+
+  return date.toLocaleDateString("en-PH", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+}
+
+function formatEventTime(value) {
+  if (!value) {
+    return "Time TBA";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "Time TBA";
+  }
+
+  return date.toLocaleTimeString("en-PH", {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
+function formatEventDateTime(value) {
+  if (!value) {
+    return "TBA";
+  }
+
+  return `${formatEventDate(value)} | ${formatEventTime(value)}`;
+}
+
+function getEventPosterUrl(eventItem) {
+  return normalizeApiUrl(eventItem?.posterImageUrl || eventItem?.posterUrl || eventItem?.imageUrl || "");
+}
+
+function getEventRegisteredCount(eventItem) {
+  return Number(eventItem?.registeredCount ?? eventItem?.participantCount ?? eventItem?.participants?.filter((participant) => participant.status !== "cancelled").length ?? 0);
+}
+
+function getEventCapacityLabel(eventItem) {
+  const registeredCount = getEventRegisteredCount(eventItem);
+  const capacity = eventItem?.capacity;
+  if (capacity === null || capacity === undefined || capacity === "") {
+    return `${registeredCount} registered`;
+  }
+  return `${registeredCount} / ${capacity} slots`;
+}
+
+function getEventSlotsProgress(eventItem) {
+  const registeredCount = Math.max(0, getEventRegisteredCount(eventItem));
+  const capacity = Number(eventItem?.capacity);
+
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    return {
+      label: `${registeredCount} slots taken`,
+      percent: 0
+    };
+  }
+
+  const displayCount = Math.min(registeredCount, capacity);
+  return {
+    label: `${displayCount} / ${capacity} slots taken`,
+    percent: Math.min(100, Math.round((registeredCount / capacity) * 100))
+  };
+}
+
+function createEventMetaItem(label, value, className = "") {
+  const item = document.createElement("div");
+  if (className) {
+    item.className = className;
+  }
+  item.append(createTextElement("span", label), createTextElement("strong", value));
+  return item;
+}
+
+function createEventSlotsProgress(eventItem) {
+  const progress = getEventSlotsProgress(eventItem);
+  const item = document.createElement("div");
+  item.className = "event-meta-full event-slots-progress";
+  item.append(createTextElement("span", "Slots"));
+
+  const bar = document.createElement("div");
+  bar.className = "event-slots-bar";
+  bar.style.setProperty("--event-slots-percent", `${progress.percent}%`);
+  const fill = document.createElement("span");
+  fill.setAttribute("aria-hidden", "true");
+  bar.append(fill, createTextElement("strong", progress.label));
+
+  item.append(bar);
+  return item;
+}
+
+function isEventRegistrationOpen(eventItem) {
+  if (!eventItem) {
+    return false;
+  }
+
+  if (eventItem.status !== "open" && eventItem.status !== "published") {
+    return false;
+  }
+
+  const now = Date.now();
+  if (eventItem.registrationOpensAt && new Date(eventItem.registrationOpensAt).getTime() > now) {
+    return false;
+  }
+  if (eventItem.registrationClosesAt && new Date(eventItem.registrationClosesAt).getTime() < now) {
+    return false;
+  }
+
+  const capacity = Number(eventItem.capacity);
+  return !Number.isFinite(capacity) || capacity <= 0 || getEventRegisteredCount(eventItem) < capacity;
+}
+
+function getEventCurrentRegistration(eventItem) {
+  if (eventItem?.currentRegistration) {
+    return eventItem.currentRegistration;
+  }
+
+  const accountId = customerState.account?.id || customerState.profile?.id;
+  if (!accountId || !Array.isArray(eventItem?.participants)) {
+    return null;
+  }
+
+  return eventItem.participants.find((participant) =>
+    (participant.publicCustomerAccountId || participant.customerAccountId || participant.accountId) === accountId &&
+    participant.status !== "cancelled"
+  ) || null;
+}
+
+function getEventParticipantAvatar(participant) {
+  return normalizeApiUrl(participant.profilePictureUrl || participant.avatarUrl || participant.participantAvatarUrl || "");
+}
+
+function getEventParticipantName(participant) {
+  return participant.displayName || participant.username || participant.participantName || "SMB Rider";
+}
+
+function getEventInitials(name) {
+  return String(name || "SMB")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("") || "SMB";
+}
+
+function createEventAvatar(participant) {
+  const name = getEventParticipantName(participant);
+  const avatar = document.createElement("span");
+  avatar.className = "event-avatar";
+  const imageUrl = getEventParticipantAvatar(participant);
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.alt = `${name} profile picture`;
+    image.loading = "lazy";
+    image.src = imageUrl;
+    avatar.append(image);
+  } else {
+    avatar.textContent = getEventInitials(name);
+  }
+  return avatar;
+}
+
+function setEventsState(title, detail, actionLabel) {
+  const list = document.querySelector("[data-events-list]");
+  if (!list) {
+    return;
+  }
+
+  const card = document.createElement("article");
+  card.className = "events-state-card";
+  card.append(
+    createTextElement("h2", title),
+    createTextElement("p", detail)
+  );
+  if (actionLabel) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = actionLabel;
+    button.addEventListener("click", () => loadEventsPageEvents());
+    card.append(button);
+  }
+  list.replaceChildren(card);
+}
+
+function buildEventsQuery() {
+  const params = new URLSearchParams();
+  params.set("branch", "Quezon City");
+  if (eventsState.search) {
+    params.set("search", eventsState.search);
+  }
+  if (eventsState.selectedType !== "all") {
+    params.set("eventType", eventsState.selectedType);
+  }
+  if (eventsState.selectedStatus && eventsState.selectedStatus !== "public") {
+    params.set("status", eventsState.selectedStatus);
+  }
+  return params.toString();
+}
+
+async function loadEventsPageEvents() {
+  if (!isEventsPage() || eventsState.isLoading) {
+    return;
+  }
+
+  eventsState.isLoading = true;
+  setEventsState("Loading events", "Checking SMBSystem for public rides, workshops, and get-togethers.");
+
+  try {
+    const query = buildEventsQuery();
+    const rows = await apiRequest(`/api/public/events${query ? `?${query}` : ""}`);
+    eventsState.events = Array.isArray(rows) ? rows : [];
+    renderEventsList();
+    const selectedId = new URLSearchParams(window.location.search).get("event");
+    if (selectedId) {
+      await openEventDetail(selectedId, { updateUrl: false });
+    }
+  } catch (error) {
+    const missingEndpoint = error.status === 404 || error.status === 405;
+    setEventsState(
+      missingEndpoint ? "Events API not ready" : "Events unavailable",
+      missingEndpoint
+        ? "SMBWeb2 is ready for /api/public/events, but SMBSystem still needs the public events API slice."
+        : (error.message || "SMBSystem public events could not be loaded."),
+      "Try Again"
+    );
+  } finally {
+    eventsState.isLoading = false;
+  }
+}
+
+function renderEventsList() {
+  const list = document.querySelector("[data-events-list]");
+  if (!list) {
+    return;
+  }
+
+  if (eventsState.events.length === 0) {
+    setEventsState("No events found", "There are no public SarapMagBike events matching the current filters.");
+    return;
+  }
+
+  list.replaceChildren(...eventsState.events.map(renderEventCard));
+}
+
+function getEventCardSummary(eventItem) {
+  const text = String(eventItem.summary || "Tap to view event details, participants, and registration status.").replace(/\s+/g, " ").trim();
+  return text.length > 110 ? `${text.slice(0, 107).trim()}...` : text;
+}
+
+function renderEventCard(eventItem) {
+  const card = document.createElement("article");
+  card.className = "event-public-card";
+
+  const poster = document.createElement("div");
+  poster.className = "event-public-poster";
+  poster.tabIndex = 0;
+  poster.setAttribute("role", "button");
+  poster.setAttribute("aria-label", `View details for ${eventItem.title || "this event"}`);
+  poster.addEventListener("click", () => openEventDetail(eventItem.id));
+  poster.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openEventDetail(eventItem.id);
+    }
+  });
+  const posterUrl = getEventPosterUrl(eventItem);
+  if (posterUrl) {
+    const image = document.createElement("img");
+    image.alt = eventItem.title || "SarapMagBike event poster";
+    image.loading = "lazy";
+    image.src = posterUrl;
+    poster.append(image);
+  } else {
+    poster.append(createTextElement("span", getEventTypeLabel(eventItem.eventType)));
+  }
+  poster.append(createTextElement("strong", getEventTypeLabel(eventItem.eventType), "event-type-badge"));
+
+  const body = document.createElement("div");
+  body.className = "event-public-card-body";
+  const statusRow = document.createElement("div");
+  statusRow.className = "event-status-row";
+  statusRow.append(
+    createTextElement("span", getEventStatusLabel(eventItem.status), `event-status ${getEventStatusClass(eventItem.status)}`),
+    createTextElement("strong", eventItem.isPaid ? pesoFormatter.format(Number(eventItem.feeAmount || 0)) : "Free")
+  );
+
+  const title = createTextElement("h2", eventItem.title || "SarapMagBike Event");
+  const summary = createTextElement("p", getEventCardSummary(eventItem), "event-card-summary");
+  const meta = document.createElement("div");
+  meta.className = "event-meta-grid";
+  meta.append(
+    createEventMetaItem("Date", formatEventDate(eventItem.assemblyAt)),
+    createEventMetaItem("Assembly", formatEventTime(eventItem.assemblyAt)),
+    createEventMetaItem("Meetup", eventItem.meetupPlace || "SarapMagBike Quezon City", "event-meta-full"),
+    createEventSlotsProgress(eventItem)
+  );
+
+  const action = document.createElement("button");
+  action.type = "button";
+  action.textContent = isEventRegistrationOpen(eventItem) ? "View / Join Event" : "View Details";
+  action.addEventListener("click", () => openEventDetail(eventItem.id));
+
+  body.append(statusRow, title, summary, meta, action);
+  card.append(poster, body);
+  return card;
+}
+
+function showEventListView() {
+  document.querySelector("[data-events-list-layout]")?.removeAttribute("hidden");
+  document.querySelector("[data-events-toolbar]")?.removeAttribute("hidden");
+  document.querySelector("[data-event-detail]")?.setAttribute("hidden", "");
+  eventsState.activeEvent = null;
+  window.history.pushState({ view: "events" }, "", "events.html");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function openEventDetail(eventId, { updateUrl = true } = {}) {
+  const detail = document.querySelector("[data-event-detail]");
+  const content = document.querySelector("[data-event-detail-content]");
+  if (!detail || !content || !eventId) {
+    return;
+  }
+
+  document.querySelector("[data-events-list-layout]")?.setAttribute("hidden", "");
+  document.querySelector("[data-events-toolbar]")?.setAttribute("hidden", "");
+  detail.hidden = false;
+  content.replaceChildren(createEventDetailState("Loading event details", "Checking SMBSystem for the latest event information."));
+
+  try {
+    const eventItem = await apiRequest(`/api/public/events/${eventId}?branch=Quezon%20City`);
+    eventsState.activeEvent = eventItem;
+    renderEventDetail(eventItem);
+    if (updateUrl) {
+      window.history.pushState({ view: "event-detail", eventId }, "", `events.html?event=${encodeURIComponent(eventId)}`);
+    }
+  } catch (error) {
+    content.replaceChildren(createEventDetailState("Event unavailable", error.message || "This event could not be loaded from SMBSystem."));
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function createEventDetailState(title, detail) {
+  const card = document.createElement("article");
+  card.className = "events-state-card";
+  card.append(createTextElement("h2", title), createTextElement("p", detail));
+  return card;
+}
+
+function sanitizeEventHtml(value) {
+  const container = document.createElement("div");
+  container.innerHTML = String(value || "");
+  container.querySelectorAll("script").forEach((node) => node.remove());
+  container.querySelectorAll("[href], [src]").forEach((node) => {
+    ["href", "src"].forEach((attribute) => {
+      if (/^\s*javascript:/i.test(node.getAttribute(attribute) || "")) {
+        node.removeAttribute(attribute);
+      }
+    });
+  });
+  return container.innerHTML;
+}
+
+function renderEventDetail(eventItem) {
+  const content = document.querySelector("[data-event-detail-content]");
+  if (!content) {
+    return;
+  }
+
+  const shell = document.createElement("div");
+  shell.className = "event-detail-shell";
+
+  const main = document.createElement("article");
+  main.className = "event-detail-main";
+  const posterUrl = getEventPosterUrl(eventItem);
+  const poster = document.createElement("div");
+  poster.className = "event-detail-poster";
+  if (posterUrl) {
+    const image = document.createElement("img");
+    image.alt = eventItem.title || "SarapMagBike event poster";
+    image.src = posterUrl;
+    poster.append(image);
+  } else {
+    poster.append(createTextElement("span", getEventTypeLabel(eventItem.eventType)));
+  }
+
+  const copy = document.createElement("div");
+  copy.className = "event-detail-copy";
+  const statusRow = document.createElement("div");
+  statusRow.className = "event-status-row";
+  statusRow.append(
+    createTextElement("span", getEventStatusLabel(eventItem.status), `event-status ${getEventStatusClass(eventItem.status)}`),
+    createTextElement("strong", eventItem.isPaid ? pesoFormatter.format(Number(eventItem.feeAmount || 0)) : "Free event")
+  );
+  const title = createTextElement("h1", eventItem.title || "SarapMagBike Event");
+  const summary = createTextElement("p", eventItem.summary || "Full event details and registration are managed through SMBSystem.");
+  const description = document.createElement("div");
+  description.className = "event-description";
+  description.innerHTML = sanitizeEventHtml(eventItem.descriptionHtml || eventItem.description || "");
+  copy.append(statusRow, title, summary, description);
+  main.append(poster, copy);
+
+  const aside = document.createElement("aside");
+  aside.className = "event-detail-side";
+  aside.append(renderEventFacts(eventItem), renderEventParticipants(eventItem), renderEventActionPanel(eventItem));
+  shell.append(main, aside);
+  content.replaceChildren(shell);
+}
+
+function renderEventFacts(eventItem) {
+  const panel = document.createElement("section");
+  panel.className = "event-info-panel";
+  panel.append(createTextElement("h2", "Event information"));
+  const facts = document.createElement("div");
+  facts.className = "event-facts";
+  [
+    ["Assembly", formatEventDateTime(eventItem.assemblyAt)],
+    ["Starts", eventItem.startsAt ? formatEventDateTime(eventItem.startsAt) : "TBA"],
+    ["Ends", eventItem.endsAt ? formatEventDateTime(eventItem.endsAt) : "TBA"],
+    ["Meetup", eventItem.meetupPlace || "SarapMagBike Quezon City"],
+    ["Slots", getEventCapacityLabel(eventItem)],
+    ["Registration closes", eventItem.registrationClosesAt ? formatEventDateTime(eventItem.registrationClosesAt) : "Not set"]
+  ].forEach(([label, value]) => {
+    const fact = document.createElement("div");
+    fact.append(createTextElement("span", label), createTextElement("strong", value));
+    facts.append(fact);
+  });
+  panel.append(facts);
+  if (eventItem.mapUrl) {
+    const map = document.createElement("a");
+    map.href = eventItem.mapUrl;
+    map.target = "_blank";
+    map.rel = "noreferrer";
+    map.textContent = "Open Map";
+    map.className = "event-panel-link";
+    panel.append(map);
+  }
+  return panel;
+}
+
+function renderEventParticipants(eventItem) {
+  const panel = document.createElement("section");
+  panel.className = "event-info-panel";
+  panel.append(createTextElement("h2", "Participants"));
+  const participants = Array.isArray(eventItem.participants)
+    ? eventItem.participants.filter((participant) => participant.status !== "cancelled")
+    : [];
+  const participantCount = eventItem.isPaid ? participants.length : (participants.length || getEventRegisteredCount(eventItem));
+  panel.append(createTextElement("p", `${participantCount} ${eventItem.isPaid ? "confirmed" : "registered"} participant${participantCount === 1 ? "" : "s"}.`));
+
+  if (eventItem.isPaid) {
+    panel.append(createTextElement("p", "Only participants with confirmed proof of payment appear on this list. Check the status of your registration below.", "event-muted"));
+  }
+
+  if (participants.length === 0) {
+    panel.append(createTextElement("p", eventItem.isPaid ? "Confirmed participants will appear here after staff reviews payment." : "Participant names will appear here after riders register.", "event-muted"));
+    return panel;
+  }
+
+  const stack = document.createElement("div");
+  stack.className = "event-avatar-stack";
+  participants.slice(0, 5).forEach((participant) => stack.append(createEventAvatar(participant)));
+  if (participants.length > 5) {
+    const more = document.createElement("span");
+    more.className = "event-avatar";
+    more.textContent = `+${participants.length - 5}`;
+    stack.append(more);
+  }
+
+  const list = document.createElement("ul");
+  list.className = "event-participant-list";
+  participants.slice(0, 8).forEach((participant) => {
+    const item = document.createElement("li");
+    const text = document.createElement("div");
+    text.append(
+      createTextElement("strong", getEventParticipantName(participant)),
+      createTextElement("span", participant.status === "waitlisted" ? "Waitlisted" : "Registered")
+    );
+    item.append(createEventAvatar(participant), text);
+    list.append(item);
+  });
+
+  panel.append(stack, list);
+  return panel;
+}
+
+function renderEventActionPanel(eventItem) {
+  const panel = document.createElement("section");
+  panel.className = "event-info-panel event-action-panel";
+  panel.append(createTextElement("h2", "Your registration"));
+
+  const currentRegistration = getEventCurrentRegistration(eventItem);
+  if (!customerState.account) {
+    panel.append(createTextElement("p", "Log in or create a public customer profile to register for this event."));
+    const actions = document.createElement("div");
+    actions.className = "event-action-row";
+    const login = document.createElement("button");
+    login.type = "button";
+    login.textContent = "Log in to Register";
+    login.addEventListener("click", () => document.querySelector("[data-customer-login-form] input[name='username']")?.focus());
+    const register = document.createElement("button");
+    register.type = "button";
+    register.textContent = "Create Account";
+    register.addEventListener("click", openRegisterForm);
+    actions.append(login, register);
+    panel.append(actions);
+    return panel;
+  }
+
+  if (currentRegistration) {
+    panel.append(createTextElement("p", `You are ${currentRegistration.status === "waitlisted" ? "waitlisted" : "registered"} for this event.`));
+    panel.append(renderEventRegistrationRecord(currentRegistration));
+    const withdraw = document.createElement("button");
+    withdraw.type = "button";
+    withdraw.className = "event-danger-action";
+    withdraw.textContent = "Withdraw Registration";
+    withdraw.addEventListener("click", () => withdrawEventRegistration(eventItem.id));
+    panel.append(withdraw);
+    return panel;
+  }
+
+  if (!isEventRegistrationOpen(eventItem)) {
+    panel.append(createTextElement("p", eventItem.status === "full" ? "This event is full." : "Registration is not open for this event."));
+    return panel;
+  }
+
+  panel.append(createTextElement("p", "Register using your public customer profile. Staff can review registrations in SMBSystem."));
+  const register = document.createElement("button");
+  register.type = "button";
+  register.textContent = "Register for Event";
+  register.addEventListener("click", openEventRegistrationModal);
+  panel.append(register);
+  return panel;
+}
+
+function getEventRegistrationStatusLabel(registration, eventItem) {
+  const paymentStatus = String(registration?.paymentStatus || "").toLowerCase();
+  if (eventItem?.isPaid) {
+    if (paymentStatus === "paid" || paymentStatus === "waived") {
+      return "CONFIRMED";
+    }
+    if (paymentStatus === "rejected") {
+      return "REJECTED";
+    }
+    return "AWAITING CONFIRMATION";
+  }
+
+  return registration?.status === "waitlisted" ? "Waitlisted" : "Registered";
+}
+
+function renderEventRegistrationRecord(registration) {
+  const record = document.createElement("dl");
+  record.className = "event-registration-record";
+  const accountName = customerState.profile?.username || customerState.account?.username || "Customer";
+  const accountEmail = customerState.profile?.email || customerState.account?.email || "Not set";
+  const eventItem = eventsState.activeEvent;
+  const rows = [
+    ["Registrant", accountName],
+    ["Email", accountEmail],
+    ["Status", getEventRegistrationStatusLabel(registration, eventItem)],
+    ["Registered", registration.registeredAt ? formatEventDateTime(registration.registeredAt) : "Just now"]
+  ];
+
+  if (eventItem?.isPaid) {
+    rows.push(["Fee", pesoFormatter.format(Number(eventItem.feeAmount || 0))]);
+    rows.push(["Payment", String(registration.paymentStatus || "unpaid").replace(/_/g, " ")]);
+  }
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.append(createTextElement("dt", label), createTextElement("dd", value));
+    record.append(row);
+  });
+  return record;
+}
+
+function openEventRegistrationModal() {
+  const eventItem = eventsState.activeEvent;
+  const modal = document.querySelector("[data-event-registration-modal]");
+  const form = document.querySelector("[data-event-registration-form]");
+  const title = document.querySelector("#event-registration-title");
+  const message = document.querySelector("[data-event-registration-message]");
+  const paymentFields = document.querySelector("[data-event-payment-fields]");
+  const feeLabel = document.querySelector("[data-event-registration-fee]");
+  if (!eventItem || !modal || !form) {
+    return;
+  }
+
+  if (title) {
+    title.textContent = `Register for ${eventItem.title || "event"}`;
+  }
+  setMessage(message, "");
+  form.elements.participantName.value = customerState.profile?.username || customerState.account?.username || "";
+  form.elements.participantEmail.value = customerState.profile?.email || customerState.account?.email || "";
+  form.elements.bikeType.value = customerState.profile?.riderTypes?.[0] || "";
+  form.elements.emergencyContactName.value = "";
+  form.elements.emergencyContactPhone.value = "";
+  if (form.elements.paymentProof) {
+    form.elements.paymentProof.value = "";
+  }
+  form.elements.notes.value = "";
+  if (paymentFields) {
+    paymentFields.hidden = !eventItem.isPaid;
+  }
+  if (feeLabel) {
+    feeLabel.textContent = pesoFormatter.format(Number(eventItem.feeAmount || 0));
+  }
+  modal.hidden = false;
+  form.elements.bikeType.focus();
+}
+
+function closeEventRegistrationModal() {
+  document.querySelector("[data-event-registration-modal]")?.setAttribute("hidden", "");
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      const result = String(reader.result || "");
+      resolve(result.includes(",") ? result.split(",").pop() : result);
+    });
+    reader.addEventListener("error", () => reject(reader.error || new Error("Unable to read file.")));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function buildEventRegistrationPayload(form) {
+  const paymentProof = form.elements.paymentProof?.files?.[0] || null;
+  const payload = {
+    participantName: form.elements.participantName.value.trim(),
+    participantEmail: form.elements.participantEmail.value.trim() || null,
+    emergencyContactName: form.elements.emergencyContactName.value.trim() || null,
+    emergencyContactPhone: form.elements.emergencyContactPhone.value.trim() || null,
+    bikeType: form.elements.bikeType.value.trim() || null,
+    notes: form.elements.notes.value.trim() || null
+  };
+
+  if (paymentProof) {
+    payload.paymentProofBase64 = await readFileAsBase64(paymentProof);
+    payload.paymentProofFileName = paymentProof.name;
+    payload.paymentProofContentType = paymentProof.type;
+  }
+
+  return payload;
+}
+
+async function submitEventRegistration(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = document.querySelector("[data-event-registration-message]");
+  if (!eventsState.activeEvent) {
+    return;
+  }
+
+  setMessage(message, "Saving registration...");
+  try {
+    const payload = await buildEventRegistrationPayload(form);
+    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/registration`, {
+      body: JSON.stringify(payload),
+      method: "POST"
+    });
+    eventsState.activeEvent = updated;
+    closeEventRegistrationModal();
+    renderEventDetail(updated);
+  } catch (error) {
+    setMessage(message, error.message || "Unable to register for this event.", "error");
+  }
+}
+
+async function withdrawEventRegistration(eventId) {
+  if (!eventId || !window.confirm("Withdraw your registration for this event?")) {
+    return;
+  }
+
+  try {
+    const updated = await apiRequest(`/api/public/events/${eventId}/registration`, { method: "DELETE" });
+    eventsState.activeEvent = updated;
+    renderEventDetail(updated);
+  } catch (error) {
+    window.alert(error.message || "Unable to withdraw registration.");
+  }
+}
+
+function bindEventsUi() {
+  if (!isEventsPage()) {
+    return;
+  }
+
+  document.querySelector("[data-events-search]")?.addEventListener("input", (event) => {
+    eventsState.search = event.target.value.trim();
+    window.clearTimeout(eventsState.searchTimer);
+    eventsState.searchTimer = window.setTimeout(loadEventsPageEvents, 300);
+  });
+  document.querySelector("[data-events-type]")?.addEventListener("change", (event) => {
+    eventsState.selectedType = event.target.value;
+    document.querySelectorAll("[data-events-chip]").forEach((chip) => chip.classList.toggle("active", chip.dataset.eventsChip === eventsState.selectedType || (eventsState.selectedType === "all" && chip.dataset.eventsChip === "all")));
+    loadEventsPageEvents();
+  });
+  document.querySelector("[data-events-status]")?.addEventListener("change", (event) => {
+    eventsState.selectedStatus = event.target.value;
+    loadEventsPageEvents();
+  });
+  document.querySelector("[data-events-refresh]")?.addEventListener("click", loadEventsPageEvents);
+  document.querySelectorAll("[data-events-chip]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      eventsState.selectedType = chip.dataset.eventsChip || "all";
+      const select = document.querySelector("[data-events-type]");
+      if (select) {
+        select.value = eventsState.selectedType;
+      }
+      document.querySelectorAll("[data-events-chip]").forEach((item) => item.classList.toggle("active", item === chip));
+      loadEventsPageEvents();
+    });
+  });
+  document.querySelector("[data-events-back]")?.addEventListener("click", showEventListView);
+  document.querySelector("[data-events-search-shortcut]")?.addEventListener("click", () => document.querySelector("[data-events-search]")?.focus());
+  document.querySelector("[data-event-registration-form]")?.addEventListener("submit", submitEventRegistration);
+  document.querySelector("[data-event-registration-close]")?.addEventListener("click", closeEventRegistrationModal);
+  document.querySelector("[data-event-registration-cancel]")?.addEventListener("click", closeEventRegistrationModal);
+  document.querySelector("[data-event-registration-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeEventRegistrationModal();
+    }
+  });
+  window.addEventListener("popstate", () => {
+    const eventId = new URLSearchParams(window.location.search).get("event");
+    if (eventId) {
+      openEventDetail(eventId, { updateUrl: false });
+    } else {
+      document.querySelector("[data-event-detail]")?.setAttribute("hidden", "");
+      document.querySelector("[data-events-list-layout]")?.removeAttribute("hidden");
+      document.querySelector("[data-events-toolbar]")?.removeAttribute("hidden");
+    }
   });
 }
 
@@ -2701,6 +3618,17 @@ function setComingSoonHeaderMenuOpen(open) {
   }
 }
 
+function setMobileHeaderMenuOpen(open) {
+  const menu = document.querySelector("[data-mobile-header-menu]");
+  const toggle = document.querySelector("[data-mobile-header-menu-toggle]");
+  if (menu) {
+    menu.hidden = !open;
+  }
+  if (toggle) {
+    toggle.setAttribute("aria-expanded", String(open));
+  }
+}
+
 function setMessage(element, message, type = "") {
   if (!element) {
     return;
@@ -2764,13 +3692,17 @@ function updateCustomerHeader() {
   const comingSoonMember = document.querySelector("[data-coming-soon-account-member]");
   const comingSoonName = document.querySelector("[data-coming-soon-account-name]");
   const comingSoonRegisterAction = document.querySelector("[data-coming-soon-register-action]");
+  const comingSoonHeaderLogin = document.querySelector("[data-coming-soon-header-login]");
   const comingSoonHeaderRegister = document.querySelector("[data-coming-soon-header-register]");
   const comingSoonHeaderSession = document.querySelector("[data-coming-soon-header-session]");
   const comingSoonHeaderName = document.querySelector("[data-coming-soon-header-name]");
   const comingSoonHeaderEmail = document.querySelector("[data-coming-soon-header-email]");
   const communityComposerAvatar = document.querySelector("[data-community-composer-avatar]");
   const communityComposer = document.querySelector("[data-community-composer]");
+  const communityComposerPrompt = document.querySelector("[data-community-composer-prompt]");
   const isLoggedIn = Boolean(customerState.account);
+  const customerName = customerState.account?.username || customerState.account?.email || "Customer";
+  const customerEmail = customerState.profile?.email || customerState.account?.email || "";
 
   if (loginForm) {
     loginForm.hidden = isLoggedIn;
@@ -2781,9 +3713,18 @@ function updateCustomerHeader() {
   if (comingSoonHeaderRegister) {
     comingSoonHeaderRegister.hidden = isLoggedIn;
   }
+  if (comingSoonHeaderLogin) {
+    comingSoonHeaderLogin.hidden = isLoggedIn;
+  }
   if (comingSoonHeaderSession) {
     comingSoonHeaderSession.hidden = !isLoggedIn;
   }
+  document.querySelectorAll("[data-mobile-header-login], [data-mobile-header-register]").forEach((element) => {
+    element.hidden = isLoggedIn;
+  });
+  document.querySelectorAll("[data-mobile-header-session]").forEach((element) => {
+    element.hidden = !isLoggedIn;
+  });
   if (comingSoonGuest) {
     comingSoonGuest.hidden = isLoggedIn;
   }
@@ -2791,14 +3732,20 @@ function updateCustomerHeader() {
     comingSoonMember.hidden = !isLoggedIn;
   }
   if (comingSoonName) {
-    comingSoonName.textContent = customerState.account?.username || customerState.account?.email || "Customer";
+    comingSoonName.textContent = customerName;
   }
   if (comingSoonHeaderName) {
-    comingSoonHeaderName.textContent = customerState.account?.username || customerState.account?.email || "Customer";
+    comingSoonHeaderName.textContent = customerName;
   }
   if (comingSoonHeaderEmail) {
-    comingSoonHeaderEmail.textContent = customerState.profile?.email || customerState.account?.email || "";
+    comingSoonHeaderEmail.textContent = customerEmail;
   }
+  document.querySelectorAll("[data-mobile-header-name]").forEach((element) => {
+    element.textContent = customerName;
+  });
+  document.querySelectorAll("[data-mobile-header-email]").forEach((element) => {
+    element.textContent = customerEmail;
+  });
   if (comingSoonRegisterAction) {
     comingSoonRegisterAction.hidden = isLoggedIn;
   }
@@ -2808,12 +3755,21 @@ function updateCustomerHeader() {
   if (communityComposer) {
     communityComposer.classList.toggle("has-customer-avatar", isLoggedIn);
   }
+  document.querySelector("[data-community-composer-launcher]")?.classList.toggle("has-customer-avatar", isLoggedIn);
+  document.querySelector("[data-community-composer-launcher-row]")?.classList.toggle("has-customer-avatar", isLoggedIn);
+  if (communityComposerPrompt) {
+    communityComposerPrompt.textContent = isLoggedIn
+      ? "What's on your mind?"
+      : "Register or Login to join the discussion.";
+  }
   setAccountMenuOpen(false);
   setComingSoonHeaderMenuOpen(false);
+  setMobileHeaderMenuOpen(false);
   renderAvatar(document.querySelector("[data-account-avatar]"));
   renderAvatar(document.querySelector("[data-account-menu-avatar]"));
   renderAvatar(document.querySelector("[data-coming-soon-account-avatar]"));
   renderAvatar(document.querySelector("[data-coming-soon-header-avatar]"));
+  document.querySelectorAll("[data-mobile-header-avatar]").forEach((element) => renderAvatar(element));
   renderAvatar(communityComposerAvatar);
   if (greeting && customerState.account) {
     greeting.textContent = customerState.account.username;
@@ -2833,6 +3789,9 @@ function updateCustomerHeader() {
   if (communityState.posts.length > 0) {
     renderCommunityPosts();
     refreshCommunityThreadModal();
+  }
+  if (isEventsPage() && eventsState.activeEvent) {
+    renderEventDetail(eventsState.activeEvent);
   }
 }
 
@@ -3089,6 +4048,8 @@ async function loginCustomer(event) {
     form.reset();
     updateCustomerHeader();
     setMessage(message, "Logged in.", "success");
+    hideCommunityAuthPrompt();
+    document.querySelector("[data-community-login-form]")?.setAttribute("hidden", "");
     if (wasInCommunity) {
       openCommunityPage(false);
     } else if (isComingSoonPage) {
@@ -3175,6 +4136,33 @@ async function toggleComingSoonHeaderMenu(event) {
   }
 }
 
+async function toggleMobileHeaderMenu(event) {
+  event?.stopPropagation();
+  const menu = document.querySelector("[data-mobile-header-menu]");
+  if (!menu || !customerState.account) {
+    return;
+  }
+
+  const shouldOpen = menu.hidden;
+  setMobileHeaderMenuOpen(shouldOpen);
+  if (!shouldOpen || customerState.profile) {
+    return;
+  }
+
+  try {
+    customerState.profile = await apiRequest("/api/public/customer-account/profile");
+    customerState.account = {
+      ...customerState.account,
+      email: customerState.profile.email,
+      profilePictureUrl: customerState.profile.profilePictureUrl
+    };
+    updateCustomerHeader();
+    setMobileHeaderMenuOpen(true);
+  } catch {
+    setMobileHeaderMenuOpen(true);
+  }
+}
+
 async function restoreCustomerSession() {
   try {
     customerState.account = await apiRequest("/api/public/customer-account/session");
@@ -3223,10 +4211,14 @@ function bindCustomerAccountUi() {
     });
   });
   document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
+  document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
+  document.querySelector("[data-mobile-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelector("[data-coming-soon-header-menu-toggle]")?.addEventListener("click", toggleComingSoonHeaderMenu);
+  document.querySelector("[data-mobile-header-menu-toggle]")?.addEventListener("click", toggleMobileHeaderMenu);
   document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
   document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-coming-soon-header-logout]")?.addEventListener("click", logoutCustomer);
+  document.querySelector("[data-mobile-header-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-close-profile]")?.addEventListener("click", () => showProfileMode(false));
   document.addEventListener("click", (event) => {
     const sessionPanel = getCustomerSessionPanel();
@@ -3236,6 +4228,10 @@ function bindCustomerAccountUi() {
     const comingSoonHeaderSession = document.querySelector("[data-coming-soon-header-session]");
     if (comingSoonHeaderSession && !comingSoonHeaderSession.contains(event.target)) {
       setComingSoonHeaderMenuOpen(false);
+    }
+    const mobileHeaderSession = document.querySelector("[data-mobile-header-session]");
+    if (mobileHeaderSession && !mobileHeaderSession.contains(event.target)) {
+      setMobileHeaderMenuOpen(false);
     }
   });
   getProfileForm()?.addEventListener("submit", submitProfile);
@@ -3285,6 +4281,422 @@ function bindCustomerAccountUi() {
   window.setTimeout(handleProfileDeepLink, 0);
 }
 
+function getProductDetailRoot() {
+  return document.querySelector("[data-product-detail]");
+}
+
+function getFieldValue(item, fieldNames) {
+  for (const fieldName of fieldNames) {
+    const value = item[fieldName];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return "";
+}
+
+function sanitizeRichText(html) {
+  const template = document.createElement("template");
+  template.innerHTML = String(html || "");
+  const allowedTags = new Set(["A", "B", "BR", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+
+  const cleanNode = (node) => {
+    Array.from(node.childNodes).forEach((child) => {
+      if (child.nodeType === Node.TEXT_NODE) {
+        return;
+      }
+
+      if (child.nodeType !== Node.ELEMENT_NODE) {
+        child.remove();
+        return;
+      }
+
+      const element = child;
+      if (!allowedTags.has(element.tagName)) {
+        element.replaceWith(document.createTextNode(element.textContent || ""));
+        return;
+      }
+
+      Array.from(element.attributes).forEach((attribute) => {
+        const isSafeLink = element.tagName === "A"
+          && attribute.name === "href"
+          && /^(https?:|mailto:|tel:)/i.test(attribute.value);
+        if (!isSafeLink) {
+          element.removeAttribute(attribute.name);
+        }
+      });
+
+      if (element.tagName === "A") {
+        element.target = "_blank";
+        element.rel = "noreferrer";
+      }
+
+      cleanNode(element);
+    });
+  };
+
+  cleanNode(template.content);
+  return template.innerHTML;
+}
+
+function renderProductDescription(description) {
+  const detail = document.createElement("div");
+  detail.className = "product-detail-description";
+
+  if (!description) {
+    detail.textContent = "Public catalog item from SMBSystem. Stocks and prices may change due to in-store sales.";
+    return detail;
+  }
+
+  detail.innerHTML = sanitizeRichText(description);
+  return detail;
+}
+
+function getProductDetailQuery() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    id: params.get("id") || "",
+    slug: params.get("slug") || ""
+  };
+}
+
+function itemMatchesProductQuery(item, query) {
+  const targetId = normalizeText(query.id);
+  const targetSlug = normalizeText(query.slug);
+  const identifiers = [
+    getItemIdentifier(item),
+    item.productId,
+    item.id,
+    item.itemId,
+    item.inventoryItemId,
+    item.catalogItemId,
+    item.sku,
+    item.itemCode,
+    item.barcode
+  ].filter(Boolean).map(normalizeText);
+
+  if (targetId && identifiers.includes(targetId)) {
+    return true;
+  }
+
+  return Boolean(targetSlug && slugify(getItemName(item)) === slugify(targetSlug));
+}
+
+function setProductDetailState(title, detail) {
+  const root = getProductDetailRoot();
+  if (!root) {
+    return;
+  }
+  root.replaceChildren();
+  const stateCard = document.createElement("article");
+  stateCard.className = "product-detail-state";
+  stateCard.append(createTextElement("h1", title), createTextElement("p", detail));
+  root.append(stateCard);
+}
+
+function buildSpecRows(item) {
+  const rows = [
+    ["Brand", getFieldValue(item, ["brand", "brandName"])],
+    ["Model", getFieldValue(item, ["model", "modelName", "variant"])],
+    ["Category", getFieldValue(item, ["webCategory", "webCategoryName", "category"])],
+    ["Type", getFieldValue(item, ["categoryGroupName", "categoryGroup", "itemType"])],
+    ["Size", getFieldValue(item, ["size", "frameSize", "wheelSize"])],
+    ["Color", getFieldValue(item, ["color", "colour"])],
+    ["Material", getFieldValue(item, ["material"])],
+    ["Compatibility", getFieldValue(item, ["compatibility", "compatibleWith"])],
+    ["Included", getFieldValue(item, ["included", "inclusions", "packageIncludes"])]
+  ];
+
+  const specs = item.specs || item.specifications || item.webSpecs;
+  if (Array.isArray(specs)) {
+    specs.forEach((spec) => {
+      if (typeof spec === "string") {
+        rows.push(["Spec", spec]);
+        return;
+      }
+      rows.push([spec.label || spec.name || "Spec", spec.value || spec.description || ""]);
+    });
+  } else if (specs && typeof specs === "object") {
+    Object.entries(specs).forEach(([key, value]) => rows.push([key, value]));
+  }
+
+  return rows
+    .map(([label, value]) => [label, String(value || "").trim()])
+    .filter(([, value]) => value);
+}
+
+function renderProductDetailGallery(item) {
+  const imageUrls = getProductImageUrls(item);
+  const gallery = document.createElement("section");
+  gallery.className = "product-detail-gallery";
+  gallery.setAttribute("aria-label", "Product photos");
+
+  const stage = document.createElement("div");
+  stage.className = "product-detail-photo-stage product-api-photo";
+  stage.dataset.initial = getItemName(item).trim().slice(0, 1).toUpperCase();
+
+  if (imageUrls[0]) {
+    stage.classList.add("has-image");
+    const image = document.createElement("img");
+    image.alt = getItemName(item);
+    image.decoding = "async";
+    image.src = imageUrls[0];
+    stage.append(image);
+  }
+
+  gallery.append(stage);
+
+  if (imageUrls.length > 1) {
+    const thumbnails = document.createElement("div");
+    thumbnails.className = "product-detail-thumbnails";
+    imageUrls.forEach((imageUrl, index) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = index === 0 ? "active" : "";
+      button.setAttribute("aria-label", `Show product photo ${index + 1}`);
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = imageUrl;
+      button.append(image);
+      button.addEventListener("click", () => {
+        const stageImage = stage.querySelector("img") || document.createElement("img");
+        stageImage.alt = getItemName(item);
+        stageImage.src = imageUrl;
+        if (!stageImage.parentElement) {
+          stage.classList.add("has-image");
+          stage.append(stageImage);
+        }
+        thumbnails.querySelectorAll("button").forEach((thumbnail) => thumbnail.classList.remove("active"));
+        button.classList.add("active");
+      });
+      thumbnails.append(button);
+    });
+    gallery.append(thumbnails);
+  }
+
+  return gallery;
+}
+
+function renderBranchAvailability(item) {
+  const availability = document.createElement("div");
+  availability.className = "product-branch-list";
+
+  Object.entries(branchContacts).forEach(([branchName, branch]) => {
+    const card = document.createElement("article");
+    card.className = "product-branch-card";
+    const actualStatus = branchName === "Quezon City"
+      ? getAvailabilityLabel(item)
+      : getFieldValue(item, [`${branchName.toLowerCase()}Availability`, "otherBranchAvailability"]) || "ASK BRANCH";
+    card.append(
+      createTextElement("strong", branchName),
+      createTextElement("span", actualStatus, actualStatus === "AVAILABLE" ? "available" : "ask"),
+      createTextElement("p", `${branch.address} | ${branch.phone}`)
+    );
+    availability.append(card);
+  });
+
+  return availability;
+}
+
+function renderSpecTable(item) {
+  const rows = buildSpecRows(item);
+  const table = document.createElement("dl");
+  table.className = "product-spec-table";
+
+  if (rows.length === 0) {
+    const note = document.createElement("p");
+    note.className = "product-detail-note";
+    note.textContent = "Specs are not yet published for this item. Message us to confirm compatibility.";
+    return note;
+  }
+
+  rows.forEach(([label, value]) => {
+    const group = document.createElement("div");
+    group.append(createTextElement("dt", label), createTextElement("dd", value));
+    table.append(group);
+  });
+
+  return table;
+}
+
+function getRelatedProducts(item) {
+  const currentIdentifier = normalizeText(getItemIdentifier(item));
+  const currentGroup = normalizeText(getItemCategoryGroup(item));
+  const currentCategory = normalizeText(getItemWebCategory(item));
+  return state.items
+    .filter(isPublicProduct)
+    .filter((candidate) => normalizeText(getItemIdentifier(candidate)) !== currentIdentifier)
+    .filter((candidate) => {
+      return normalizeText(getItemWebCategory(candidate)) === currentCategory
+        || normalizeText(getItemCategoryGroup(candidate)) === currentGroup;
+    })
+    .slice(0, 4);
+}
+
+function renderProductMiniCard(item) {
+  const link = document.createElement("a");
+  link.className = "product-mini-card";
+  link.href = getProductDetailUrl(item);
+  link.append(
+    renderProductPhoto(item),
+    createTextElement("strong", getItemName(item)),
+    renderPrice(item)
+  );
+  return link;
+}
+
+async function copyCurrentProductLink(button) {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    button.textContent = "Link copied";
+    window.setTimeout(() => {
+      button.textContent = "Copy link";
+    }, 1600);
+  } catch {
+    button.textContent = "Copy failed";
+    window.setTimeout(() => {
+      button.textContent = "Copy link";
+    }, 1600);
+  }
+}
+
+function bindProductStickyInquiry(sticky, actions) {
+  if (!sticky || !actions) {
+    return;
+  }
+
+  const updateSticky = () => {
+    const isMobile = window.matchMedia("(max-width: 760px)").matches;
+    const actionsRect = actions.getBoundingClientRect();
+    const actionsVisible = actionsRect.bottom > 86 && actionsRect.top < window.innerHeight - 86;
+    sticky.hidden = !isMobile || actionsVisible;
+  };
+
+  updateSticky();
+  window.addEventListener("scroll", updateSticky, { passive: true });
+  window.addEventListener("resize", updateSticky);
+}
+
+function renderProductDetail(item) {
+  const root = getProductDetailRoot();
+  if (!root) {
+    return;
+  }
+
+  const productName = getItemName(item);
+  document.title = `${productName} | SarapMagBike Shop`;
+  document.querySelector("meta[name='description']")?.setAttribute("content", `${productName} details, photos, specs, price, and branch availability from SarapMagBike Shop.`);
+
+  root.replaceChildren();
+
+  const detailShell = document.createElement("section");
+  detailShell.className = "product-detail-shell";
+
+  const summary = document.createElement("section");
+  summary.className = "product-detail-summary";
+  summary.setAttribute("aria-label", "Product summary");
+
+  const badges = document.createElement("div");
+  badges.className = "product-detail-badges";
+  if (item.isNew) {
+    badges.append(createTextElement("span", "New arrival"));
+  }
+  if (item.isOnSale) {
+    badges.append(createTextElement("span", "Promo"));
+  }
+  badges.append(createTextElement("span", getAvailabilityLabel(item)));
+
+  const description = getFieldValue(item, ["webDescription", "description", "notes", "itemNotes"]);
+  const detail = renderProductDescription(description);
+  const price = renderPrice(item);
+  price.classList.add("product-detail-price");
+
+  const actions = document.createElement("div");
+  actions.className = "product-detail-actions";
+  const messenger = document.createElement("a");
+  messenger.href = "https://www.facebook.com/sarapmagbikeshop";
+  messenger.target = "_blank";
+  messenger.rel = "noreferrer";
+  messenger.textContent = "Messenger";
+  const callQc = document.createElement("a");
+  callQc.href = `tel:${branchContacts["Quezon City"].tel}`;
+  callQc.textContent = "Call QC";
+  const copyLink = document.createElement("button");
+  copyLink.type = "button";
+  copyLink.textContent = "Copy link";
+  copyLink.addEventListener("click", () => copyCurrentProductLink(copyLink));
+  actions.append(messenger, callQc, copyLink);
+
+  summary.append(
+    badges,
+    createTextElement("p", getFieldValue(item, ["brand", "brandName"]) || "SarapMagBike Catalog", "product-detail-eyebrow"),
+    createTextElement("h1", productName),
+    price,
+    detail,
+    actions,
+    createTextElement("p", "Default branch context: Quezon City. Message us before visiting so staff can confirm current availability.", "product-detail-note")
+  );
+
+  detailShell.append(renderProductDetailGallery(item), summary);
+  root.append(detailShell);
+
+  const infoGrid = document.createElement("section");
+  infoGrid.className = "product-detail-info-grid";
+  const specsCard = document.createElement("article");
+  specsCard.append(createTextElement("h2", "Specs"), renderSpecTable(item));
+  const availabilityCard = document.createElement("article");
+  availabilityCard.append(createTextElement("h2", "Branch Availability"), renderBranchAvailability(item));
+  const serviceCard = document.createElement("article");
+  serviceCard.append(
+    createTextElement("h2", "Install Service"),
+    createTextElement("p", "Ask staff if this item needs installation, tuning, brake bleed, drivetrain setup, or compatibility checking before purchase.")
+  );
+  infoGrid.append(specsCard, availabilityCard, serviceCard);
+  root.append(infoGrid);
+
+  const related = getRelatedProducts(item);
+  if (related.length > 0) {
+    const relatedSection = document.createElement("section");
+    relatedSection.className = "product-related-section";
+    relatedSection.append(createTextElement("h2", "Related Items"));
+    const relatedGrid = document.createElement("div");
+    relatedGrid.className = "product-related-grid";
+    related.forEach((relatedItem) => relatedGrid.append(renderProductMiniCard(relatedItem)));
+    relatedSection.append(relatedGrid);
+    root.append(relatedSection);
+  }
+
+  const sticky = document.querySelector("[data-product-sticky]");
+  if (sticky) {
+    sticky.querySelector("[data-product-sticky-price]").textContent = price.textContent;
+    sticky.querySelector("[data-product-sticky-title]").textContent = productName;
+    bindProductStickyInquiry(sticky, actions);
+  }
+}
+
+async function loadProductDetailPage() {
+  const root = getProductDetailRoot();
+  if (!root) {
+    return;
+  }
+
+  setProductDetailState("Loading Product", "Checking SMBSystem public catalog for this item.");
+
+  try {
+    await loadWebItems();
+    const query = getProductDetailQuery();
+    const item = state.items.find((candidate) => isPublicProduct(candidate) && itemMatchesProductQuery(candidate, query));
+    if (!item) {
+      setProductDetailState("Product Not Found", "This item is not currently published in the public catalog. It may be unavailable or hidden from the website.");
+      return;
+    }
+    renderProductDetail(item);
+  } catch (error) {
+    setProductDetailState("Product Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
+  }
+}
+
 async function startCatalog() {
   if (await enforcePublicWebsiteMode()) {
     return;
@@ -3296,7 +4708,13 @@ async function startCatalog() {
   bindCatalogUi();
   bindServiceFilters();
   bindCommunityUi();
-  loadHomeProductItems();
+  bindEventsUi();
+  loadProductDetailPage();
+  if (isEventsPage()) {
+    await loadEventsPageEvents();
+  } else {
+    loadHomeProductItems();
+  }
   if (document.body.classList.contains("is-coming-soon-page") && document.querySelector("[data-community-view]")) {
     updateCommunityAuthState();
     loadCommunityDiscussions();

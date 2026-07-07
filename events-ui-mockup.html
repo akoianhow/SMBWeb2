@@ -1,0 +1,1272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SarapMagBike Events UI Mockup</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <style>
+      :root {
+        color-scheme: light;
+        --red: #df2027;
+        --red-dark: #b9181e;
+        --ink: #202020;
+        --muted: #6f7378;
+        --line: #d9dde2;
+        --paper: #f5f6f7;
+        --white: #ffffff;
+        --green: #138a43;
+        --blue: #1a6fb3;
+        --amber: #a86b00;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(rgba(245, 246, 247, 0.94), rgba(245, 246, 247, 0.98)),
+          url("assets/hero-bikes.png") center top / cover fixed;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      img {
+        display: block;
+        max-width: 100%;
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+
+      .wrap {
+        width: 1180px;
+        max-width: calc(100vw - 32px);
+        margin: 0 auto;
+      }
+
+      .topbar {
+        color: #f7f7f7;
+        background: #333333;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+        gap: 16px;
+      }
+
+      .topbar nav,
+      .customer-strip {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .customer-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #ffffff;
+        text-transform: none;
+        font-weight: 600;
+      }
+
+      .avatar,
+      .avatar-stack span {
+        display: inline-grid;
+        place-items: center;
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        overflow: hidden;
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        color: #ffffff;
+        background: #555555;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .avatar img,
+      .avatar-stack img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .header-main {
+        display: grid;
+        grid-template-columns: auto minmax(240px, 1fr) auto;
+        align-items: center;
+        gap: 24px;
+        padding: 18px 0;
+      }
+
+      .logo {
+        display: grid;
+        grid-template-columns: 54px auto;
+        align-items: center;
+        column-gap: 10px;
+      }
+
+      .logo img {
+        width: 54px;
+        height: 54px;
+      }
+
+      .logo strong {
+        display: block;
+        font-size: 22px;
+        line-height: 1;
+        letter-spacing: 0;
+      }
+
+      .logo strong span {
+        color: var(--red);
+      }
+
+      .logo small {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .search {
+        display: flex;
+        min-width: 0;
+        border: 1px solid var(--line);
+        background: var(--white);
+      }
+
+      .search input {
+        min-width: 0;
+        flex: 1;
+        height: 42px;
+        border: 0;
+        padding: 0 14px;
+        outline: none;
+      }
+
+      .search button,
+      .primary,
+      .secondary,
+      .danger,
+      .icon-button {
+        border: 0;
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .search button,
+      .primary {
+        color: #ffffff;
+        background: var(--red);
+      }
+
+      .search button {
+        padding: 0 18px;
+      }
+
+      .primary,
+      .secondary,
+      .danger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 4px;
+        gap: 8px;
+      }
+
+      .primary:hover,
+      .search button:hover {
+        background: var(--red-dark);
+      }
+
+      .secondary {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: var(--white);
+      }
+
+      .danger {
+        color: #ffffff;
+        background: #9d1d22;
+      }
+
+      .main-nav {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        background: #2f2f2f;
+      }
+
+      .main-nav a {
+        flex: 1;
+        min-width: 0;
+        padding: 13px 10px;
+        color: #ffffff;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .main-nav a.active {
+        background: var(--red);
+      }
+
+      .content {
+        padding: 26px 0 60px;
+      }
+
+      .mockup-note {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 18px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.92);
+      }
+
+      .mockup-note strong {
+        display: block;
+        margin-bottom: 2px;
+      }
+
+      .mockup-note p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .screen-band {
+        margin-top: 18px;
+        padding: 22px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.96);
+      }
+
+      .screen-title {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .screen-title p {
+        margin-bottom: 4px;
+        color: var(--red);
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .screen-title h1,
+      .screen-title h2 {
+        margin-bottom: 0;
+        font-size: 26px;
+        letter-spacing: 0;
+      }
+
+      .screen-title span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: minmax(220px, 1fr) auto auto auto;
+        gap: 10px;
+        margin-bottom: 16px;
+      }
+
+      .filters input,
+      .filters select {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        background: var(--white);
+        padding: 0 12px;
+      }
+
+      .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 32px;
+        padding: 0 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--ink);
+        background: #ffffff;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .chip.active {
+        border-color: var(--red);
+        color: #ffffff;
+        background: var(--red);
+      }
+
+      .event-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .event-card {
+        display: grid;
+        grid-template-rows: 180px auto;
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--white);
+      }
+
+      .poster {
+        position: relative;
+        min-height: 0;
+        background: #d9dde2;
+      }
+
+      .poster img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .poster-badge {
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        padding: 6px 8px;
+        border-radius: 4px;
+        color: #ffffff;
+        background: rgba(32, 32, 32, 0.84);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .event-card-body {
+        display: grid;
+        gap: 10px;
+        padding: 14px;
+      }
+
+      .event-card h3 {
+        margin-bottom: 0;
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .event-card p {
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .meta {
+        min-width: 0;
+        padding: 8px;
+        border: 1px solid #e5e8eb;
+        background: #fafafa;
+      }
+
+      .meta span {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .meta strong {
+        display: block;
+        overflow-wrap: anywhere;
+        font-size: 13px;
+      }
+
+      .status-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        min-height: 26px;
+        padding: 0 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .status.open {
+        color: #ffffff;
+        background: var(--green);
+      }
+
+      .status.full {
+        color: #ffffff;
+        background: var(--amber);
+      }
+
+      .status.closed {
+        color: #ffffff;
+        background: #686d73;
+      }
+
+      .split-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+        gap: 18px;
+      }
+
+      .detail-hero {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--white);
+      }
+
+      .detail-hero img {
+        width: 100%;
+        height: 340px;
+        object-fit: cover;
+      }
+
+      .detail-copy {
+        padding: 18px;
+      }
+
+      .detail-copy h1 {
+        margin-bottom: 8px;
+        font-size: 30px;
+      }
+
+      .detail-copy p {
+        color: #4b4f55;
+      }
+
+      .detail-copy ul {
+        margin: 14px 0 0;
+        padding-left: 20px;
+      }
+
+      .detail-copy li + li {
+        margin-top: 6px;
+      }
+
+      .side-panel {
+        display: grid;
+        gap: 14px;
+        align-content: start;
+      }
+
+      .info-panel {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--white);
+      }
+
+      .info-panel h2,
+      .info-panel h3 {
+        margin-bottom: 10px;
+        font-size: 18px;
+      }
+
+      .event-facts {
+        display: grid;
+        gap: 8px;
+      }
+
+      .fact {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #edf0f2;
+      }
+
+      .fact span {
+        color: var(--muted);
+      }
+
+      .fact strong {
+        text-align: right;
+      }
+
+      .avatar-stack {
+        display: flex;
+        align-items: center;
+        margin: 8px 0 12px;
+      }
+
+      .avatar-stack span {
+        margin-right: -8px;
+        border-color: #ffffff;
+      }
+
+      .participant-list {
+        display: grid;
+        gap: 9px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .participant-list li {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+
+      .participant-list strong,
+      .participant-list span {
+        display: block;
+      }
+
+      .participant-list span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .register-panel {
+        display: grid;
+        gap: 10px;
+      }
+
+      .register-panel p {
+        margin-bottom: 0;
+        color: var(--muted);
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .form-grid label,
+      .full-field {
+        display: grid;
+        gap: 5px;
+        color: #40454a;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .form-grid input,
+      .form-grid select,
+      .full-field textarea {
+        width: 100%;
+        min-height: 40px;
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+        color: var(--ink);
+        background: var(--white);
+        font-weight: 400;
+      }
+
+      .full-field {
+        grid-column: 1 / -1;
+      }
+
+      .full-field textarea {
+        min-height: 76px;
+        resize: vertical;
+      }
+
+      .payment-proof {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+        border: 1px dashed #c7ccd1;
+        background: #fbfbfb;
+      }
+
+      .confirmation {
+        display: grid;
+        gap: 10px;
+      }
+
+      .confirmation strong {
+        color: var(--green);
+      }
+
+      .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .modal-preview {
+        width: 460px;
+        max-width: 100%;
+        margin: 0 auto;
+        border: 1px solid #c7ccd1;
+        border-radius: 8px;
+        background: #ffffff;
+        box-shadow: 0 22px 70px rgba(0, 0, 0, 0.18);
+      }
+
+      .modal-preview header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .modal-preview h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .modal-preview .body {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .icon-button {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        color: var(--ink);
+        background: #eff1f3;
+      }
+
+      .mobile-demo {
+        display: grid;
+        grid-template-columns: 390px 390px;
+        justify-content: center;
+        gap: 22px;
+      }
+
+      .phone {
+        overflow: hidden;
+        border: 10px solid #202020;
+        border-radius: 30px;
+        background: #f4f5f6;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16);
+      }
+
+      .phone-header {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 58px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        background: #ffffff;
+      }
+
+      .phone-header strong {
+        font-size: 16px;
+      }
+
+      .phone-body {
+        display: grid;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .phone-search {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+      }
+
+      .phone-search .chip {
+        white-space: nowrap;
+      }
+
+      .mobile-event-card {
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+      }
+
+      .mobile-event-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+      }
+
+      .mobile-event-card div {
+        display: grid;
+        gap: 8px;
+        padding: 12px;
+      }
+
+      .mobile-event-card h3 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .phone-footer {
+        position: sticky;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-top: 1px solid var(--line);
+        background: #ffffff;
+      }
+
+      .phone-footer a {
+        display: grid;
+        place-items: center;
+        min-height: 54px;
+        color: #555b61;
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .phone-footer a.active {
+        color: var(--red);
+      }
+
+      .sticky-cta {
+        position: sticky;
+        bottom: 0;
+        display: grid;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid var(--line);
+        background: #ffffff;
+      }
+
+      .state-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .state-tile {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #ffffff;
+      }
+
+      .state-tile h3 {
+        margin: 0;
+        font-size: 17px;
+      }
+
+      .state-tile p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      @media (max-width: 920px) {
+        .topbar-inner,
+        .header-main,
+        .screen-title,
+        .mockup-note {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .header-main {
+          grid-template-columns: 1fr;
+        }
+
+        .main-nav {
+          overflow-x: auto;
+        }
+
+        .main-nav a {
+          flex: 0 0 auto;
+          min-width: 104px;
+        }
+
+        .filters,
+        .split-layout,
+        .event-grid,
+        .state-grid,
+        .mobile-demo {
+          grid-template-columns: 1fr;
+        }
+
+        .phone {
+          width: min(390px, 100%);
+          margin: 0 auto;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .wrap {
+          max-width: calc(100vw - 20px);
+        }
+
+        .screen-band {
+          padding: 14px;
+        }
+
+        .form-grid,
+        .meta-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-hero img {
+          height: 230px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <nav aria-label="Utility navigation">
+          <a href="#">Contact Us</a>
+          <a href="#">Book Service</a>
+          <a href="#">Survey</a>
+        </nav>
+        <div class="customer-strip">
+          <span>Prices in PHP</span>
+          <span class="customer-pill"><span class="avatar">IH</span> IanHow Rider</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="wrap header-main">
+      <a class="logo" href="#" aria-label="SarapMagBike Shop home">
+        <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+        <span>
+          <strong>SARAPMAG<span>BIKE</span></strong>
+          <small>QC | PAMPANGA</small>
+        </span>
+      </a>
+      <form class="search">
+        <input type="search" value="Yaya Ride" aria-label="Search events">
+        <button type="button">Search</button>
+      </form>
+      <a class="secondary" href="#">Message Us</a>
+    </div>
+
+    <nav class="wrap main-nav" aria-label="Website navigation">
+      <a href="#">Bikes</a>
+      <a href="#">Parts</a>
+      <a href="#">Service</a>
+      <a class="active" href="#">Events</a>
+      <a href="#">Community</a>
+      <a href="#">Contact</a>
+    </nav>
+
+    <main class="wrap content">
+      <section class="mockup-note" aria-label="Mockup note">
+        <div>
+          <strong>Events UI mockup</strong>
+          <p>Visual-only prototype for the public SMBWeb2 event flow backed by SMBSystem events and public customer accounts.</p>
+        </div>
+        <a class="primary" href="#details">Jump to Details</a>
+      </section>
+
+      <section class="screen-band" aria-labelledby="list-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 1</p>
+            <h1 id="list-title">Events List</h1>
+          </div>
+          <span>EVENT button redirects here and shows public events only.</span>
+        </div>
+
+        <div class="filters">
+          <input type="search" value="Yaya Ride" aria-label="Search events">
+          <select aria-label="Event type">
+            <option>All event types</option>
+            <option>Rides</option>
+            <option>Workshops</option>
+            <option>Get-togethers</option>
+          </select>
+          <select aria-label="Status">
+            <option>Open events</option>
+            <option>All public events</option>
+          </select>
+          <button class="secondary" type="button">Refresh</button>
+        </div>
+
+        <div class="chip-row" aria-label="Quick filters">
+          <span class="chip active">All</span>
+          <span class="chip">Rides</span>
+          <span class="chip">Workshops</span>
+          <span class="chip">Get-togethers</span>
+          <span class="chip">Free</span>
+          <span class="chip">This month</span>
+        </div>
+
+        <div class="event-grid">
+          <article class="event-card">
+            <div class="poster">
+              <img src="assets/hero-cinematic-poster.jpg" alt="Cyclists preparing for a community ride">
+              <span class="poster-badge">Ride</span>
+            </div>
+            <div class="event-card-body">
+              <div class="status-row">
+                <span class="status open">Open</span>
+                <strong>Free</strong>
+              </div>
+              <h3>Yaya Ride: UP Diliman Coffee Loop</h3>
+              <p>Beginner-friendly Sunday spin with regroup stops, coffee, and public route reminders.</p>
+              <div class="meta-grid">
+                <div class="meta"><span>Date</span><strong>Jul 19, 2026</strong></div>
+                <div class="meta"><span>Assembly</span><strong>5:30 AM</strong></div>
+                <div class="meta"><span>Meetup</span><strong>SMB Quezon City</strong></div>
+                <div class="meta"><span>Slots</span><strong>18 / 35</strong></div>
+              </div>
+              <a class="primary" href="#details">View / Join Event</a>
+            </div>
+          </article>
+
+          <article class="event-card">
+            <div class="poster">
+              <img src="assets/workshop-service.png" alt="Bike service tools and workshop table">
+              <span class="poster-badge">Workshop</span>
+            </div>
+            <div class="event-card-body">
+              <div class="status-row">
+                <span class="status open">Open</span>
+                <strong>PHP 350</strong>
+              </div>
+              <h3>Basic Bike Check Workshop</h3>
+              <p>Learn tire pressure, brake checks, chain lube, safety inspection, and what to bring on rides.</p>
+              <div class="meta-grid">
+                <div class="meta"><span>Date</span><strong>Jul 26, 2026</strong></div>
+                <div class="meta"><span>Starts</span><strong>2:00 PM</strong></div>
+                <div class="meta"><span>Meetup</span><strong>QC Workshop</strong></div>
+                <div class="meta"><span>Slots</span><strong>9 / 15</strong></div>
+              </div>
+              <a class="primary" href="#register">View / Join Event</a>
+            </div>
+          </article>
+
+          <article class="event-card">
+            <div class="poster">
+              <img src="assets/product-bikes.png" alt="Bikes displayed inside SarapMagBike">
+              <span class="poster-badge">Get-together</span>
+            </div>
+            <div class="event-card-body">
+              <div class="status-row">
+                <span class="status full">Full</span>
+                <strong>Free</strong>
+              </div>
+              <h3>New Bike Day Community Night</h3>
+              <p>Short shop hangout for bike checks, photos, stories, and IanHow community announcements.</p>
+              <div class="meta-grid">
+                <div class="meta"><span>Date</span><strong>Aug 1, 2026</strong></div>
+                <div class="meta"><span>Starts</span><strong>6:00 PM</strong></div>
+                <div class="meta"><span>Meetup</span><strong>SMB Quezon City</strong></div>
+                <div class="meta"><span>Slots</span><strong>25 / 25</strong></div>
+              </div>
+              <a class="secondary" href="#full-state">View Details</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen-band" id="details" aria-labelledby="detail-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 2</p>
+            <h2 id="detail-title">Event Details</h2>
+          </div>
+          <span>Shows full details, participant count, avatars, and the user action state.</span>
+        </div>
+
+        <div class="split-layout">
+          <article class="detail-hero">
+            <img src="assets/hero-cinematic-poster.jpg" alt="Cyclists joining a SarapMagBike community ride">
+            <div class="detail-copy">
+              <div class="status-row">
+                <span class="status open">Registration Open</span>
+                <strong>Free event</strong>
+              </div>
+              <h1>Yaya Ride: UP Diliman Coffee Loop</h1>
+              <p>Join a relaxed Sunday ride from SarapMagBike Quezon City to UP Diliman with regroup stops, a coffee stop, and beginner-friendly pacing. Staff will post final route notes before ride day.</p>
+              <ul>
+                <li>Bring helmet, lights, spare tube, water, and basic tools.</li>
+                <li>No-drop pacing for first-time joiners.</li>
+                <li>Final reminders and weather decision will appear in the Community thread.</li>
+              </ul>
+            </div>
+          </article>
+
+          <aside class="side-panel">
+            <section class="info-panel">
+              <h2>Event information</h2>
+              <div class="event-facts">
+                <div class="fact"><span>Assembly</span><strong>Jul 19, 2026 · 5:30 AM</strong></div>
+                <div class="fact"><span>Ride start</span><strong>6:00 AM</strong></div>
+                <div class="fact"><span>Meetup place</span><strong>44 Mindanao Ave., Tandang Sora, QC</strong></div>
+                <div class="fact"><span>Map</span><strong>Open Google Maps</strong></div>
+                <div class="fact"><span>Slots</span><strong>18 registered / 35 capacity</strong></div>
+                <div class="fact"><span>Registration closes</span><strong>Jul 18, 2026 · 8:00 PM</strong></div>
+              </div>
+            </section>
+
+            <section class="info-panel">
+              <h3>Participants</h3>
+              <div class="avatar-stack" aria-label="Participant avatars">
+                <span>IH</span>
+                <span>ML</span>
+                <span>JC</span>
+                <span>AR</span>
+                <span>+14</span>
+              </div>
+              <ul class="participant-list">
+                <li><span class="avatar">IH</span><div><strong>IanHow Rider</strong><span>Registered</span></div></li>
+                <li><span class="avatar">ML</span><div><strong>Migs L.</strong><span>Registered</span></div></li>
+                <li><span class="avatar">JC</span><div><strong>Jessa C.</strong><span>Registered</span></div></li>
+                <li><span class="avatar">AR</span><div><strong>Arvin R.</strong><span>Registered</span></div></li>
+              </ul>
+            </section>
+
+            <section class="info-panel register-panel">
+              <h3>Your registration</h3>
+              <p>You are logged in as <strong>IanHow Rider</strong>. Registration uses your public customer profile.</p>
+              <a class="primary" href="#register">Register for Event</a>
+            </section>
+          </aside>
+        </div>
+      </section>
+
+      <section class="screen-band" id="register" aria-labelledby="register-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 3</p>
+            <h2 id="register-title">Registration Form / Drawer</h2>
+          </div>
+          <span>Opened after clicking Register. Defaults come from the customer profile.</span>
+        </div>
+
+        <div class="modal-preview">
+          <header>
+            <h2>Register for Yaya Ride</h2>
+            <button class="icon-button" type="button" aria-label="Close">×</button>
+          </header>
+          <div class="body">
+            <div class="form-grid">
+              <label>Participant name<input value="IanHow Rider"></label>
+              <label>Email<input value="ianhow@example.com"></label>
+              <label>Bike type<select><option>Gravel bike</option><option>Mountain bike</option><option>Road bike</option></select></label>
+              <label>Rider level<select><option>Beginner-friendly pace</option><option>Intermediate</option><option>Advanced</option></select></label>
+              <label>Emergency contact<input value="Anna H."></label>
+              <label>Emergency phone<input value="09xx xxx xxxx"></label>
+              <label class="full-field">Notes<textarea>Joining from QC. First Yaya Ride.</textarea></label>
+            </div>
+            <p>By registering, your display name and avatar may appear in the public participant list. Emergency and contact details stay private in SMBSystem.</p>
+            <div class="action-row">
+              <button class="primary" type="button">Confirm Registration</button>
+              <button class="secondary" type="button">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen-band" aria-labelledby="states-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 4</p>
+            <h2 id="states-title">Registration States</h2>
+          </div>
+          <span>Same details page, different customer/event states.</span>
+        </div>
+
+        <div class="state-grid">
+          <article class="state-tile">
+            <span class="status open">Logged out</span>
+            <h3>Login required</h3>
+            <p>Visitor can read event details and participants, but must log in before registering.</p>
+            <button class="primary" type="button">Log in to Register</button>
+          </article>
+
+          <article class="state-tile">
+            <span class="status open">Registered</span>
+            <h3>Registration confirmed</h3>
+            <p>Show confirmation, status, and withdrawal action. Public page should not show private emergency details.</p>
+            <div class="confirmation">
+              <strong>You are registered.</strong>
+              <button class="danger" type="button">Withdraw Registration</button>
+            </div>
+          </article>
+
+          <article class="state-tile" id="full-state">
+            <span class="status full">Full</span>
+            <h3>Capacity reached</h3>
+            <p>Disable normal registration. If waitlist is enabled later, switch the CTA to Join Waitlist.</p>
+            <button class="secondary" type="button">Notify Me / Join Waitlist</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="screen-band" aria-labelledby="paid-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 5</p>
+            <h2 id="paid-title">Paid Event Payment Proof</h2>
+          </div>
+          <span>Optional next slice for workshops or paid rides.</span>
+        </div>
+
+        <div class="split-layout">
+          <section class="info-panel">
+            <h3>Basic Bike Check Workshop</h3>
+            <div class="event-facts">
+              <div class="fact"><span>Fee</span><strong>PHP 350</strong></div>
+              <div class="fact"><span>Payment status</span><strong>Pending review</strong></div>
+              <div class="fact"><span>Instructions</span><strong>Send GCash payment and upload proof.</strong></div>
+            </div>
+          </section>
+          <section class="info-panel payment-proof">
+            <h3>Submit payment proof</h3>
+            <label class="full-field">Reference number<input value="GCASH-072626-1842"></label>
+            <label class="full-field">Upload screenshot<input type="file"></label>
+            <div class="action-row">
+              <button class="primary" type="button">Submit for Review</button>
+              <button class="secondary" type="button">Change File</button>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen-band" aria-labelledby="mobile-title">
+        <div class="screen-title">
+          <div>
+            <p>Screen 6</p>
+            <h2 id="mobile-title">Mobile Event App Feel</h2>
+          </div>
+          <span>Same pages, responsive customer flow with sticky quick actions.</span>
+        </div>
+
+        <div class="mobile-demo">
+          <div class="phone" aria-label="Mobile events list mockup">
+            <div class="phone-header">
+              <strong>Events</strong>
+              <span class="avatar">IH</span>
+            </div>
+            <div class="phone-body">
+              <div class="phone-search">
+                <span class="chip active">All</span>
+                <span class="chip">Rides</span>
+                <span class="chip">Workshops</span>
+                <span class="chip">Free</span>
+              </div>
+              <article class="mobile-event-card">
+                <img src="assets/hero-cinematic-poster.jpg" alt="Mobile event poster">
+                <div>
+                  <span class="status open">Open · 18 / 35</span>
+                  <h3>Yaya Ride: UP Diliman Coffee Loop</h3>
+                  <p>Jul 19 · 5:30 AM · SMB Quezon City</p>
+                  <button class="primary" type="button">View / Join Event</button>
+                </div>
+              </article>
+              <article class="mobile-event-card">
+                <img src="assets/workshop-service.png" alt="Mobile workshop poster">
+                <div>
+                  <span class="status open">Open · PHP 350</span>
+                  <h3>Basic Bike Check Workshop</h3>
+                  <p>Jul 26 · 2:00 PM · QC Workshop</p>
+                  <button class="primary" type="button">View / Join Event</button>
+                </div>
+              </article>
+            </div>
+            <nav class="phone-footer" aria-label="Mobile bottom navigation">
+              <a href="#">Shop</a>
+              <a href="#">Service</a>
+              <a class="active" href="#">Events</a>
+              <a href="#">Account</a>
+            </nav>
+          </div>
+
+          <div class="phone" aria-label="Mobile event details mockup">
+            <div class="phone-header">
+              <strong>Yaya Ride</strong>
+              <span class="status open">Open</span>
+            </div>
+            <div class="phone-body">
+              <article class="mobile-event-card">
+                <img src="assets/hero-cinematic-poster.jpg" alt="Mobile event detail poster">
+                <div>
+                  <h3>UP Diliman Coffee Loop</h3>
+                  <p>Assembly: Jul 19, 2026 · 5:30 AM</p>
+                  <p>Meetup: 44 Mindanao Ave., Tandang Sora, QC</p>
+                  <p>Participants: 18 / 35</p>
+                </div>
+              </article>
+              <section class="info-panel">
+                <h3>Participants</h3>
+                <div class="avatar-stack">
+                  <span>IH</span><span>ML</span><span>JC</span><span>+15</span>
+                </div>
+                <p>Public list shows display names and avatars only.</p>
+              </section>
+            </div>
+            <div class="sticky-cta">
+              <button class="primary" type="button">Register for Event</button>
+              <button class="secondary" type="button">Ask in Community</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

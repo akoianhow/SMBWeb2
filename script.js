@@ -4561,6 +4561,143 @@ async function copyCurrentProductLink(button) {
   }
 }
 
+const socialPreviewDetails = {
+  facebook: {
+    title: "Message SarapMagBike on Facebook",
+    label: "Facebook",
+    url: "https://www.facebook.com/sarapmagbikeshop",
+    action: "Open Facebook"
+  },
+  instagram: {
+    title: "Follow SarapMagBike on Instagram",
+    label: "Instagram",
+    url: "https://www.instagram.com/sarapmagbike.shop",
+    action: "Open Instagram"
+  },
+  youtube: {
+    title: "Follow IanHow on YouTube",
+    label: "YouTube",
+    url: "https://www.youtube.com/ianhow",
+    action: "Open YouTube"
+  }
+};
+
+function getSocialPreviewDetail(platform = "facebook") {
+  return socialPreviewDetails[platform] || socialPreviewDetails.facebook;
+}
+
+function ensureSocialPreviewModal() {
+  let modal = document.querySelector("[data-social-preview-modal]");
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.className = "social-preview-modal";
+  modal.dataset.socialPreviewModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="social-preview-title">
+      <button type="button" class="social-preview-close" data-social-preview-close aria-label="Close">Close</button>
+      <span data-social-preview-label></span>
+      <h2 id="social-preview-title" data-social-preview-title></h2>
+      <p data-social-preview-copy></p>
+      <div class="social-preview-actions">
+        <a href="#" target="_blank" rel="noreferrer" data-social-preview-action></a>
+        <button type="button" data-social-preview-close>Cancel</button>
+      </div>
+    </div>
+  `;
+  document.body.append(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-social-preview-close]")) {
+      closeSocialPreviewModal();
+    }
+  });
+  return modal;
+}
+
+function openSocialPreviewModal(platform = "facebook", context = "general") {
+  const detail = getSocialPreviewDetail(platform);
+  const modal = ensureSocialPreviewModal();
+  const copy = context === "product"
+    ? "Preview this contact option before leaving the product page. Use the button below when you are ready to message the shop."
+    : "Preview this platform before leaving the website. Use the button below when you are ready to continue.";
+  modal.querySelector("[data-social-preview-label]").textContent = detail.label;
+  modal.querySelector("[data-social-preview-title]").textContent = detail.title;
+  modal.querySelector("[data-social-preview-copy]").textContent = copy;
+  const action = modal.querySelector("[data-social-preview-action]");
+  action.href = detail.url;
+  action.textContent = context === "product" && platform === "facebook" ? "Send on Facebook" : detail.action;
+  modal.hidden = false;
+  document.body.classList.add("has-social-preview-modal");
+  window.setTimeout(() => action.focus(), 0);
+}
+
+function closeSocialPreviewModal() {
+  const modal = document.querySelector("[data-social-preview-modal]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  document.body.classList.remove("has-social-preview-modal");
+}
+
+function getSocialPlatformFromUrl(url) {
+  const normalized = String(url || "").toLowerCase();
+  if (normalized.includes("instagram.com")) {
+    return "instagram";
+  }
+  if (normalized.includes("youtube.com")) {
+    return "youtube";
+  }
+  if (normalized.includes("facebook.com")) {
+    return "facebook";
+  }
+  return "";
+}
+
+function bindSocialPreviewLinks() {
+  document.querySelectorAll(".footer strong").forEach((element) => {
+    if (normalizeText(element.textContent).includes("message us on facebook")) {
+      element.tabIndex = 0;
+      element.setAttribute("role", "button");
+      element.setAttribute("aria-label", "Preview Facebook message option");
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    const socialLink = event.target.closest("a[href*='facebook.com'], a[href*='instagram.com'], a[href*='youtube.com']");
+    if (socialLink) {
+      const platform = getSocialPlatformFromUrl(socialLink.href);
+      if (platform) {
+        event.preventDefault();
+        openSocialPreviewModal(platform, document.body.classList.contains("product-detail-page") ? "product" : "general");
+        return;
+      }
+    }
+
+    const footerStrong = event.target.closest(".footer strong");
+    if (footerStrong && normalizeText(footerStrong.textContent).includes("message us on facebook")) {
+      event.preventDefault();
+      openSocialPreviewModal("facebook", "general");
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    const footerStrong = event.target.closest?.(".footer strong");
+    if ((event.key === "Enter" || event.key === " ") && footerStrong && normalizeText(footerStrong.textContent).includes("message us on facebook")) {
+      event.preventDefault();
+      openSocialPreviewModal("facebook", "general");
+      return;
+    }
+
+    if (event.key === "Escape" && !document.querySelector("[data-social-preview-modal]")?.hidden) {
+      closeSocialPreviewModal();
+    }
+  });
+}
+
 function bindProductStickyInquiry(sticky, actions) {
   if (!sticky || !actions) {
     return;
@@ -4709,6 +4846,7 @@ async function startCatalog() {
   bindServiceFilters();
   bindCommunityUi();
   bindEventsUi();
+  bindSocialPreviewLinks();
   loadProductDetailPage();
   if (isEventsPage()) {
     await loadEventsPageEvents();

@@ -970,7 +970,7 @@ body.is-catalog-mode .content {
   overflow: hidden;
   background:
     linear-gradient(90deg, rgba(0, 0, 0, 0.08), transparent 34%),
-    url("assets/hero-cinematic-poster.jpg") center / cover no-repeat,
+    url("assets/hero-shop-intro-poster.jpg") center / cover no-repeat,
     url("assets/hero-bikes.png") center right / cover no-repeat,
     #141414;
 }
@@ -986,10 +986,17 @@ body.is-catalog-mode .content {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 0;
   filter: saturate(1.1) contrast(1.08) brightness(0.92);
   transform: scale(1.02);
   animation: hero-cinematic-pan 16s ease-in-out infinite alternate;
+  transition: opacity 450ms ease;
   will-change: transform, filter;
+  pointer-events: none;
+}
+
+.hero-video.active {
+  opacity: 1;
 }
 
 .slide-image::before,
@@ -2732,8 +2739,9 @@ body.is-catalog-mode .product-section {
 
 .product-detail-badges span {
   padding: 6px 9px;
-  color: #ffffff;
-  background: var(--dark);
+  color: #334155;
+  background: #eef2f5;
+  border: 1px solid #d8e0e7;
   border-radius: 7px;
   font-size: 10px;
   font-weight: 900;
@@ -2741,7 +2749,9 @@ body.is-catalog-mode .product-section {
 }
 
 .product-detail-badges span:first-child {
-  background: var(--red);
+  color: #7f1d1d;
+  background: #f8e8ea;
+  border-color: #efcfd4;
 }
 
 .product-detail-eyebrow {
@@ -3221,6 +3231,7 @@ body.is-catalog-mode .product-section {
   color: var(--white);
   font-size: 18px;
   line-height: 1.15;
+  cursor: pointer;
 }
 
 .footer-bottom {
@@ -3238,6 +3249,106 @@ body.is-catalog-mode .product-section {
 .footer-bottom span {
   display: inline;
   margin: 0;
+}
+
+.social-preview-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.58);
+}
+
+.social-preview-modal[hidden] {
+  display: none;
+}
+
+.social-preview-modal > div {
+  position: relative;
+  width: min(420px, 100%);
+  padding: 22px;
+  color: #202020;
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 10px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+}
+
+.social-preview-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  min-height: 34px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: #252525;
+  border: 0;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.social-preview-modal span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 0 8px;
+  color: #334155;
+  background: #eef2f5;
+  border: 1px solid #d8e0e7;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.social-preview-modal h2 {
+  margin: 0 70px 10px 0;
+  color: #171717;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.social-preview-modal p {
+  margin: 0 0 16px;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.social-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.social-preview-actions a,
+.social-preview-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.social-preview-actions a {
+  color: #ffffff;
+  background: var(--red);
+}
+
+.social-preview-actions button {
+  color: #202020;
+  background: #eeeeee;
 }
 
 .community-section {
@@ -5007,7 +5118,7 @@ body.is-catalog-mode .product-section {
   .slide-image {
     background:
       linear-gradient(90deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.1) 72%),
-      url("assets/hero-cinematic-poster.jpg") center / cover no-repeat,
+      url("assets/hero-shop-intro-poster.jpg") center / cover no-repeat,
       url("assets/hero-bikes.png") center right / cover no-repeat,
       #141414;
   }
@@ -5478,8 +5589,7 @@ body.is-catalog-mode .product-section {
   }
 
   .banner-row,
-  .info-panels,
-  .footer-main {
+  .info-panels {
     grid-template-columns: 1fr;
   }
 
@@ -5509,9 +5619,86 @@ body.is-catalog-mode .product-section {
     padding: 16px;
   }
 
+  .service-list {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .service-list div {
+    grid-template-columns: 36px minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  .round-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+
+  .service-list h3 {
+    font-size: 12px;
+  }
+
+  .service-list p {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .useful-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+
+  .useful-links h2 {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+    font-size: 20px;
+  }
+
+  .useful-links a {
+    min-height: 30px;
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .footer {
+    padding-bottom: 0;
+  }
+
   .footer-main {
-    padding-right: 12px;
-    padding-left: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 18px;
+    min-height: 0;
+    padding: 20px 18px 88px;
+  }
+
+  .footer-logo img {
+    width: 92px;
+    height: 66px;
+  }
+
+  .footer h2 {
+    margin-bottom: 7px;
+    font-size: 12px;
+  }
+
+  .footer a,
+  .footer p,
+  .footer span {
+    margin-bottom: 6px;
+    font-size: 10px;
+    line-height: 1.25;
+  }
+
+  .footer strong {
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  .footer-main #contact {
+    grid-column: 1 / -1;
   }
 
   .mobile-bottom-nav {
@@ -5561,10 +5748,6 @@ body.is-catalog-mode .product-section {
   }
 
   .service-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .footer-main {
     grid-template-columns: 1fr;
   }
 

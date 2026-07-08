@@ -15,6 +15,14 @@ const legacyCategoryTargets = {
   "helmets-sunglasses": ["Helmets & Sunglasses"]
 };
 
+const catalogShortcutTitles = {
+  "bike-frames": "Bike & Frames",
+  "parts-components": "Parts & Components",
+  "cycling-clothing": "Cycling Clothing",
+  "helmets-sunglasses": "Helmets & Sunglasses",
+  "tires-tubes": "Tires & Tubes"
+};
+
 const state = {
   activeCategory: null,
   activeSubcategory: "All",
@@ -1514,6 +1522,14 @@ function updateCatalogUrl(categoryKey) {
   window.history.pushState({ view: "catalog", category: categoryKey }, "", `index.html${query ? `?${query}` : ""}#products`);
 }
 
+function getCatalogShortcutTitle(categoryKey) {
+  return catalogShortcutTitles[categoryKey] || String(categoryKey || "Catalog").replaceAll("-", " ");
+}
+
+function openServicesPage() {
+  window.location.href = "services.html";
+}
+
 function renderCatalog() {
   const grid = getWebItemsGrid();
   const group = getCategoryGroup(state.activeCategory);
@@ -1541,19 +1557,22 @@ async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
   state.activeSubcategory = "All";
   setCatalogMode(true);
   setGridState("Loading Catalog", "Checking SMBSystem catalog items for Quezon City.");
+  if (updatePath) {
+    updateCatalogUrl(categoryKey);
+  }
 
   try {
     await loadWebItems();
     const resolvedCategoryKey = resolveCategoryKey(categoryKey);
     if (!resolvedCategoryKey) {
-      setGridState("Category Unavailable", "No public SMBSystem catalog items are available for this category right now.");
+      state.activeCategory = null;
+      updateActiveCategoryNav();
+      document.querySelector("[data-stock-note]").textContent = "Stocks and prices may change. Message us to confirm before visiting or ordering.";
+      setGridState(`No ${getCatalogShortcutTitle(categoryKey)} Found`, "No publicly available products found for this category right now. Message us to check latest stock.");
       return;
     }
     state.activeCategory = resolvedCategoryKey;
     renderCatalog();
-    if (updatePath) {
-      updateCatalogUrl(categoryKey);
-    }
   } catch (error) {
     setGridState("Catalog Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
   }
@@ -3249,6 +3268,22 @@ function bindCatalogUi() {
     });
   });
 
+  document.querySelectorAll("[data-service-card]").forEach((card) => {
+    card.addEventListener("click", (event) => {
+      if (event.target instanceof HTMLAnchorElement) {
+        return;
+      }
+      openServicesPage();
+    });
+
+    card.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openServicesPage();
+      }
+    });
+  });
+
   document.querySelectorAll("[data-home-product-filter]").forEach((button) => {
     button.addEventListener("click", () => {
       setCatalogMode(false);
@@ -3296,6 +3331,15 @@ function setupFeatureTileBelt() {
           return;
         }
         openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
+      });
+    });
+
+    clone.querySelectorAll("[data-service-card]").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLAnchorElement) {
+          return;
+        }
+        openServicesPage();
       });
     });
 

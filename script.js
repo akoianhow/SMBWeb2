@@ -5301,33 +5301,35 @@ function shouldOpenSocialLinkDirectly(link) {
   return label === "book service" || label === "book a service" || label === "message us" || label === "ask about this service";
 }
 
+function openSarapMagBikeFacebook() {
+  const facebookUrl = socialPreviewDetails.facebook.url;
+  const opened = window.open(facebookUrl, "_blank", "noopener,noreferrer");
+  if (!opened) {
+    window.location.href = facebookUrl;
+  }
+}
+
 function bindSocialPreviewLinks() {
   document.querySelectorAll(".footer strong").forEach((element) => {
     if (normalizeText(element.textContent).includes("message us on facebook")) {
       element.tabIndex = 0;
       element.setAttribute("role", "button");
-      element.setAttribute("aria-label", "Preview Facebook message option");
+      element.setAttribute("aria-label", "Open SarapMagBike Facebook page");
     }
   });
 
   document.addEventListener("click", (event) => {
     const socialLink = event.target.closest("a[href*='facebook.com'], a[href*='instagram.com'], a[href*='youtube.com']");
     if (socialLink) {
-      if (shouldOpenSocialLinkDirectly(socialLink)) {
-        return;
-      }
-      const platform = getSocialPlatformFromUrl(socialLink.href);
-      if (platform) {
-        event.preventDefault();
-        openSocialPreviewModal(platform, document.body.classList.contains("product-detail-page") ? "product" : "general");
-        return;
-      }
+      socialLink.target = "_blank";
+      socialLink.rel = "noreferrer";
+      return;
     }
 
     const footerStrong = event.target.closest(".footer strong");
     if (footerStrong && normalizeText(footerStrong.textContent).includes("message us on facebook")) {
       event.preventDefault();
-      openSocialPreviewModal("facebook", "general");
+      openSarapMagBikeFacebook();
     }
   });
 
@@ -5335,7 +5337,7 @@ function bindSocialPreviewLinks() {
     const footerStrong = event.target.closest?.(".footer strong");
     if ((event.key === "Enter" || event.key === " ") && footerStrong && normalizeText(footerStrong.textContent).includes("message us on facebook")) {
       event.preventDefault();
-      openSocialPreviewModal("facebook", "general");
+      openSarapMagBikeFacebook();
       return;
     }
 

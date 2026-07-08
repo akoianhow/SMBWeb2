@@ -3141,23 +3141,148 @@ function bindCatalogUi() {
 }
 
 function setupFeatureTileBelt() {
+  const scroller = document.querySelector(".feature-tiles");
   const track = document.querySelector("[data-feature-tile-track]");
   const group = document.querySelector("[data-feature-tile-group]");
-  if (!track || !group || track.querySelector("[data-feature-tile-clone]")) {
+  if (!scroller || !track || !group) {
     return;
   }
 
-  const clone = group.cloneNode(true);
-  clone.removeAttribute("data-feature-tile-group");
-  clone.setAttribute("data-feature-tile-clone", "");
-  clone.setAttribute("aria-hidden", "true");
-  clone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
-  clone.querySelectorAll("[tabindex]").forEach((element) => element.setAttribute("tabindex", "-1"));
-  clone.querySelectorAll("a, button, input, select, textarea").forEach((element) => {
-    element.setAttribute("tabindex", "-1");
+  if (!track.querySelector("[data-feature-tile-clone]")) {
+    const clone = group.cloneNode(true);
+    clone.removeAttribute("data-feature-tile-group");
+    clone.setAttribute("data-feature-tile-clone", "");
+    clone.setAttribute("aria-hidden", "true");
+    clone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+    clone.querySelectorAll("[tabindex]").forEach((element) => element.setAttribute("tabindex", "-1"));
+    clone.querySelectorAll("a, button, input, select, textarea").forEach((element) => {
+      element.setAttribute("tabindex", "-1");
+    });
+
+    clone.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
+      element.addEventListener("click", (event) => {
+        event.preventDefault();
+        openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav);
+      });
+    });
+
+    clone.querySelectorAll("[data-category-card]").forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.target instanceof HTMLAnchorElement) {
+          return;
+        }
+        openCategoryCatalog(card.dataset.categoryCard);
+      });
+    });
+
+    track.append(clone);
+  }
+
+  setupFeatureTileScrollBelt(scroller, group);
+}
+
+function setupFeatureTileScrollBelt(scroller, group) {
+  if (scroller.dataset.featureScrollBeltReady === "true") {
+    return;
+  }
+
+  scroller.dataset.featureScrollBeltReady = "true";
+  scroller.classList.add("is-scroll-belt");
+
+  const mobileQuery = window.matchMedia("(max-width: 760px)");
+  const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+  let lastFrameTime = 0;
+  let pauseUntil = 0;
+  let isMouseDragging = false;
+  let isAutoScrolling = false;
+  let dragStartX = 0;
+  let dragStartScrollLeft = 0;
+
+  const getLoopWidth = () => group.getBoundingClientRect().width;
+
+  const normalizeScrollPosition = () => {
+    const loopWidth = getLoopWidth();
+    if (!loopWidth) {
+      return;
+    }
+
+    if (scroller.scrollLeft >= loopWidth) {
+      scroller.scrollLeft -= loopWidth;
+    } else if (scroller.scrollLeft < 0) {
+      scroller.scrollLeft += loopWidth;
+    }
+  };
+
+  const pauseAutoScroll = (duration = 1800) => {
+    pauseUntil = performance.now() + duration;
+  };
+
+  scroller.addEventListener("pointerdown", (event) => {
+    pauseAutoScroll(2600);
+    if (event.pointerType !== "mouse") {
+      return;
+    }
+
+    isMouseDragging = true;
+    dragStartX = event.clientX;
+    dragStartScrollLeft = scroller.scrollLeft;
+    scroller.classList.add("is-dragging");
+    scroller.setPointerCapture?.(event.pointerId);
   });
 
-  track.append(clone);
+  scroller.addEventListener("pointermove", (event) => {
+    if (!isMouseDragging) {
+      return;
+    }
+    event.preventDefault();
+    scroller.scrollLeft = dragStartScrollLeft - (event.clientX - dragStartX);
+    normalizeScrollPosition();
+  });
+
+  const stopMouseDrag = (event) => {
+    if (!isMouseDragging) {
+      return;
+    }
+
+    isMouseDragging = false;
+    scroller.classList.remove("is-dragging");
+    scroller.releasePointerCapture?.(event.pointerId);
+    pauseAutoScroll(1800);
+  };
+
+  scroller.addEventListener("pointerup", stopMouseDrag);
+  scroller.addEventListener("pointercancel", stopMouseDrag);
+  scroller.addEventListener("scroll", () => {
+    if (isAutoScrolling) {
+      return;
+    }
+    pauseAutoScroll(1200);
+    window.requestAnimationFrame(normalizeScrollPosition);
+  }, { passive: true });
+
+  const moveBelt = (frameTime) => {
+    const elapsed = lastFrameTime ? frameTime - lastFrameTime : 0;
+    lastFrameTime = frameTime;
+
+    if (
+      mobileQuery.matches
+      && !reducedMotionQuery.matches
+      && !isMouseDragging
+      && frameTime > pauseUntil
+      && scroller.scrollWidth > scroller.clientWidth
+    ) {
+      isAutoScrolling = true;
+      scroller.scrollLeft += elapsed * 0.018;
+      normalizeScrollPosition();
+      window.requestAnimationFrame(() => {
+        isAutoScrolling = false;
+      });
+    }
+
+    window.requestAnimationFrame(moveBelt);
+  };
+
+  window.requestAnimationFrame(moveBelt);
 }
 
 function isEventsPage() {
@@ -5064,6 +5189,11 @@ function getSocialPlatformFromUrl(url) {
   return "";
 }
 
+function shouldOpenSocialLinkDirectly(link) {
+  const label = normalizeText(link?.textContent || "");
+  return label === "book service" || label === "book a service" || label === "message us" || label === "ask about this service";
+}
+
 function bindSocialPreviewLinks() {
   document.querySelectorAll(".footer strong").forEach((element) => {
     if (normalizeText(element.textContent).includes("message us on facebook")) {
@@ -5076,6 +5206,9 @@ function bindSocialPreviewLinks() {
   document.addEventListener("click", (event) => {
     const socialLink = event.target.closest("a[href*='facebook.com'], a[href*='instagram.com'], a[href*='youtube.com']");
     if (socialLink) {
+      if (shouldOpenSocialLinkDirectly(socialLink)) {
+        return;
+      }
       const platform = getSocialPlatformFromUrl(socialLink.href);
       if (platform) {
         event.preventDefault();

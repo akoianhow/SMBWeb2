@@ -1190,6 +1190,14 @@ body.is-catalog-mode .content {
   }
 }
 
+.feature-tiles.is-scroll-belt {
+  cursor: grab;
+}
+
+.feature-tiles.is-scroll-belt.is-dragging {
+  cursor: grabbing;
+}
+
 .product-section {
   padding-top: 31px;
 }
@@ -5594,18 +5602,26 @@ body.is-catalog-mode .product-section {
     max-width: 100%;
     margin: 12px 0 0;
     padding: 0 0 4px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    touch-action: pan-x;
+  }
+
+  .feature-tiles::-webkit-scrollbar {
+    display: none;
   }
 
   .feature-tile-track {
     display: flex;
     width: max-content;
-    animation: feature-tile-belt 24s linear infinite;
-    will-change: transform;
   }
 
   .feature-tiles:focus-within .feature-tile-track {
-    animation-play-state: paused;
+    animation-play-state: running;
   }
 
   .feature-tile-group,

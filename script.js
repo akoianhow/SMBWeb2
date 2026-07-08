@@ -21,6 +21,7 @@ const state = {
   categoryGroups: [],
   homeProductList: "new",
   items: [],
+  productSearchEndpointAvailable: null,
   sort: "price-asc"
 };
 
@@ -719,6 +720,392 @@ async function loadWebItems() {
   state.categoryGroups = buildCategoryGroups(state.items);
   renderCategoryNav();
   return state.items;
+}
+
+function getArrayPayload(payload) {
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+  if (Array.isArray(payload?.items)) {
+    return payload.items;
+  }
+  if (Array.isArray(payload?.results)) {
+    return payload.results;
+  }
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+  return [];
+}
+
+function getProductSearchStatus(item) {
+  const rawStatus = normalizeText(item.webCatalogStatus || item.catalogStatus || item.publicStatus || item.status);
+  const displayValue = item.displayOnWeb
+    ?? item.displayedOnWeb
+    ?? item.isDisplayedOnWeb
+    ?? item.isDisplayOnWeb
+    ?? item.isPublished
+    ?? item.isPublic
+    ?? item.isOnWebCatalog
+    ?? item.isInWebCatalog
+    ?? item.showOnWebsite
+    ?? item.isWebCatalogVisible;
+  if (
+    displayValue === false
+    || rawStatus.includes("stock only")
+    || rawStatus.includes("not displayed")
+    || rawStatus.includes("hidden")
+    || rawStatus.includes("not on web")
+  ) {
+    return "stock-only";
+  }
+
+  return "web";
+}
+
+function getProductSearchPrice(item) {
+  return getProductPrice(item)
+    || Number(item.srp)
+    || Number(item.retailPrice)
+    || Number(item.price)
+    || Number(item.unitPrice)
+    || 0;
+}
+
+function getProductSearchCategoryText(item) {
+  return [
+    getFieldValue(item, ["brand", "brandName"]),
+    getItemCategoryGroup(item),
+    getItemWebCategory(item),
+    getFieldValue(item, ["category", "categoryName"])
+  ].filter(Boolean).join(" / ");
+}
+
+function productMatchesSearchQuery(item, query) {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  return normalizeText([
+    getItemName(item),
+    getItemSku(item),
+    getFieldValue(item, ["brand", "brandName"]),
+    getItemCategoryGroup(item),
+    getItemWebCategory(item),
+    getFieldValue(item, ["category", "categoryName"])
+  ].filter(Boolean).join(" ")).includes(normalizedQuery);
+}
+
+async function searchInventoryProducts(query) {
+  const params = new URLSearchParams();
+  params.set("branch", "Quezon City");
+  params.set("search", query);
+
+  if (state.productSearchEndpointAvailable !== false) {
+    try {
+      const response = await fetch(`${getApiBaseUrl()}/api/public/product-search?${params.toString()}`);
+      if (response.ok) {
+        state.productSearchEndpointAvailable = true;
+        return {
+          items: getArrayPayload(await response.json()),
+          source: "inventory"
+        };
+      }
+      if (response.status !== 404 && response.status !== 405) {
+        throw new Error(`Request failed with ${response.status}`);
+      }
+      state.productSearchEndpointAvailable = false;
+    } catch (error) {
+      if (state.productSearchEndpointAvailable === true) {
+        throw error;
+      }
+      state.productSearchEndpointAvailable = false;
+    }
+  }
+
+  const items = await loadWebItems();
+  return {
+    items: items.filter((item) => isPublicProduct(item) && productMatchesSearchQuery(item, query)),
+    source: "web"
+  };
+}
+
+function ensureProductSearchModal() {
+  let modal = document.querySelector("[data-product-search-modal]");
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.className = "product-search-modal";
+  modal.dataset.productSearchModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <section role="dialog" aria-modal="true" aria-labelledby="product-search-title">
+      <header class="product-search-head">
+        <div>
+          <span>Quezon City inventory</span>
+          <h2 id="product-search-title">Search Products</h2>
+          <p data-product-search-summary>Type a brand, model, SKU, category, or barcode.</p>
+        </div>
+        <button type="button" data-product-search-close aria-label="Close product search">Close</button>
+      </header>
+      <div class="product-search-body">
+        <form class="product-search-form" data-product-search-form>
+          <input type="search" data-product-search-input aria-label="Search inventory products" placeholder="Search bikes, parts, service">
+          <button type="submit">Search</button>
+        </form>
+        <p class="product-search-note" data-product-search-note></p>
+        <div class="product-search-results" data-product-search-results></div>
+      </div>
+    </section>
+  `;
+  document.body.append(modal);
+
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-product-search-close]")) {
+      closeProductSearchModal();
+    }
+  });
+
+  modal.querySelector("[data-product-search-form]")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    runProductSearch(modal.querySelector("[data-product-search-input]")?.value || "");
+  });
+
+  let searchTimer = null;
+  modal.querySelector("[data-product-search-input]")?.addEventListener("input", (event) => {
+    window.clearTimeout(searchTimer);
+    searchTimer = window.setTimeout(() => runProductSearch(event.target.value), 220);
+  });
+
+  return modal;
+}
+
+function closeProductSearchModal() {
+  const modal = document.querySelector("[data-product-search-modal]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  document.body.classList.remove("has-product-search-modal");
+}
+
+function setProductSearchState(title, detail) {
+  const modal = ensureProductSearchModal();
+  modal.querySelector("[data-product-search-summary]").textContent = title;
+  const results = modal.querySelector("[data-product-search-results]");
+  results.replaceChildren();
+  const stateCard = document.createElement("div");
+  stateCard.className = "product-search-state";
+  stateCard.append(
+    createTextElement("strong", title),
+    createTextElement("p", detail)
+  );
+  results.append(stateCard);
+}
+
+function renderProductSearchThumbnail(item) {
+  const thumbnail = document.createElement("span");
+  thumbnail.className = "product-search-thumb";
+  const imageUrl = getProductImageUrls(item)[0];
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.alt = getItemName(item);
+    image.loading = "lazy";
+    image.src = imageUrl;
+    thumbnail.append(image);
+    return thumbnail;
+  }
+
+  thumbnail.textContent = getItemName(item).trim().slice(0, 1).toUpperCase() || "S";
+  return thumbnail;
+}
+
+function renderProductSearchRow(item) {
+  const status = getProductSearchStatus(item);
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = "product-search-row";
+
+  const detail = document.createElement("span");
+  detail.className = "product-search-row-detail";
+  detail.append(
+    createTextElement("strong", getItemName(item)),
+    createTextElement("span", getProductSearchCategoryText(item) || "SarapMagBike inventory")
+  );
+
+  const meta = document.createElement("span");
+  meta.className = "product-search-row-meta";
+  const price = getProductSearchPrice(item);
+  meta.append(
+    createTextElement("strong", price > 0 ? pesoFormatter.format(price) : "Ask for price"),
+    createTextElement("span", status === "web" ? "Open details" : "In stock, not on web")
+  );
+  if (status !== "web") {
+    meta.classList.add("is-stock-only");
+  }
+
+  row.append(renderProductSearchThumbnail(item), detail, meta);
+  row.addEventListener("click", () => handleProductSearchSelection(item));
+  return row;
+}
+
+function renderProductSearchResults(items, source, query) {
+  const modal = ensureProductSearchModal();
+  const results = modal.querySelector("[data-product-search-results]");
+  const summary = modal.querySelector("[data-product-search-summary]");
+  const note = modal.querySelector("[data-product-search-note]");
+  results.replaceChildren();
+
+  summary.textContent = `${items.length} ${items.length === 1 ? "match" : "matches"} for "${query || "all products"}".`;
+  note.textContent = source === "inventory"
+    ? "Results come from SMBSystem public-safe inventory search. Exact stock can still change after in-store sales."
+    : "Full inventory search needs SMBSystem API support. Showing published web catalog matches for now.";
+
+  if (items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "product-search-state";
+    empty.append(
+      createTextElement("strong", "No matching products found"),
+      createTextElement("p", "Try a brand, model, SKU, category, or message the shop for a manual stock check.")
+    );
+    results.append(empty);
+    return;
+  }
+
+  items.slice(0, 30).forEach((item) => results.append(renderProductSearchRow(item)));
+}
+
+async function runProductSearch(query) {
+  const trimmedQuery = String(query || "").trim();
+  setProductSearchState("Searching Products", "Checking SarapMagBike inventory matches for Quezon City.");
+
+  try {
+    const result = await searchInventoryProducts(trimmedQuery);
+    renderProductSearchResults(result.items, result.source, trimmedQuery);
+  } catch (error) {
+    setProductSearchState("Search Unavailable", "SMBSystem public search is not reachable. Try again after the API is running.");
+  }
+}
+
+function openProductSearchModal(query = "") {
+  const modal = ensureProductSearchModal();
+  const input = modal.querySelector("[data-product-search-input]");
+  input.value = String(query || "").trim();
+  modal.hidden = false;
+  document.body.classList.add("has-product-search-modal");
+  runProductSearch(input.value);
+  window.setTimeout(() => input.focus(), 0);
+}
+
+function ensureProductStockModal() {
+  let modal = document.querySelector("[data-product-stock-modal]");
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.className = "product-stock-modal";
+  modal.dataset.productStockModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <section role="dialog" aria-modal="true" aria-labelledby="product-stock-title">
+      <button type="button" class="product-stock-close" data-product-stock-close aria-label="Close">Close</button>
+      <span>Stock check</span>
+      <h2 id="product-stock-title" data-product-stock-title></h2>
+      <p data-product-stock-copy></p>
+      <strong data-product-stock-price></strong>
+      <div class="product-stock-actions">
+        <a href="https://www.facebook.com/sarapmagbikeshop" target="_blank" rel="noreferrer">Message Shop</a>
+        <button type="button" data-product-stock-close>Back to Search</button>
+      </div>
+    </section>
+  `;
+  document.body.append(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-product-stock-close]")) {
+      closeProductStockModal();
+    }
+  });
+  return modal;
+}
+
+function openProductStockModal(item) {
+  const modal = ensureProductStockModal();
+  const productName = getItemName(item);
+  const price = getProductSearchPrice(item);
+  modal.querySelector("[data-product-stock-title]").textContent = "Product is available in shop";
+  modal.querySelector("[data-product-stock-copy]").textContent = `${productName} is not available on the web catalog, but we have stock. Message SarapMagBike to confirm current availability before visiting.`;
+  modal.querySelector("[data-product-stock-price]").textContent = price > 0 ? `SRP ${pesoFormatter.format(price)}` : "SRP: Ask staff";
+  modal.hidden = false;
+  document.body.classList.add("has-product-stock-modal");
+}
+
+function closeProductStockModal() {
+  const modal = document.querySelector("[data-product-stock-modal]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  document.body.classList.remove("has-product-stock-modal");
+}
+
+function handleProductSearchSelection(item) {
+  if (getProductSearchStatus(item) === "web") {
+    window.location.href = getProductDetailUrl(item);
+    return;
+  }
+
+  openProductStockModal(item);
+}
+
+function isProductSearchForm(form) {
+  const input = form.querySelector("input[type='search']");
+  if (!input || input.disabled) {
+    return false;
+  }
+  const text = `${input.placeholder || ""} ${input.getAttribute("aria-label") || ""}`.toLowerCase();
+  return text.includes("bike") || text.includes("part") || text.includes("service");
+}
+
+function bindProductSearchUi() {
+  document.querySelectorAll(".search-form").forEach((form) => {
+    if (!isProductSearchForm(form) || form.dataset.productSearchBound) {
+      return;
+    }
+    form.dataset.productSearchBound = "true";
+    const input = form.querySelector("input[type='search']");
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      openProductSearchModal(input.value);
+    });
+    input.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+      event.preventDefault();
+      openProductSearchModal(input.value);
+    });
+    form.querySelector("button")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      openProductSearchModal(input.value);
+    });
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") {
+      return;
+    }
+    if (!document.querySelector("[data-product-stock-modal]")?.hidden) {
+      closeProductStockModal();
+      return;
+    }
+    if (!document.querySelector("[data-product-search-modal]")?.hidden) {
+      closeProductSearchModal();
+    }
+  });
 }
 
 function isPublicProduct(item) {
@@ -2751,6 +3138,26 @@ function bindCatalogUi() {
     state.sort = event.target.value;
     renderCatalog();
   });
+}
+
+function setupFeatureTileBelt() {
+  const track = document.querySelector("[data-feature-tile-track]");
+  const group = document.querySelector("[data-feature-tile-group]");
+  if (!track || !group || track.querySelector("[data-feature-tile-clone]")) {
+    return;
+  }
+
+  const clone = group.cloneNode(true);
+  clone.removeAttribute("data-feature-tile-group");
+  clone.setAttribute("data-feature-tile-clone", "");
+  clone.setAttribute("aria-hidden", "true");
+  clone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"));
+  clone.querySelectorAll("[tabindex]").forEach((element) => element.setAttribute("tabindex", "-1"));
+  clone.querySelectorAll("a, button, input, select, textarea").forEach((element) => {
+    element.setAttribute("tabindex", "-1");
+  });
+
+  track.append(clone);
 }
 
 function isEventsPage() {
@@ -4843,6 +5250,8 @@ async function startCatalog() {
   renderCategoryNav();
   bindCustomerAccountUi();
   bindCatalogUi();
+  bindProductSearchUi();
+  setupFeatureTileBelt();
   bindServiceFilters();
   bindCommunityUi();
   bindEventsUi();

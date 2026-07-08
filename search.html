@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
       name="description"
-      content="SarapMagBike product details with photos, specs, price, branch availability, and inquiry actions."
+      content="Search SarapMagBike Shop products, parts, accessories, apparel, and service-related inventory from the public catalog."
     >
-    <title>Product Details | SarapMagBike Shop</title>
+    <title>Search Products | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
     <link rel="stylesheet" href="styles.css?v=20260708-store-availability">
   </head>
-  <body class="product-detail-page">
+  <body class="search-page">
     <div class="page-bg"></div>
 
     <header class="topbar">
@@ -34,8 +34,8 @@
         <span class="logo-word">SARAPMAG<span>BIKE</span></span>
         <span class="logo-tag">QC | PAMPANGA</span>
       </a>
-      <form class="search-form" action="index.html#products">
-        <input type="search" aria-label="Search" placeholder="Search bikes, parts, service">
+      <form class="search-form" action="search.html">
+        <input type="search" name="search" aria-label="Search" placeholder="Search bikes, parts, service">
         <button type="submit">Search</button>
       </form>
       <div class="cart-box" aria-label="Message SarapMagBike">
@@ -55,14 +55,28 @@
       <a href="index.html#contact">Contact</a>
     </nav>
 
-    <main id="top" class="wrap content product-detail-content">
+    <main id="top" class="wrap content product-search-page-content" data-product-search-page>
       <a class="product-back-link" href="index.html#products">Back to catalog</a>
-      <div data-product-detail>
-        <article class="product-detail-state">
-          <h1>Loading Product</h1>
-          <p>Checking SMBSystem public catalog for this item.</p>
-        </article>
-      </div>
+      <section class="product-search-page-shell">
+        <div class="product-search-page-heading">
+          <span>Quezon City inventory</span>
+          <h1>Search Products</h1>
+          <p data-product-search-page-summary>Type at least 2 characters to search SarapMagBike inventory and web catalog items.</p>
+        </div>
+
+        <form class="product-search-page-form" data-product-search-page-form>
+          <input type="search" data-product-search-page-input aria-label="Search inventory products" placeholder="Search bikes, parts, service">
+          <button type="submit">Search</button>
+        </form>
+
+        <p class="product-search-note" data-product-search-page-note></p>
+        <div class="product-search-page-results" data-product-search-page-results>
+          <div class="product-search-state">
+            <strong>Search Products</strong>
+            <p>Type at least 2 characters to search SarapMagBike inventory and web catalog items.</p>
+          </div>
+        </div>
+      </section>
     </main>
 
     <footer id="footer" class="footer">
@@ -106,14 +120,6 @@
         </div>
       </div>
     </footer>
-
-    <div class="product-sticky-inquiry" data-product-sticky hidden>
-      <div>
-        <span data-product-sticky-title>Product</span>
-        <strong data-product-sticky-price>Ask for price</strong>
-      </div>
-      <a href="https://www.facebook.com/sarapmagbikeshop" target="_blank" rel="noreferrer">Ask availability</a>
-    </div>
 
     <nav class="mobile-bottom-nav" aria-label="Mobile catalog navigation">
       <a href="index.html" data-mobile-nav="home" aria-label="Home"><span aria-hidden="true">⌂</span>Home</a>

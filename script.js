@@ -883,6 +883,19 @@ function ensureProductSearchModal() {
   return modal;
 }
 
+function getProductSearchPageUrl(query = "") {
+  const params = new URLSearchParams();
+  const trimmedQuery = String(query || "").trim();
+  if (trimmedQuery) {
+    params.set("search", trimmedQuery);
+  }
+  return `search.html${params.toString() ? `?${params.toString()}` : ""}`;
+}
+
+function submitProductSearch(query = "") {
+  window.location.href = getProductSearchPageUrl(query);
+}
+
 function closeProductSearchModal() {
   const modal = document.querySelector("[data-product-search-modal]");
   if (!modal) {
@@ -941,7 +954,7 @@ function renderProductSearchRow(item) {
   const price = getProductSearchPrice(item);
   meta.append(
     createTextElement("strong", price > 0 ? pesoFormatter.format(price) : "Ask for price"),
-    createTextElement("span", status === "web" ? "Open details" : "In stock, not on web")
+    createTextElement("span", status === "web" ? "Open details" : "Available in store")
   );
   if (status !== "web") {
     meta.classList.add("is-stock-only");
@@ -976,6 +989,100 @@ function renderProductSearchResults(items, source, query) {
   }
 
   items.slice(0, 30).forEach((item) => results.append(renderProductSearchRow(item)));
+}
+
+function getProductSearchPageRoot() {
+  return document.querySelector("[data-product-search-page]");
+}
+
+function setProductSearchPageState(title, detail) {
+  const root = getProductSearchPageRoot();
+  if (!root) {
+    return;
+  }
+
+  root.querySelector("[data-product-search-page-summary]").textContent = title;
+  const results = root.querySelector("[data-product-search-page-results]");
+  results.replaceChildren();
+  const stateCard = document.createElement("div");
+  stateCard.className = "product-search-state";
+  stateCard.append(
+    createTextElement("strong", title),
+    createTextElement("p", detail)
+  );
+  results.append(stateCard);
+}
+
+function renderProductSearchPageResults(items, source, query) {
+  const root = getProductSearchPageRoot();
+  if (!root) {
+    return;
+  }
+
+  const results = root.querySelector("[data-product-search-page-results]");
+  const summary = root.querySelector("[data-product-search-page-summary]");
+  const note = root.querySelector("[data-product-search-page-note]");
+  results.replaceChildren();
+
+  summary.textContent = `${items.length} ${items.length === 1 ? "match" : "matches"} for "${query}".`;
+  note.textContent = source === "inventory"
+    ? "Results come from SMBSystem public-safe inventory search. Exact stock can still change after in-store sales."
+    : "Full inventory search needs SMBSystem API support. Showing published web catalog matches for now.";
+
+  if (items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "product-search-state";
+    empty.append(
+      createTextElement("strong", "No matching products found"),
+      createTextElement("p", "Try a brand, model, SKU, category, or message the shop for a manual stock check.")
+    );
+    results.append(empty);
+    return;
+  }
+
+  items.slice(0, 30).forEach((item) => results.append(renderProductSearchRow(item)));
+}
+
+async function loadProductSearchPage() {
+  const root = getProductSearchPageRoot();
+  if (!root) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const query = (params.get("search") || "").trim();
+  const input = root.querySelector("[data-product-search-page-input]");
+  if (input) {
+    input.value = query;
+  }
+
+  if (query.length < 2) {
+    setProductSearchPageState("Search Products", "Type at least 2 characters to search SarapMagBike inventory and web catalog items.");
+    window.setTimeout(() => input?.focus(), 0);
+    return;
+  }
+
+  setProductSearchPageState("Searching Products", "Checking SarapMagBike inventory matches for Quezon City.");
+
+  try {
+    const result = await searchInventoryProducts(query);
+    renderProductSearchPageResults(result.items, result.source, query);
+  } catch (error) {
+    setProductSearchPageState("Search Unavailable", "SMBSystem public search is not reachable. Try again after the API is running.");
+  }
+}
+
+function bindProductSearchPageUi() {
+  const root = getProductSearchPageRoot();
+  if (!root) {
+    return;
+  }
+
+  root.querySelector("[data-product-search-page-form]")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = root.querySelector("[data-product-search-page-input]");
+    submitProductSearch(input?.value || "");
+  });
 }
 
 async function runProductSearch(query) {
@@ -1079,18 +1186,18 @@ function bindProductSearchUi() {
     const input = form.querySelector("input[type='search']");
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      openProductSearchModal(input.value);
+      submitProductSearch(input.value);
     });
     input.addEventListener("keydown", (event) => {
       if (event.key !== "Enter") {
         return;
       }
       event.preventDefault();
-      openProductSearchModal(input.value);
+      submitProductSearch(input.value);
     });
     form.querySelector("button")?.addEventListener("click", (event) => {
       event.preventDefault();
-      openProductSearchModal(input.value);
+      submitProductSearch(input.value);
     });
   });
 
@@ -5384,12 +5491,14 @@ async function startCatalog() {
   bindCustomerAccountUi();
   bindCatalogUi();
   bindProductSearchUi();
+  bindProductSearchPageUi();
   setupFeatureTileBelt();
   bindServiceFilters();
   bindCommunityUi();
   bindEventsUi();
   bindSocialPreviewLinks();
   loadProductDetailPage();
+  loadProductSearchPage();
   if (isEventsPage()) {
     await loadEventsPageEvents();
   } else {

@@ -3645,6 +3645,111 @@ body.is-catalog-mode .product-section {
   line-height: 1.45;
 }
 
+.product-search-page-content {
+  padding-top: 22px;
+}
+
+.product-search-page-shell {
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  color: #202020;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.product-search-page-heading span {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  margin-bottom: 8px;
+  padding: 0 8px;
+  color: #334155;
+  background: #eef2f5;
+  border: 1px solid #d8e0e7;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.product-search-page-heading h1 {
+  margin: 0 0 7px;
+  color: #171717;
+  font-size: 28px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.product-search-page-heading p {
+  margin: 0;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.product-search-page-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px;
+  border: 1px solid #cfcfcf;
+  background: #ffffff;
+}
+
+.product-search-page-form input {
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 14px;
+  color: #202020;
+  border: 0;
+  font: inherit;
+  outline: 0;
+}
+
+.product-search-page-form button {
+  position: relative;
+  width: 56px;
+  height: 46px;
+  overflow: hidden;
+  color: transparent;
+  border: 0;
+  background: var(--red);
+  cursor: pointer;
+}
+
+.product-search-page-form button::before {
+  position: absolute;
+  top: 12px;
+  left: 18px;
+  width: 14px;
+  height: 14px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  content: "";
+}
+
+.product-search-page-form button::after {
+  position: absolute;
+  top: 29px;
+  left: 33px;
+  width: 10px;
+  height: 3px;
+  content: "";
+  background: #ffffff;
+  transform: rotate(45deg);
+  transform-origin: left center;
+}
+
+.product-search-page-results {
+  display: grid;
+  gap: 10px;
+}
+
+.product-search-page-results .product-search-row {
+  min-height: 94px;
+}
+
 .product-stock-modal > section {
   position: relative;
   width: min(440px, 100%);
@@ -5495,6 +5600,42 @@ body.is-catalog-mode .product-section {
     grid-column: 2;
     justify-items: start;
     text-align: left;
+  }
+
+  .product-search-page-content {
+    padding-top: 10px;
+  }
+
+  .product-search-page-shell {
+    gap: 12px;
+    padding: 15px;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+  }
+
+  .product-search-page-heading h1 {
+    font-size: 22px;
+  }
+
+  .product-search-page-form {
+    grid-template-columns: minmax(0, 1fr) 50px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .product-search-page-form input {
+    height: 44px;
+    font-size: 14px;
+  }
+
+  .product-search-page-form button {
+    width: 50px;
+    height: 44px;
+  }
+
+  .product-search-page-results .product-search-row {
+    min-height: 0;
   }
 
   .product-stock-modal {

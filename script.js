@@ -53,8 +53,6 @@ const scrambleLabelSelector = [
   ".hero-message p",
   ".hero-message a",
   ".main-nav a",
-  ".feature-card h2",
-  ".feature-card a",
   ".product-tabs button",
   ".product-card h3",
   ".sale-banner h2",
@@ -1500,6 +1498,22 @@ function updateCatalogControls() {
   }
 }
 
+function getRequestedCatalogKey() {
+  const params = new URLSearchParams(window.location.search);
+  return (params.get("catalog") || "").trim();
+}
+
+function updateCatalogUrl(categoryKey) {
+  if (!document.querySelector("[data-web-items-grid]")) {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  params.set("catalog", categoryKey);
+  const query = params.toString();
+  window.history.pushState({ view: "catalog", category: categoryKey }, "", `index.html${query ? `?${query}` : ""}#products`);
+}
+
 function renderCatalog() {
   const grid = getWebItemsGrid();
   const group = getCategoryGroup(state.activeCategory);
@@ -1523,7 +1537,7 @@ function renderCatalog() {
   updateCatalogControls();
 }
 
-async function openCategoryCatalog(categoryKey) {
+async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
   state.activeSubcategory = "All";
   setCatalogMode(true);
   setGridState("Loading Catalog", "Checking SMBSystem catalog items for Quezon City.");
@@ -1537,6 +1551,9 @@ async function openCategoryCatalog(categoryKey) {
     }
     state.activeCategory = resolvedCategoryKey;
     renderCatalog();
+    if (updatePath) {
+      updateCatalogUrl(categoryKey);
+    }
   } catch (error) {
     setGridState("Catalog Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
   }
@@ -3212,7 +3229,7 @@ function bindCatalogUi() {
   document.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
       event.preventDefault();
-      openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav);
+      openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav, { updatePath: true });
     });
   });
 
@@ -3221,13 +3238,13 @@ function bindCatalogUi() {
       if (event.target instanceof HTMLAnchorElement) {
         return;
       }
-      openCategoryCatalog(card.dataset.categoryCard);
+      openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
     });
 
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openCategoryCatalog(card.dataset.categoryCard);
+        openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
       }
     });
   });
@@ -3269,7 +3286,7 @@ function setupFeatureTileBelt() {
     clone.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
       element.addEventListener("click", (event) => {
         event.preventDefault();
-        openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav);
+        openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav, { updatePath: true });
       });
     });
 
@@ -3278,7 +3295,7 @@ function setupFeatureTileBelt() {
         if (event.target instanceof HTMLAnchorElement) {
           return;
         }
-        openCategoryCatalog(card.dataset.categoryCard);
+        openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
       });
     });
 
@@ -5501,7 +5518,10 @@ async function startCatalog() {
   bindSocialPreviewLinks();
   loadProductDetailPage();
   loadProductSearchPage();
-  if (isEventsPage()) {
+  const requestedCatalogKey = getRequestedCatalogKey();
+  if (requestedCatalogKey && document.querySelector("[data-web-items-grid]")) {
+    await openCategoryCatalog(requestedCatalogKey);
+  } else if (isEventsPage()) {
     await loadEventsPageEvents();
   } else {
     loadHomeProductItems();

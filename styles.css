@@ -5773,6 +5773,10 @@ body.is-catalog-mode .product-section {
     padding-right: 8px;
   }
 
+  .feature-tile-group[aria-hidden="true"] {
+    pointer-events: auto;
+  }
+
   .feature-card {
     flex: 0 0 112px;
     min-height: 96px;

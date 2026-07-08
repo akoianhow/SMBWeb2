@@ -1526,6 +1526,20 @@ function getCatalogShortcutTitle(categoryKey) {
   return catalogShortcutTitles[categoryKey] || String(categoryKey || "Catalog").replaceAll("-", " ");
 }
 
+function getCategoryTileHref(card) {
+  return card?.querySelector("[data-category-link]")?.getAttribute("href") || "";
+}
+
+function openCategoryTilePage(card) {
+  const href = getCategoryTileHref(card);
+  if (href) {
+    window.location.href = href;
+    return;
+  }
+
+  openCategoryCatalog(card?.dataset.categoryCard, { updatePath: true });
+}
+
 function openServicesPage() {
   window.location.href = "services.html";
 }
@@ -3247,6 +3261,9 @@ function bindCatalogUi() {
 
   document.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
     element.addEventListener("click", (event) => {
+      if (element.dataset.categoryLink && element.getAttribute("href")) {
+        return;
+      }
       event.preventDefault();
       openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav, { updatePath: true });
     });
@@ -3257,13 +3274,13 @@ function bindCatalogUi() {
       if (event.target instanceof HTMLAnchorElement) {
         return;
       }
-      openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
+      openCategoryTilePage(card);
     });
 
     card.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
+        openCategoryTilePage(card);
       }
     });
   });
@@ -3320,6 +3337,9 @@ function setupFeatureTileBelt() {
 
     clone.querySelectorAll("[data-category-link], [data-category-nav]").forEach((element) => {
       element.addEventListener("click", (event) => {
+        if (element.dataset.categoryLink && element.getAttribute("href")) {
+          return;
+        }
         event.preventDefault();
         openCategoryCatalog(element.dataset.categoryLink || element.dataset.categoryNav, { updatePath: true });
       });
@@ -3330,7 +3350,7 @@ function setupFeatureTileBelt() {
         if (event.target instanceof HTMLAnchorElement) {
           return;
         }
-        openCategoryCatalog(card.dataset.categoryCard, { updatePath: true });
+        openCategoryTilePage(card);
       });
     });
 

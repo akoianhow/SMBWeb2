@@ -3381,10 +3381,12 @@ function setupFeatureTileScrollBelt(scroller, group) {
   const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
   let lastFrameTime = 0;
   let pauseUntil = 0;
+  let isPointerDown = false;
   let isMouseDragging = false;
   let isAutoScrolling = false;
   let dragStartX = 0;
   let dragStartScrollLeft = 0;
+  let dragStartId = null;
 
   const getLoopWidth = () => group.getBoundingClientRect().width;
 
@@ -3411,30 +3413,51 @@ function setupFeatureTileScrollBelt(scroller, group) {
       return;
     }
 
-    isMouseDragging = true;
+    isPointerDown = true;
     dragStartX = event.clientX;
     dragStartScrollLeft = scroller.scrollLeft;
-    scroller.classList.add("is-dragging");
-    scroller.setPointerCapture?.(event.pointerId);
+    dragStartId = event.pointerId;
   });
 
   scroller.addEventListener("pointermove", (event) => {
-    if (!isMouseDragging) {
+    if (!isPointerDown) {
       return;
     }
+
+    if (!isMouseDragging) {
+      if (Math.abs(event.clientX - dragStartX) > 6) {
+        isMouseDragging = true;
+        scroller.classList.add("is-dragging");
+        if (dragStartId !== null) {
+          scroller.setPointerCapture?.(dragStartId);
+        }
+      } else {
+        return;
+      }
+    }
+
     event.preventDefault();
     scroller.scrollLeft = dragStartScrollLeft - (event.clientX - dragStartX);
     normalizeScrollPosition();
   });
 
   const stopMouseDrag = (event) => {
-    if (!isMouseDragging) {
+    if (!isPointerDown) {
       return;
     }
 
+    const wasDragging = isMouseDragging;
+    isPointerDown = false;
     isMouseDragging = false;
     scroller.classList.remove("is-dragging");
-    scroller.releasePointerCapture?.(event.pointerId);
+    if (wasDragging && dragStartId !== null) {
+      try {
+        scroller.releasePointerCapture?.(dragStartId);
+      } catch (err) {
+        // Ignore if pointer capture release fails
+      }
+    }
+    dragStartId = null;
     pauseAutoScroll(1800);
   };
 

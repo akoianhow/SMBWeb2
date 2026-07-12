@@ -1,0 +1,1 @@
+30 3 * * * root /opt/smbwordpress/backup.sh >> /var/log/smb-wordpress-backup.log 2>&1

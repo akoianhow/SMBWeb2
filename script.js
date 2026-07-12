@@ -1366,8 +1366,10 @@ function renderCategoryNav() {
 
   const isServicesPage = window.location.pathname.endsWith("/services.html");
   const isEventsPage = window.location.pathname.endsWith("/events.html");
+  const isStoriesPage = window.location.pathname.endsWith("/stories.html") || window.location.pathname.endsWith("/story.html");
+  const isStandalonePage = isServicesPage || isEventsPage || isStoriesPage;
   const goToHomeTarget = (targetId) => {
-    if (isServicesPage || isEventsPage) {
+    if (isStandalonePage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
       return;
     }
@@ -1387,13 +1389,14 @@ function renderCategoryNav() {
 
   nav.replaceChildren();
   [
-    { label: "Home", href: (isServicesPage || isEventsPage) ? "index.html" : "#top", action: () => goToHomeTarget("top") },
-    { label: "Products", href: (isServicesPage || isEventsPage) ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
+    { label: "Home", href: isStandalonePage ? "index.html" : "#top", action: () => goToHomeTarget("top") },
+    { label: "Products", href: isStandalonePage ? "index.html#products" : "#products", action: () => goToHomeTarget("products") },
     { label: "Services", href: "services.html", action: goToServices, active: isServicesPage },
     { label: "Events", href: "events.html", action: () => window.location.href = "events.html", active: isEventsPage },
-    { label: "Community", href: (isServicesPage || isEventsPage) ? "index.html#community" : "#community", action: () => (isServicesPage || isEventsPage) ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isServicesPage && !isEventsPage },
+    { label: "Stories", href: "stories.html", action: () => window.location.href = "stories.html", active: isStoriesPage },
+    { label: "Community", href: isStandalonePage ? "index.html#community" : "#community", action: () => isStandalonePage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isStandalonePage },
     { label: "Survey", href: "survey.html", action: () => window.location.href = "survey.html" },
-    { label: "Contact", href: isServicesPage || isEventsPage ? "#contact" : "#contact", action: () => (isServicesPage || isEventsPage) ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
+    { label: "Contact", href: "#contact", action: () => isStandalonePage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
   ].forEach((item) => {
     const link = document.createElement("a");
     link.href = item.href;
@@ -1418,25 +1421,7 @@ function getServiceCardCategory(card) {
 }
 
 function serviceCardMatchesFilter(card, filter) {
-  if (filter === "all") {
-    return true;
-  }
-
-  const category = getServiceCardCategory(card);
-  const serviceFilterCategories = {
-    basic: ["Basic Bike Service"],
-    overhaul: ["Full Bike Service"],
-    assembly: ["Bike Assembly"],
-    drivetrain: ["Drivetrain Service", "Shifter Service"],
-    brakes: ["Brake Service"],
-    cables: ["Cable Service"],
-    wheels: ["Wheel & Tire Service", "Hub Service"],
-    fork: ["Fork Service"],
-    cockpit: ["Cockpit Service", "Headset Service", "Fit / Adjustment Service"],
-    accessories: ["Accessory Installation"]
-  };
-
-  return (serviceFilterCategories[filter] || []).includes(category);
+  return filter === "all" || card.dataset.serviceCategory === filter;
 }
 
 function applyServiceFilter(filter) {
@@ -1464,6 +1449,248 @@ function bindServiceFilters() {
       applyServiceFilter(chip.dataset.serviceFilter || "all");
     });
   });
+}
+
+function getServiceCategory(item) {
+  return item.category || item.categoryGroupName || "Bike Service";
+}
+
+function getServiceDescription(item) {
+  const container = document.createElement("div");
+  container.innerHTML = String(item.webDescription || "");
+  container.querySelectorAll("script, style").forEach((node) => node.remove());
+  container.querySelectorAll("br, p, div, li, h1, h2, h3, h4, h5, h6, strong").forEach((node) => node.append(" "));
+  return (container.textContent || "").replace(/\*+/g, "").replace(/\s+/g, " ").trim()
+    || "Message SarapMagBike for service details, availability, and current workshop queue.";
+}
+
+function getServiceExcerpt(item) {
+  const description = getServiceDescription(item);
+  return description.length > 200 ? `${description.slice(0, 200).trimEnd()}...` : description;
+}
+
+function getServiceDetailUrl(item) {
+  const params = new URLSearchParams();
+  params.set("id", String(getItemIdentifier(item)));
+  params.set("slug", slugify(getItemName(item)));
+  return `service.html?${params.toString()}`;
+}
+
+function renderServiceCardImage(item) {
+  const frame = document.createElement("div");
+  const managedImage = getProductImageUrls(item)[0];
+  frame.className = `service-card-image${managedImage ? " has-managed-image" : " is-fallback"}`;
+  const image = document.createElement("img");
+  image.alt = managedImage ? getItemName(item) : "SarapMagBike bike mechanic at work";
+  image.loading = "lazy";
+  image.src = managedImage || "assets/workshop-service.png";
+  frame.append(image);
+  return frame;
+}
+
+function renderServiceFullDescription(item) {
+  const detail = document.createElement("div");
+  detail.className = "product-detail-description service-detail-description";
+  const source = document.createElement("div");
+  source.innerHTML = String(item.webDescription || "");
+  source.querySelectorAll("script, style").forEach((node) => node.remove());
+  source.querySelectorAll("br").forEach((node) => node.replaceWith("\n"));
+  source.querySelectorAll("p, div, li, h1, h2, h3, h4, h5, h6").forEach((node) => node.append("\n"));
+  const paragraphs = (source.textContent || "")
+    .replace(/\*+/g, "")
+    .split(/\n+/)
+    .map((line) => line.replace(/\s+/g, " ").trim())
+    .filter(Boolean);
+  (paragraphs.length > 0 ? paragraphs : ["Message SarapMagBike for the complete service scope and current workshop availability."])
+    .forEach((paragraph) => detail.append(createTextElement("p", paragraph)));
+  return detail;
+}
+
+function renderManagedServiceCard(item) {
+  const card = document.createElement("article");
+  const category = getServiceCategory(item);
+  card.className = "service-card";
+  card.dataset.serviceCategory = slugify(category);
+
+  const action = document.createElement("a");
+  action.href = getServiceDetailUrl(item);
+  action.textContent = "More...";
+
+  card.append(
+    renderServiceCardImage(item),
+    createTextElement("span", category),
+    createTextElement("h2", getItemName(item)),
+    renderPrice(item),
+    createTextElement("p", getServiceExcerpt(item)),
+    action
+  );
+  return card;
+}
+
+function getServiceDetailRoot() {
+  return document.querySelector("[data-service-detail]");
+}
+
+function renderServiceDetail(item) {
+  const root = getServiceDetailRoot();
+  if (!root) {
+    return;
+  }
+
+  const serviceName = getItemName(item);
+  const category = getServiceCategory(item);
+  document.title = `${serviceName} | SarapMagBike Services`;
+  document.querySelector("meta[name='description']")?.setAttribute("content", getServiceExcerpt(item));
+  root.replaceChildren();
+
+  const shell = document.createElement("section");
+  shell.className = "product-detail-shell service-detail-shell";
+  const imageItem = getProductImageUrls(item).length > 0
+    ? item
+    : { ...item, mainImageUrl: "assets/workshop-service.png" };
+
+  const summary = document.createElement("section");
+  summary.className = "product-detail-summary";
+  summary.setAttribute("aria-label", "Service summary");
+  const badges = document.createElement("div");
+  badges.className = "product-detail-badges";
+  badges.append(createTextElement("span", "Service"), createTextElement("span", category));
+  const price = renderPrice(item);
+  price.classList.add("product-detail-price");
+  const description = renderServiceFullDescription(item);
+  const actions = document.createElement("div");
+  actions.className = "product-detail-actions";
+  const message = document.createElement("a");
+  message.href = "https://www.facebook.com/sarapmagbikeshop";
+  message.target = "_blank";
+  message.rel = "noreferrer";
+  message.textContent = "Message Us";
+  actions.append(message);
+  summary.append(
+    badges,
+    createTextElement("p", "SarapMagBike Quezon City Workshop", "product-detail-eyebrow"),
+    createTextElement("h1", serviceName),
+    price,
+    description,
+    actions,
+    createTextElement("p", "Message us before visiting so the team can confirm the service scope, workshop queue, required parts, and final quotation.", "product-detail-note")
+  );
+  const gallery = renderProductDetailGallery(imageItem);
+  gallery.setAttribute("aria-label", "Service photos");
+  shell.append(gallery, summary);
+  root.append(shell);
+
+  const infoGrid = document.createElement("section");
+  infoGrid.className = "product-detail-info-grid service-detail-info";
+  const details = document.createElement("article");
+  const detailList = document.createElement("dl");
+  detailList.className = "product-spec-table";
+  [["Category", category], ["Service code", getItemSku(item) || "Not specified"], ["Labor price", renderPrice(item).textContent], ["Branch", "Quezon City"]].forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.append(createTextElement("dt", label), createTextElement("dd", value));
+    detailList.append(row);
+  });
+  details.append(createTextElement("h2", "Service Information"), detailList);
+  const booking = document.createElement("article");
+  booking.append(
+    createTextElement("h2", "Before You Visit"),
+    createTextElement("p", "Send photos and a short description of the bike concern through Facebook. Parts, special tools, and additional work may be quoted separately after inspection.")
+  );
+  infoGrid.append(details, booking);
+  root.append(infoGrid);
+}
+
+function setServiceDetailState(title, detail) {
+  const root = getServiceDetailRoot();
+  if (!root) {
+    return;
+  }
+  root.replaceChildren();
+  const card = document.createElement("article");
+  card.className = "product-detail-state";
+  card.append(createTextElement("h1", title), createTextElement("p", detail));
+  root.append(card);
+}
+
+async function loadServiceDetailPage() {
+  if (!getServiceDetailRoot()) {
+    return;
+  }
+  const id = new URLSearchParams(window.location.search).get("id")?.trim();
+  if (!id) {
+    setServiceDetailState("Service Not Found", "Return to the service menu and choose a published service.");
+    return;
+  }
+  try {
+    const item = (await loadWebItems()).find((candidate) => candidate.isService === true && String(getItemIdentifier(candidate)) === id);
+    if (!item) {
+      setServiceDetailState("Service Unavailable", "This service is not currently published in SMBSystem Manage Web Items.");
+      return;
+    }
+    renderServiceDetail(item);
+  } catch {
+    setServiceDetailState("Service Unavailable", "SMBSystem Manage Web Items could not be reached. Please try again shortly.");
+  }
+}
+
+function renderManagedServiceFilters(items) {
+  const filters = document.querySelector("[data-service-filters]");
+  if (!filters) {
+    return;
+  }
+
+  const categories = [...new Map(items.map((item) => {
+    const label = getServiceCategory(item);
+    return [slugify(label), label];
+  })).entries()];
+  filters.replaceChildren();
+  [["all", "All Services"], ...categories].forEach(([value, label], index) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.serviceFilter = value;
+    button.classList.toggle("active", index === 0);
+    button.textContent = label;
+    filters.append(button);
+  });
+  filters.hidden = categories.length === 0;
+  bindServiceFilters();
+}
+
+async function loadManagedServices() {
+  const grid = document.querySelector("[data-services-grid]");
+  if (!grid) {
+    return;
+  }
+
+  grid.hidden = false;
+  grid.setAttribute("aria-busy", "true");
+  grid.replaceChildren();
+  const loading = document.createElement("article");
+  loading.className = "service-card service-card-state";
+  loading.append(createTextElement("h2", "Loading Services"), createTextElement("p", "Loading services configured in SMBSystem Manage Web Items."));
+  grid.append(loading);
+
+  try {
+    const items = (await loadWebItems()).filter((item) => item.isService === true);
+    grid.replaceChildren();
+    renderManagedServiceFilters(items);
+    if (items.length === 0) {
+      const empty = document.createElement("article");
+      empty.className = "service-card service-card-state";
+      empty.append(createTextElement("h2", "No Services Published"), createTextElement("p", "Enable Display on Web for services in SMBSystem Manage Web Items to show them here."));
+      grid.append(empty);
+    } else {
+      items.forEach((item) => grid.append(renderManagedServiceCard(item)));
+    }
+  } catch {
+    grid.replaceChildren();
+    const unavailable = document.createElement("article");
+    unavailable.className = "service-card service-card-state";
+    unavailable.append(createTextElement("h2", "Services Unavailable"), createTextElement("p", "SMBSystem Manage Web Items could not be reached. Please try again shortly."));
+    grid.append(unavailable);
+  } finally {
+    grid.setAttribute("aria-busy", "false");
+  }
 }
 
 function updateActiveCategoryNav() {
@@ -3904,6 +4131,16 @@ function sanitizeEventHtml(value) {
       }
     });
   });
+  container.querySelectorAll("p, div").forEach((node) => {
+    const content = (node.textContent || "").replace(/\u00a0/g, " ").trim();
+    if (!content && !node.querySelector("img, video, iframe")) {
+      node.remove();
+    }
+  });
+  container.querySelectorAll("br + br").forEach((node) => node.remove());
+  while (container.firstChild?.nodeName === "BR") {
+    container.firstChild.remove();
+  }
   return container.innerHTML;
 }
 
@@ -4233,11 +4470,6 @@ function bindEventsUi() {
     return;
   }
 
-  document.querySelector("[data-events-search]")?.addEventListener("input", (event) => {
-    eventsState.search = event.target.value.trim();
-    window.clearTimeout(eventsState.searchTimer);
-    eventsState.searchTimer = window.setTimeout(loadEventsPageEvents, 300);
-  });
   document.querySelector("[data-events-type]")?.addEventListener("change", (event) => {
     eventsState.selectedType = event.target.value;
     document.querySelectorAll("[data-events-chip]").forEach((chip) => chip.classList.toggle("active", chip.dataset.eventsChip === eventsState.selectedType || (eventsState.selectedType === "all" && chip.dataset.eventsChip === "all")));
@@ -4260,7 +4492,6 @@ function bindEventsUi() {
     });
   });
   document.querySelector("[data-events-back]")?.addEventListener("click", showEventListView);
-  document.querySelector("[data-events-search-shortcut]")?.addEventListener("click", () => document.querySelector("[data-events-search]")?.focus());
   document.querySelector("[data-event-registration-form]")?.addEventListener("submit", submitEventRegistration);
   document.querySelector("[data-event-registration-close]")?.addEventListener("click", closeEventRegistrationModal);
   document.querySelector("[data-event-registration-cancel]")?.addEventListener("click", closeEventRegistrationModal);
@@ -5604,12 +5835,15 @@ async function startCatalog() {
   bindEventsUi();
   bindSocialPreviewLinks();
   loadProductDetailPage();
+  loadServiceDetailPage();
   loadProductSearchPage();
   const requestedCatalogKey = getRequestedCatalogKey();
   if (requestedCatalogKey && document.querySelector("[data-web-items-grid]")) {
     await openCategoryCatalog(requestedCatalogKey);
   } else if (isEventsPage()) {
     await loadEventsPageEvents();
+  } else if (document.querySelector("[data-services-grid]")) {
+    await loadManagedServices();
   } else {
     loadHomeProductItems();
   }

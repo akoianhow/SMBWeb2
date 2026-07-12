@@ -1365,9 +1365,10 @@ function renderCategoryNav() {
   }
 
   const isServicesPage = window.location.pathname.endsWith("/services.html");
+  const isAppointmentsPage = window.location.pathname.endsWith("/appointments.html");
   const isEventsPage = window.location.pathname.endsWith("/events.html");
   const isStoriesPage = window.location.pathname.endsWith("/stories.html") || window.location.pathname.endsWith("/story.html");
-  const isStandalonePage = isServicesPage || isEventsPage || isStoriesPage;
+  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage;
   const goToHomeTarget = (targetId) => {
     if (isStandalonePage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
@@ -1476,6 +1477,12 @@ function getServiceDetailUrl(item) {
   return `service.html?${params.toString()}`;
 }
 
+function getServiceBookingUrl(item) {
+  const params = new URLSearchParams();
+  params.set("service", String(getItemIdentifier(item)));
+  return `appointments.html?${params.toString()}`;
+}
+
 function renderServiceCardImage(item) {
   const frame = document.createElement("div");
   const managedImage = getProductImageUrls(item)[0];
@@ -1512,9 +1519,15 @@ function renderManagedServiceCard(item) {
   card.className = "service-card";
   card.dataset.serviceCategory = slugify(category);
 
-  const action = document.createElement("a");
-  action.href = getServiceDetailUrl(item);
-  action.textContent = "More...";
+  const actions = document.createElement("div");
+  actions.className = "service-card-actions";
+  const book = document.createElement("a");
+  book.href = getServiceBookingUrl(item);
+  book.textContent = "Book this service";
+  const more = document.createElement("a");
+  more.href = getServiceDetailUrl(item);
+  more.textContent = "More...";
+  actions.append(book, more);
 
   card.append(
     renderServiceCardImage(item),
@@ -1522,7 +1535,7 @@ function renderManagedServiceCard(item) {
     createTextElement("h2", getItemName(item)),
     renderPrice(item),
     createTextElement("p", getServiceExcerpt(item)),
-    action
+    actions
   );
   return card;
 }
@@ -1560,12 +1573,15 @@ function renderServiceDetail(item) {
   const description = renderServiceFullDescription(item);
   const actions = document.createElement("div");
   actions.className = "product-detail-actions";
+  const book = document.createElement("a");
+  book.href = getServiceBookingUrl(item);
+  book.textContent = "Book this Service";
   const message = document.createElement("a");
   message.href = "https://www.facebook.com/sarapmagbikeshop";
   message.target = "_blank";
   message.rel = "noreferrer";
   message.textContent = "Message Us";
-  actions.append(message);
+  actions.append(book, message);
   summary.append(
     badges,
     createTextElement("p", "SarapMagBike Quezon City Workshop", "product-detail-eyebrow"),
@@ -4967,6 +4983,7 @@ async function submitProfile(event) {
         body: JSON.stringify(payload)
       });
       updateCustomerHeader();
+      window.dispatchEvent(new CustomEvent("customer-session-changed"));
       setMessage(message, "Profile created. You are now logged in.", "success");
       await openEditProfileForm();
       return;
@@ -5021,6 +5038,7 @@ async function loginCustomer(event) {
     });
     form.reset();
     updateCustomerHeader();
+    window.dispatchEvent(new CustomEvent("customer-session-changed"));
     setMessage(message, "Logged in.", "success");
     hideCommunityAuthPrompt();
     document.querySelector("[data-community-login-form]")?.setAttribute("hidden", "");
@@ -5052,6 +5070,7 @@ async function logoutCustomer() {
   customerState.profile = null;
   setAccountMenuOpen(false);
   updateCustomerHeader();
+  window.dispatchEvent(new CustomEvent("customer-session-changed"));
   showProfileMode(false);
 }
 
@@ -5144,6 +5163,7 @@ async function restoreCustomerSession() {
     customerState.account = null;
   }
   updateCustomerHeader();
+  window.dispatchEvent(new CustomEvent("customer-session-changed"));
 }
 
 async function submitChangePassword(event) {

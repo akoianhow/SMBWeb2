@@ -549,14 +549,16 @@ async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     let message = `Request failed with ${response.status}`;
+    let errorBody = null;
     try {
-      const errorBody = await response.json();
+      errorBody = await response.json();
       message = errorBody.message || message;
     } catch {
       // Keep the generic status message when the API has no JSON error body.
     }
     const error = new Error(message);
     error.status = response.status;
+    error.details = errorBody;
     throw error;
   }
 
@@ -4824,6 +4826,8 @@ function fillProfileForm(profile) {
   form.elements.username.value = profile?.username || "";
   form.elements.email.value = profile?.email || "";
   form.elements.hometown.value = profile?.hometown || "";
+  form.elements.mobileNumber.value = profile?.mobileNumber || "";
+  form.elements.facebookAccount.value = profile?.facebookAccount || "";
   form.elements.birthday.value = profile?.birthday || "";
   form.elements.password.value = "";
   form.elements.confirmPassword.value = "";
@@ -4962,6 +4966,8 @@ async function submitProfile(event) {
       confirmPassword: form.elements.confirmPassword.value,
       email: form.elements.email.value.trim(),
       hometown: form.elements.hometown.value.trim(),
+      mobileNumber: form.elements.mobileNumber.value.trim(),
+      facebookAccount: form.elements.facebookAccount.value.trim(),
       birthday: form.elements.birthday.value || null,
       riderTypes: getSelectedRiderTypes(form),
       profileImageBase64: image?.base64 || null,
@@ -4972,6 +4978,9 @@ async function submitProfile(event) {
 
     if (!payload.email || !form.elements.email.checkValidity()) {
       throw new Error("Enter a valid email address.");
+    }
+    if (payload.mobileNumber && !/^(?:\+639|09)\d{9}$/.test(payload.mobileNumber.replace(/[\s()-]/g, ""))) {
+      throw new Error("Enter a valid Philippine mobile number, such as 09171234567 or +639171234567.");
     }
     if (customerState.mode === "register" && payload.password !== payload.confirmPassword) {
       throw new Error("Password and confirm password must match.");
@@ -4994,6 +5003,8 @@ async function submitProfile(event) {
       body: JSON.stringify({
         email: payload.email,
         hometown: payload.hometown,
+        mobileNumber: payload.mobileNumber,
+        facebookAccount: payload.facebookAccount,
         birthday: payload.birthday,
         riderTypes: payload.riderTypes,
         profileImageBase64: payload.profileImageBase64,

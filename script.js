@@ -1967,6 +1967,10 @@ function showCommunityAuthPrompt() {
   const prompt = document.querySelector("[data-community-auth-prompt]");
   if (prompt) {
     prompt.hidden = false;
+    const form = prompt.querySelector("[data-community-login-form]");
+    if (form) {
+      form.hidden = false;
+    }
   }
 }
 
@@ -2081,10 +2085,7 @@ async function loadCommunityDiscussions(force = false) {
 }
 
 function renderCommunityConfig() {
-  const warning = document.querySelector("[data-community-warning]");
-  if (warning && communityState.config?.privacyWarning) {
-    warning.textContent = communityState.config.privacyWarning;
-  }
+  // Community rules remain enforced by SMBSystem without adding extra composer copy.
 }
 
 function isGeneralCommunityCategory(category) {
@@ -2110,22 +2111,9 @@ function ensureDefaultCommunityComposerCategory() {
 }
 
 function renderCommunityCategories() {
-  const select = document.querySelector("[data-community-category]");
-  if (!select) {
-    return;
-  }
-
-  const currentValue = select.value || "all";
-  select.replaceChildren(new Option("All categories", "all"));
-  getCommunityCategoriesForUi().forEach((category) => {
-    select.append(new Option(category.name, category.slug));
-  });
-  select.value = communityState.categories.some((category) => category.slug === currentValue) ? currentValue : "all";
-  communityState.selectedCategorySlugs = communityState.selectedCategorySlugs.filter((slug) =>
-    communityState.categories.some((category) => category.slug === slug)
-  );
-  ensureDefaultCommunityComposerCategory();
-  renderCommunityComposerCategories();
+  const defaultSlug = getDefaultCommunityCategorySlug();
+  communityState.selectedCategory = "all";
+  communityState.selectedCategorySlugs = defaultSlug ? [defaultSlug] : [];
 }
 
 function renderCommunityComposerCategories() {
@@ -3196,12 +3184,13 @@ async function submitCommunityPost(event) {
   setMessage(message, "Posting discussion...");
 
   try {
-    if (communityState.selectedCategorySlugs.length === 0) {
-      throw new Error("Select at least one discussion category.");
+    const generalCategorySlug = getDefaultCommunityCategorySlug();
+    if (!generalCategorySlug) {
+      throw new Error("The general discussion category is unavailable.");
     }
     const payload = {
       body: form.elements.body.value.trim(),
-      categorySlugs: communityState.selectedCategorySlugs,
+      categorySlugs: [generalCategorySlug],
       photos: communityState.photoUploads.map(({ base64, contentType, fileName }) => ({ base64, contentType, fileName }))
     };
     const created = await apiRequest("/api/public/community/posts", {
@@ -3480,7 +3469,6 @@ function bindCommunityUi() {
 
   document.querySelector("[data-community-composer]")?.addEventListener("submit", submitCommunityPost);
   document.querySelector("[data-community-composer-launcher]")?.addEventListener("click", openCommunityCreateModal);
-  document.querySelector("[data-community-create-close]")?.addEventListener("click", () => closeCommunityCreateModal());
   document.querySelector("[data-community-create-modal]")?.addEventListener("click", (event) => {
     if (event.target === event.currentTarget) {
       closeCommunityCreateModal();
@@ -3496,10 +3484,6 @@ function bindCommunityUi() {
   document.querySelector("[data-community-login-form]")?.addEventListener("submit", loginCustomer);
   document.querySelector("[data-community-register]")?.addEventListener("click", openRegisterForm);
   document.querySelector("[data-community-prompt-close]")?.addEventListener("click", hideCommunityAuthPrompt);
-  document.querySelector("[data-community-prompt-login]")?.addEventListener("click", () => {
-    hideCommunityAuthPrompt();
-    openCommunityLoginForm();
-  });
   document.querySelector("[data-community-prompt-register]")?.addEventListener("click", () => {
     hideCommunityAuthPrompt();
     openRegisterForm();
@@ -3540,10 +3524,6 @@ function bindCommunityUi() {
     communityState.search = event.target.value.trim();
     window.clearTimeout(communityState.searchTimer);
     communityState.searchTimer = window.setTimeout(() => loadCommunityDiscussions(true), 300);
-  });
-  document.querySelector("[data-community-category]")?.addEventListener("change", (event) => {
-    communityState.selectedCategory = event.target.value;
-    loadCommunityDiscussions(true);
   });
   document.querySelector("[data-community-thread-close]")?.addEventListener("click", closeCommunityThreadModal);
   document.querySelector("[data-community-thread-modal]")?.addEventListener("click", (event) => {
@@ -4856,7 +4836,8 @@ function addStaySignedInControls() {
 
     control.append(checkbox, text, note);
     const submitButton = form.querySelector("button[type='submit']");
-    form.insertBefore(control, submitButton);
+    const submitRow = submitButton?.parentElement === form ? submitButton : submitButton?.parentElement;
+    form.insertBefore(control, submitRow || null);
   });
 }
 

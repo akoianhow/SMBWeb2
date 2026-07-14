@@ -4314,6 +4314,21 @@ body.is-catalog-mode .product-section {
   font-weight: 800;
 }
 
+.community-login-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.community-auth-prompt .community-login-actions .community-login-register {
+  color: #ffffff;
+  background: #252525;
+}
+
+.community-auth-actions {
+  margin-top: 10px;
+}
+
 .community-filters label {
   display: grid;
   gap: 6px;
@@ -7993,6 +8008,11 @@ body.is-catalog-mode .product-section {
 
   .community-login-form button {
     min-height: 42px;
+  }
+
+  .community-auth-prompt .community-login-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   body:not(.is-coming-soon-page) .community-login-card {

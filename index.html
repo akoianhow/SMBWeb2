@@ -9,7 +9,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260715-stay-signed-in">
+    <link rel="stylesheet" href="styles.css?v=20260715-community-simplified">
   </head>
   <body>
     <div class="page-bg"></div>
@@ -392,12 +392,6 @@
                 Search
                 <input type="search" data-community-search placeholder="Bike questions, rides, services">
               </label>
-              <label>
-                Category
-                <select data-community-category>
-                  <option value="all">All categories</option>
-                </select>
-              </label>
             </div>
           </aside>
 
@@ -440,12 +434,13 @@
             <input type="password" name="password" autocomplete="current-password" required>
           </label>
           <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
-          <button type="submit">Log in</button>
+          <div class="community-login-actions">
+            <button type="submit">Log in</button>
+            <button class="community-login-register" type="button" data-community-prompt-register>Create account</button>
+          </div>
           <p data-community-login-message role="status"></p>
         </form>
         <div class="community-auth-actions">
-          <button type="button" data-community-prompt-login>Log in</button>
-          <button type="button" data-community-prompt-register>Create account</button>
           <button type="button" data-community-prompt-close>Close</button>
         </div>
       </div>
@@ -458,12 +453,10 @@
             <p>Start Discussion</p>
             <h2 id="community-create-title">What's on your mind?</h2>
           </div>
-          <button type="button" data-community-create-close>Close</button>
+          <button type="submit" form="community-composer-form">Post</button>
         </div>
-        <form class="community-composer" data-community-composer>
+        <form id="community-composer-form" class="community-composer" data-community-composer>
           <textarea name="body" maxlength="2000" placeholder="What's on your mind?"></textarea>
-          <p data-community-warning>Do not post order numbers, payment details, phone numbers, addresses, or private service concerns.</p>
-          <div class="community-composer-categories" data-community-composer-categories aria-label="Discussion categories"></div>
           <div class="community-photo-previews" data-community-photo-previews aria-label="Selected photos"></div>
           <div class="community-composer-actions">
             <label class="community-photo-add" title="Add Photos" aria-label="Add Photos">
@@ -475,7 +468,6 @@
               <span class="sr-only">Add Photos</span>
               <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple>
             </label>
-            <button type="submit">Post</button>
           </div>
           <p class="community-message" data-community-message role="status"></p>
         </form>
@@ -593,6 +585,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260715-stay-signed-in"></script>
+    <script src="script.js?v=20260715-community-simplified"></script>
   </body>
 </html>

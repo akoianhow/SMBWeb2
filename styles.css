@@ -2400,6 +2400,24 @@ body.is-catalog-mode .product-section {
   background: #167c45 !important;
 }
 
+.event-payment-proof-action,
+.event-payment-review-action,
+.event-waitlisted-action {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.event-payment-proof-action {
+  background: #d45b00 !important;
+}
+
+.event-payment-review-action,
+.event-waitlisted-action {
+  color: #ffffff !important;
+  background: #656b73 !important;
+  opacity: 1 !important;
+}
+
 .event-attendance-confirmed:disabled {
   color: #ffffff;
   opacity: 1;
@@ -2466,6 +2484,26 @@ body.is-catalog-mode .product-section {
   display: grid;
   gap: 12px;
   padding: 14px;
+}
+
+.event-payment-proof-field {
+  display: grid;
+  gap: 6px;
+  color: #444444;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.event-payment-proof-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 10px;
+  border: 1px solid #d8d8d8;
+  color: #202020;
+  background: #ffffff;
+  font-weight: 500;
+  text-transform: none;
 }
 
 .event-registration-grid {

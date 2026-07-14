@@ -4424,20 +4424,62 @@ function renderEventActionPanel(eventItem) {
 
   if (currentRegistration) {
     const isCheckedIn = currentRegistration.status === "checked_in";
+    const isWaitlisted = currentRegistration.status === "waitlisted";
+    const paymentStatus = String(currentRegistration.paymentStatus || "unpaid").toLowerCase();
+    const paymentConfirmed = !eventItem.isPaid || paymentStatus === "paid" || paymentStatus === "waived";
     panel.append(createTextElement("p", isCheckedIn ? "Your attendance is confirmed." : `You are ${currentRegistration.status === "waitlisted" ? "waitlisted" : "registered"} for this event.`));
     panel.append(renderEventRegistrationRecord(currentRegistration));
-    const confirmAttendance = document.createElement("button");
-    confirmAttendance.type = "button";
-    confirmAttendance.className = isCheckedIn ? "event-attendance-confirmed" : "event-confirm-attendance-action";
-    confirmAttendance.textContent = isCheckedIn ? "ATTENDANCE CONFIRMED" : "CONFIRM ATTENDANCE";
-    confirmAttendance.disabled = isCheckedIn || eventItem.attendanceConfirmationEnabled === false;
-    if (!isCheckedIn && eventItem.attendanceConfirmationEnabled === false) {
-      confirmAttendance.title = "The organizer has not enabled attendance confirmation yet.";
-    }
-    confirmAttendance.addEventListener("click", openEventAttendanceModal);
-    panel.append(confirmAttendance);
-    if (!isCheckedIn && eventItem.attendanceConfirmationEnabled === false) {
-      panel.append(createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted"));
+    if (isCheckedIn) {
+      const confirmed = document.createElement("button");
+      confirmed.type = "button";
+      confirmed.className = "event-attendance-confirmed";
+      confirmed.textContent = "ATTENDANCE CONFIRMED";
+      confirmed.disabled = true;
+      panel.append(confirmed);
+    } else if (eventItem.isPaid && !paymentConfirmed) {
+      const paymentAction = document.createElement("button");
+      paymentAction.type = "button";
+      paymentAction.className = paymentStatus === "pending_review" ? "event-payment-review-action" : "event-payment-proof-action";
+      paymentAction.textContent = paymentStatus === "pending_review"
+        ? "PROOF AWAITING REVIEW"
+        : paymentStatus === "rejected"
+          ? "UPLOAD NEW PROOF OF PAYMENT"
+          : "UPLOAD PROOF OF PAYMENT";
+      paymentAction.disabled = paymentStatus === "pending_review";
+      if (!paymentAction.disabled) {
+        paymentAction.addEventListener("click", openEventPaymentProofModal);
+      }
+      panel.append(paymentAction);
+      panel.append(createTextElement(
+        "p",
+        paymentStatus === "pending_review"
+          ? "Your proof of payment is being reviewed by SarapMagBike staff."
+          : paymentStatus === "rejected"
+            ? "Your previous proof was rejected. Upload a new, clear screenshot for review."
+            : "Upload proof of payment. Attendance confirmation appears after staff confirms payment.",
+        "event-muted"
+      ));
+    } else if (isWaitlisted) {
+      const waitlisted = document.createElement("button");
+      waitlisted.type = "button";
+      waitlisted.className = "event-waitlisted-action";
+      waitlisted.textContent = "WAITLISTED";
+      waitlisted.disabled = true;
+      panel.append(waitlisted);
+    } else {
+      const confirmAttendance = document.createElement("button");
+      confirmAttendance.type = "button";
+      confirmAttendance.className = "event-confirm-attendance-action";
+      confirmAttendance.textContent = "CONFIRM ATTENDANCE";
+      confirmAttendance.disabled = eventItem.attendanceConfirmationEnabled === false;
+      if (eventItem.attendanceConfirmationEnabled === false) {
+        confirmAttendance.title = "The organizer has not enabled attendance confirmation yet.";
+      }
+      confirmAttendance.addEventListener("click", openEventAttendanceModal);
+      panel.append(confirmAttendance);
+      if (eventItem.attendanceConfirmationEnabled === false) {
+        panel.append(createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted"));
+      }
     }
     if (!isCheckedIn) {
       const withdraw = document.createElement("button");
@@ -4563,6 +4605,68 @@ function openEventAttendanceModal() {
 
 function closeEventAttendanceModal() {
   document.querySelector("[data-event-attendance-modal]")?.setAttribute("hidden", "");
+}
+
+function openEventPaymentProofModal() {
+  const eventItem = eventsState.activeEvent;
+  const modal = document.querySelector("[data-event-payment-proof-modal]");
+  const form = document.querySelector("[data-event-payment-proof-form]");
+  const title = document.querySelector("#event-payment-proof-title");
+  const fee = document.querySelector("[data-event-payment-proof-fee]");
+  const message = document.querySelector("[data-event-payment-proof-message]");
+  if (!eventItem?.isPaid || !modal || !form) {
+    return;
+  }
+  title.textContent = `Upload payment proof for ${eventItem.title || "event"}`;
+  fee.textContent = pesoFormatter.format(Number(eventItem.feeAmount || 0));
+  setMessage(message, "");
+  form.reset();
+  modal.hidden = false;
+  form.elements.paymentProof.focus();
+}
+
+function closeEventPaymentProofModal() {
+  document.querySelector("[data-event-payment-proof-modal]")?.setAttribute("hidden", "");
+}
+
+async function submitEventPaymentProof(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const file = form.elements.paymentProof.files?.[0] || null;
+  const message = document.querySelector("[data-event-payment-proof-message]");
+  const submit = document.querySelector("[data-event-payment-proof-submit]");
+  if (!eventsState.activeEvent || !file) {
+    setMessage(message, "Select a proof of payment screenshot.", "error");
+    return;
+  }
+  if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) {
+    setMessage(message, "Upload a JPG, PNG, WebP, or GIF screenshot.", "error");
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    setMessage(message, "Proof of payment must be 5 MB or smaller.", "error");
+    return;
+  }
+
+  submit.disabled = true;
+  setMessage(message, "Uploading proof of payment...");
+  try {
+    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/payment-proof`, {
+      method: "POST",
+      body: JSON.stringify({
+        paymentProofBase64: await readFileAsBase64(file),
+        paymentProofContentType: file.type,
+        paymentProofFileName: file.name
+      })
+    });
+    eventsState.activeEvent = updated;
+    closeEventPaymentProofModal();
+    renderEventDetail(updated);
+  } catch (error) {
+    setMessage(message, error.message || "Unable to upload proof of payment.", "error");
+  } finally {
+    submit.disabled = false;
+  }
 }
 
 async function submitEventAttendance(event) {
@@ -4697,6 +4801,14 @@ function bindEventsUi() {
   document.querySelector("[data-event-attendance-modal]")?.addEventListener("click", (event) => {
     if (event.target === event.currentTarget) {
       closeEventAttendanceModal();
+    }
+  });
+  document.querySelector("[data-event-payment-proof-form]")?.addEventListener("submit", submitEventPaymentProof);
+  document.querySelector("[data-event-payment-proof-close]")?.addEventListener("click", closeEventPaymentProofModal);
+  document.querySelector("[data-event-payment-proof-cancel]")?.addEventListener("click", closeEventPaymentProofModal);
+  document.querySelector("[data-event-payment-proof-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeEventPaymentProofModal();
     }
   });
   window.addEventListener("popstate", () => {

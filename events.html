@@ -9,7 +9,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260714-compact-events">
+    <link rel="stylesheet" href="styles.css?v=20260715-event-payment-proof">
   </head>
   <body class="is-events-page">
     <div class="page-bg"></div>
@@ -326,6 +326,34 @@
       </div>
     </div>
 
+    <div class="event-registration-modal event-payment-proof-modal" data-event-payment-proof-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="event-payment-proof-title">
+        <div class="event-modal-header">
+          <div>
+            <p>Event payment</p>
+            <h2 id="event-payment-proof-title">Upload proof of payment</h2>
+          </div>
+          <button type="button" data-event-payment-proof-close>Close</button>
+        </div>
+        <form class="event-registration-form" data-event-payment-proof-form>
+          <div class="event-payment-fee">
+            <span>Registration fee</span>
+            <strong data-event-payment-proof-fee>PHP 0.00</strong>
+          </div>
+          <label class="event-payment-proof-field">
+            Proof of payment screenshot
+            <input name="paymentProof" type="file" accept="image/jpeg,image/png,image/webp,image/gif" required>
+          </label>
+          <p class="event-form-note">Upload a clear JPG, PNG, WebP, or GIF screenshot up to 5 MB. SarapMagBike staff will review it before attendance confirmation becomes available.</p>
+          <div class="event-modal-actions">
+            <button type="submit" data-event-payment-proof-submit>Upload Proof</button>
+            <button type="button" data-event-payment-proof-cancel>Cancel</button>
+          </div>
+          <p class="event-registration-message" data-event-payment-proof-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
     <footer class="footer">
       <div class="wrap footer-grid">
         <div>
@@ -372,6 +400,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260714-compact-events"></script>
+    <script src="script.js?v=20260715-event-payment-proof"></script>
   </body>
 </html>

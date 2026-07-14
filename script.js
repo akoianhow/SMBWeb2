@@ -4423,14 +4423,30 @@ function renderEventActionPanel(eventItem) {
   }
 
   if (currentRegistration) {
-    panel.append(createTextElement("p", `You are ${currentRegistration.status === "waitlisted" ? "waitlisted" : "registered"} for this event.`));
+    const isCheckedIn = currentRegistration.status === "checked_in";
+    panel.append(createTextElement("p", isCheckedIn ? "Your attendance is confirmed." : `You are ${currentRegistration.status === "waitlisted" ? "waitlisted" : "registered"} for this event.`));
     panel.append(renderEventRegistrationRecord(currentRegistration));
-    const withdraw = document.createElement("button");
-    withdraw.type = "button";
-    withdraw.className = "event-danger-action";
-    withdraw.textContent = "Withdraw Registration";
-    withdraw.addEventListener("click", () => withdrawEventRegistration(eventItem.id));
-    panel.append(withdraw);
+    const confirmAttendance = document.createElement("button");
+    confirmAttendance.type = "button";
+    confirmAttendance.className = isCheckedIn ? "event-attendance-confirmed" : "event-confirm-attendance-action";
+    confirmAttendance.textContent = isCheckedIn ? "ATTENDANCE CONFIRMED" : "CONFIRM ATTENDANCE";
+    confirmAttendance.disabled = isCheckedIn || eventItem.attendanceConfirmationEnabled === false;
+    if (!isCheckedIn && eventItem.attendanceConfirmationEnabled === false) {
+      confirmAttendance.title = "The organizer has not enabled attendance confirmation yet.";
+    }
+    confirmAttendance.addEventListener("click", openEventAttendanceModal);
+    panel.append(confirmAttendance);
+    if (!isCheckedIn && eventItem.attendanceConfirmationEnabled === false) {
+      panel.append(createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted"));
+    }
+    if (!isCheckedIn) {
+      const withdraw = document.createElement("button");
+      withdraw.type = "button";
+      withdraw.className = "event-danger-action";
+      withdraw.textContent = "Withdraw Registration";
+      withdraw.addEventListener("click", () => withdrawEventRegistration(eventItem.id));
+      panel.append(withdraw);
+    }
     return panel;
   }
 
@@ -4473,7 +4489,8 @@ function renderEventRegistrationRecord(registration) {
     ["Registrant", accountName],
     ["Email", accountEmail],
     ["Status", getEventRegistrationStatusLabel(registration, eventItem)],
-    ["Registered", registration.registeredAt ? formatEventDateTime(registration.registeredAt) : "Just now"]
+    ["Registered", registration.registeredAt ? formatEventDateTime(registration.registeredAt) : "Just now"],
+    ["Attendance", registration.checkedInAt ? `Confirmed ${formatEventDateTime(registration.checkedInAt)}` : "Not confirmed"]
   ];
 
   if (eventItem?.isPaid) {
@@ -4526,6 +4543,48 @@ function openEventRegistrationModal() {
 
 function closeEventRegistrationModal() {
   document.querySelector("[data-event-registration-modal]")?.setAttribute("hidden", "");
+}
+
+function openEventAttendanceModal() {
+  const eventItem = eventsState.activeEvent;
+  const modal = document.querySelector("[data-event-attendance-modal]");
+  const form = document.querySelector("[data-event-attendance-form]");
+  const title = document.querySelector("#event-attendance-title");
+  const message = document.querySelector("[data-event-attendance-message]");
+  if (!eventItem || !modal || !form || eventItem.attendanceConfirmationEnabled === false) {
+    return;
+  }
+  title.textContent = `Confirm attendance for ${eventItem.title || "event"}`;
+  setMessage(message, "");
+  form.reset();
+  modal.hidden = false;
+  form.elements.attendanceCode.focus();
+}
+
+function closeEventAttendanceModal() {
+  document.querySelector("[data-event-attendance-modal]")?.setAttribute("hidden", "");
+}
+
+async function submitEventAttendance(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = document.querySelector("[data-event-attendance-message]");
+  if (!eventsState.activeEvent) {
+    return;
+  }
+
+  setMessage(message, "Confirming attendance...");
+  try {
+    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/attendance-confirmation`, {
+      body: JSON.stringify({ attendanceCode: form.elements.attendanceCode.value.trim() }),
+      method: "POST"
+    });
+    eventsState.activeEvent = updated;
+    closeEventAttendanceModal();
+    renderEventDetail(updated);
+  } catch (error) {
+    setMessage(message, error.message || "Unable to confirm attendance.", "error");
+  }
 }
 
 function readFileAsBase64(file) {
@@ -4630,6 +4689,14 @@ function bindEventsUi() {
   document.querySelector("[data-event-registration-modal]")?.addEventListener("click", (event) => {
     if (event.target === event.currentTarget) {
       closeEventRegistrationModal();
+    }
+  });
+  document.querySelector("[data-event-attendance-form]")?.addEventListener("submit", submitEventAttendance);
+  document.querySelector("[data-event-attendance-close]")?.addEventListener("click", closeEventAttendanceModal);
+  document.querySelector("[data-event-attendance-cancel]")?.addEventListener("click", closeEventAttendanceModal);
+  document.querySelector("[data-event-attendance-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeEventAttendanceModal();
     }
   });
   window.addEventListener("popstate", () => {

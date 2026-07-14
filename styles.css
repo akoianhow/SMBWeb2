@@ -2350,6 +2350,18 @@ body.is-catalog-mode .product-section {
   background: #8e1b21 !important;
 }
 
+.event-confirm-attendance-action,
+.event-attendance-confirmed {
+  width: 100%;
+  margin-bottom: 8px;
+  background: #167c45 !important;
+}
+
+.event-attendance-confirmed:disabled {
+  color: #ffffff;
+  opacity: 1;
+}
+
 .event-registration-modal {
   position: fixed;
   inset: 0;

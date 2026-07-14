@@ -9,7 +9,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260709-category-page-nav">
+    <link rel="stylesheet" href="styles.css?v=20260714-event-attendance">
   </head>
   <body class="is-events-page">
     <div class="page-bg"></div>
@@ -302,6 +302,30 @@
       </div>
     </div>
 
+    <div class="event-registration-modal event-attendance-modal" data-event-attendance-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="event-attendance-title">
+        <div class="event-modal-header">
+          <div>
+            <p>Event check-in</p>
+            <h2 id="event-attendance-title">Confirm attendance</h2>
+          </div>
+          <button type="button" data-event-attendance-close>Close</button>
+        </div>
+        <form class="event-registration-form" data-event-attendance-form>
+          <label>
+            Attendance code
+            <input name="attendanceCode" autocomplete="off" maxlength="40" placeholder="Enter code from the organizer" required>
+          </label>
+          <p class="event-form-note">Enter the code provided by the event organizer. Your registration will be marked as checked in.</p>
+          <div class="event-modal-actions">
+            <button type="submit" data-event-attendance-submit>Confirm Attendance</button>
+            <button type="button" data-event-attendance-cancel>Cancel</button>
+          </div>
+          <p class="event-registration-message" data-event-attendance-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
     <footer class="footer">
       <div class="wrap footer-grid">
         <div>
@@ -348,6 +372,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260709-category-page-nav"></script>
+    <script src="script.js?v=20260714-event-attendance"></script>
   </body>
 </html>

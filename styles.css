@@ -4602,6 +4602,41 @@ body.is-catalog-mode .product-section {
   margin-top: 12px;
 }
 
+.community-reply-preview {
+  display: grid;
+  gap: 12px;
+  padding: 12px 18px 16px;
+}
+
+.community-reply-preview > .community-comment.community-comment-preview {
+  padding: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.community-reply-preview > .community-comment.community-comment-preview.is-staff {
+  border-left: 0;
+  background: transparent;
+}
+
+.community-more-replies {
+  justify-self: start;
+  padding: 2px 0;
+  color: #4d4d4d;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.community-more-replies:hover,
+.community-more-replies:focus-visible {
+  color: var(--red);
+}
+
 .community-comment {
   display: grid;
   grid-template-columns: 34px 1fr;

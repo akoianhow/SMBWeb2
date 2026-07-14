@@ -28,9 +28,10 @@ const state = {
   activeSubcategory: "All",
   categoryGroups: [],
   homeProductList: "new",
+  itemDisplayOrder: new Map(),
   items: [],
   productSearchEndpointAvailable: null,
-  sort: "price-asc"
+  sort: "featured"
 };
 
 const branchContacts = {
@@ -725,9 +726,26 @@ async function loadWebItems() {
   }
 
   state.items = await response.json();
+  assignRandomItemDisplayOrder(state.items);
   state.categoryGroups = buildCategoryGroups(state.items);
   renderCategoryNav();
   return state.items;
+}
+
+function assignRandomItemDisplayOrder(items) {
+  const shuffledItems = [...(items || [])];
+  for (let index = shuffledItems.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffledItems[index], shuffledItems[randomIndex]] = [shuffledItems[randomIndex], shuffledItems[index]];
+  }
+
+  state.itemDisplayOrder = new Map(
+    shuffledItems.map((item, index) => [String(getItemIdentifier(item)), index])
+  );
+}
+
+function getRandomItemDisplayRank(item) {
+  return state.itemDisplayOrder.get(String(getItemIdentifier(item))) ?? Number.MAX_SAFE_INTEGER;
 }
 
 function getArrayPayload(payload) {
@@ -1318,7 +1336,11 @@ function getCatalogItems() {
     if (state.sort === "price-desc") {
       return getProductPrice(b) - getProductPrice(a);
     }
-    return Number(Boolean(b.isNew)) - Number(Boolean(a.isNew));
+    if (state.sort === "newest") {
+      const newItemDelta = Number(Boolean(b.isNew)) - Number(Boolean(a.isNew));
+      return newItemDelta || getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b);
+    }
+    return getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b);
   });
 }
 
@@ -1865,7 +1887,10 @@ async function loadHomeProductItems(filterKey = state.homeProductList) {
 
   try {
     await loadWebItems();
-    const filteredItems = state.items.filter((item) => isPublicProduct(item) && config.filter(item)).slice(0, 8);
+    const filteredItems = state.items
+      .filter((item) => isPublicProduct(item) && config.filter(item))
+      .sort((a, b) => getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b))
+      .slice(0, 8);
     webItemsGrid.replaceChildren();
 
     if (filteredItems.length === 0) {
@@ -2335,7 +2360,60 @@ function renderCommunityPostCard(post) {
   );
   card.append(actions);
 
+  const preview = renderCommunityReplyPreview(post);
+  if (preview) {
+    card.append(preview);
+  }
+
   return card;
+}
+
+function getCommunityPreviewComments(post) {
+  return [...(Array.isArray(post?.comments) ? post.comments : [])]
+    .sort((first, second) => (Date.parse(first?.createdAt || "") || 0) - (Date.parse(second?.createdAt || "") || 0))
+    .slice(0, 3);
+}
+
+function renderCommunityReplyPreview(post) {
+  const previewComments = getCommunityPreviewComments(post);
+  if (previewComments.length === 0) {
+    return null;
+  }
+
+  const preview = document.createElement("div");
+  preview.className = "community-reply-preview";
+  preview.setAttribute("aria-label", "First discussion replies");
+
+  previewComments.forEach((comment) => {
+    preview.append(renderCommunityCommentPreview(comment));
+  });
+
+  if (getCommunityReplyCount(post) > previewComments.length) {
+    const moreLink = document.createElement("button");
+    moreLink.type = "button";
+    moreLink.className = "community-more-replies";
+    moreLink.textContent = "More....";
+    moreLink.setAttribute("aria-label", `Show all ${getCommunityReplyCount(post)} replies`);
+    moreLink.addEventListener("click", () => openCommunityThreadModal(post.id));
+    preview.append(moreLink);
+  }
+
+  return preview;
+}
+
+function renderCommunityCommentPreview(comment) {
+  const item = document.createElement("article");
+  item.className = `community-comment community-comment-preview${comment.isStaffReply ? " is-staff" : ""}`;
+  const authorName = comment.authorName || comment.author?.displayName || "SarapMagBike rider";
+  const avatar = renderCommunityAvatar(authorName, comment.authorAvatarUrl);
+  const content = document.createElement("div");
+  content.className = "community-comment-content";
+  const heading = document.createElement("div");
+  heading.className = "community-comment-heading";
+  heading.append(createTextElement("strong", authorName));
+  content.append(heading, createTextElement("p", comment.body));
+  item.append(avatar, content);
+  return item;
 }
 
 function renderCommunityPostThread(post) {

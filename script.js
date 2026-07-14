@@ -4834,6 +4834,32 @@ function getCustomerLoginForm() {
   return document.querySelector("[data-customer-login-form]");
 }
 
+function addStaySignedInControls() {
+  document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
+    if (form.elements.staySignedIn) {
+      return;
+    }
+
+    const control = document.createElement("label");
+    control.className = "stay-signed-in-control";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.name = "staySignedIn";
+    checkbox.value = "true";
+
+    const text = document.createElement("span");
+    text.textContent = "Stay signed in on this device";
+
+    const note = document.createElement("small");
+    note.textContent = "Use only on a personal device.";
+
+    control.append(checkbox, text, note);
+    const submitButton = form.querySelector("button[type='submit']");
+    form.insertBefore(control, submitButton);
+  });
+}
+
 function getCustomerSessionPanel() {
   return document.querySelector("[data-customer-session]");
 }
@@ -5338,7 +5364,8 @@ async function loginCustomer(event) {
       body: JSON.stringify({
         username: form.elements.username.value.trim(),
         password: form.elements.password.value,
-        website: form.elements.website.value
+        website: form.elements.website.value,
+        staySignedIn: Boolean(form.elements.staySignedIn?.checked)
       })
     });
     form.reset();
@@ -5497,6 +5524,7 @@ async function submitChangePassword(event) {
 }
 
 function bindCustomerAccountUi() {
+  addStaySignedInControls();
   getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
   document.querySelectorAll("[data-open-register]").forEach((button) => {
     button.addEventListener("click", openRegisterForm);

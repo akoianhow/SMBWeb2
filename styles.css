@@ -5669,13 +5669,9 @@ body.is-catalog-mode .product-section {
   cursor: pointer;
 }
 
-.rider-profile-primary-actions button.is-following {
-  background: #262626;
-}
-
 .rider-profile-content {
   display: grid;
-  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
   gap: 14px;
   padding: 14px;
@@ -5687,6 +5683,16 @@ body.is-catalog-mode .product-section {
   gap: 14px;
 }
 
+.rider-profile-sidebar {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.rider-profile-panel[data-rider-panel="social"],
+.rider-profile-panel[data-rider-panel="testimonials"] {
+  grid-column: 1 / -1;
+}
+
 .rider-profile-panel,
 .rider-profile-activity-header {
   border: 1px solid #dddddd;
@@ -5696,7 +5702,7 @@ body.is-catalog-mode .product-section {
 }
 
 .rider-profile-panel {
-  padding: 16px;
+  padding: 14px;
 }
 
 .rider-profile-panel header,
@@ -5729,14 +5735,23 @@ body.is-catalog-mode .product-section {
 
 .rider-profile-panel dl {
   display: grid;
-  gap: 11px;
-  margin: 15px 0 0;
+  gap: 7px;
+  margin: 12px 0 0;
 }
 
 .rider-profile-panel dl > div {
   display: grid;
-  grid-template-columns: 105px minmax(0, 1fr);
+  grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.15fr);
   gap: 10px;
+  align-items: baseline;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.rider-profile-panel dl > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 .rider-profile-panel dt,
@@ -5758,24 +5773,75 @@ body.is-catalog-mode .product-section {
 .rider-profile-social {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
 }
 
-.rider-profile-social p {
-  margin: 0;
-  color: #777777;
-  font-size: 12px;
-}
-
-.rider-profile-social a {
-  padding: 8px 10px;
-  border-radius: 999px;
+.rider-social-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
   color: #ffffff;
-  background: #292929;
-  font-size: 11px;
-  font-weight: 900;
+  background: #333333;
   text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.rider-social-icon[data-platform="strava"] {
+  background: #fc4c02;
+}
+
+.rider-social-icon[data-platform="instagram"] {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d 58%, #fcb045);
+}
+
+.rider-social-icon[data-platform="facebook"] {
+  background: #1877f2;
+}
+
+.rider-social-icon[data-platform="website"] {
+  background: #292929;
+}
+
+.rider-social-icon:not(.is-unset):hover,
+.rider-social-icon:not(.is-unset):focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.rider-social-icon.is-unset {
+  color: #8c8c8c;
+  background: #e4e4e4;
+  box-shadow: none;
+  filter: grayscale(1);
+  cursor: help;
+}
+
+.rider-social-icon svg {
+  width: 23px;
+  height: 23px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rider-social-icon[data-platform="strava"] svg,
+.rider-social-icon[data-platform="facebook"] svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+.rider-social-icon .social-icon-fill {
+  stroke: none;
+  fill: currentColor;
 }
 
 .rider-testimonial-list {
@@ -6137,17 +6203,66 @@ body.is-catalog-mode .product-section {
 
   .rider-profile-content {
     grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
   }
 
   .rider-profile-sidebar {
-    grid-template-columns: 1fr;
-    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .rider-profile-panel {
-    padding: 14px;
+    padding: 10px;
+  }
+
+  .rider-profile-panel h2 {
+    font-size: 12px;
+  }
+
+  .rider-profile-panel header {
+    gap: 6px;
+  }
+
+  .rider-profile-panel header button {
+    min-height: 27px;
+    padding: 0 7px;
+    font-size: 9px;
+  }
+
+  .rider-profile-panel dl {
+    gap: 5px;
+    margin-top: 9px;
+  }
+
+  .rider-profile-panel dl > div {
+    grid-template-columns: minmax(65px, 0.8fr) minmax(0, 1.2fr);
+    gap: 6px;
+    padding-bottom: 5px;
+  }
+
+  .rider-profile-panel dt {
+    font-size: 9px;
+  }
+
+  .rider-profile-panel dd {
+    overflow-wrap: anywhere;
+    font-size: 10px;
+  }
+
+  .rider-profile-social {
+    gap: 8px;
+    margin-top: 9px;
+  }
+
+  .rider-social-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .rider-social-icon svg {
+    width: 21px;
+    height: 21px;
   }
 
   .rider-profile-activity-header {

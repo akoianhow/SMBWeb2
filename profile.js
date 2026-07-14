@@ -54,23 +54,27 @@ function renderRiderSocial(profile) {
   const container = document.querySelector("[data-rider-social]");
   if (!container) return;
   container.replaceChildren();
-  const links = [
-    ["Strava", profile.stravaUrl],
-    ["Instagram", profile.instagramUrl],
-    ["Facebook", profile.facebookUrl],
-    ["Website", profile.otherUrl]
-  ].filter(([, url]) => url);
-  if (links.length === 0) {
-    container.append(createTextElement("p", "No public links yet."));
-    return;
-  }
-  links.forEach(([label, url]) => {
-    const link = document.createElement("a");
-    link.href = url;
-    link.target = "_blank";
-    link.rel = "noreferrer";
-    link.textContent = label;
-    container.append(link);
+  const platforms = [
+    ["strava", "Strava", profile.stravaUrl, '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8.2 14.1 3.8-7.5 3.8 7.5h-2.3L12 11l-1.5 3.1H8.2Zm5.1 2.1h2.1l1.4 2.8 1.4-2.8h2.1l-3.5 6.8-3.5-6.8Z"/></svg>'],
+    ["instagram", "Instagram", profile.instagramUrl, '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle class="social-icon-fill" cx="17.5" cy="6.8" r="1.1"/></svg>'],
+    ["facebook", "Facebook", profile.facebookUrl, '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.2 8.2V6.8c0-.8.5-1 1-1h2.5V2.2L14.5 2C11.4 2 9.7 3.8 9.7 6.6v1.6H7v4h2.7V22h4.5v-9.8h3.1l.5-4h-3.6Z"/></svg>'],
+    ["website", "Website", profile.otherUrl, '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.6 14.4 14.4 9.6M8.1 17.8l-1.3 1.3a3.5 3.5 0 0 1-5-5l3.6-3.6a3.5 3.5 0 0 1 5 0M15.9 6.2l1.3-1.3a3.5 3.5 0 0 1 5 5l-3.6 3.6a3.5 3.5 0 0 1-5 0"/></svg>']
+  ];
+  platforms.forEach(([key, label, url, icon]) => {
+    const item = document.createElement(url ? "a" : "span");
+    item.className = `rider-social-icon${url ? "" : " is-unset"}`;
+    item.dataset.platform = key;
+    item.innerHTML = icon;
+    item.title = url ? `Open ${label}` : `${label}: Not set by the user`;
+    item.setAttribute("aria-label", item.title);
+    if (url) {
+      item.href = url;
+      item.target = "_blank";
+      item.rel = "noopener noreferrer";
+    } else {
+      item.setAttribute("role", "img");
+    }
+    container.append(item);
   });
 }
 
@@ -120,8 +124,6 @@ function renderRiderProfile(profile) {
   setRiderText("[data-rider-name]", profile.displayName || profile.username, "Rider");
   setRiderText("[data-rider-username]", `@${profile.username}`, "");
   setRiderText("[data-rider-bio]", profile.bio, "No bio added yet.");
-  setRiderText("[data-rider-followers]", String(profile.followerCount || 0), "0");
-  setRiderText("[data-rider-following]", String(profile.followingCount || 0), "0");
   setRiderText("[data-rider-post-count]", String(profile.postCount || 0), "0");
   setRiderText("[data-rider-member-since]", formatProfileDate(profile.memberSince, { month: "long", year: "numeric" }), "—");
   setRiderText("[data-rider-occupation]", profile.occupation);
@@ -145,13 +147,6 @@ function renderRiderProfile(profile) {
   renderRiderTestimonials(profile);
 
   document.querySelectorAll("[data-rider-edit]").forEach((button) => { button.hidden = !profile.isOwner; });
-  const follow = document.querySelector("[data-rider-follow]");
-  if (follow) {
-    follow.hidden = profile.isOwner;
-    follow.classList.toggle("is-following", Boolean(profile.isFollowing));
-    follow.textContent = profile.isFollowing ? "Following" : "Follow";
-    follow.setAttribute("aria-pressed", String(Boolean(profile.isFollowing)));
-  }
   const createPost = document.querySelector("[data-community-composer-launcher]");
   if (createPost) createPost.hidden = !profile.isOwner;
   if (window.location.hash === "#testimonials") {
@@ -381,27 +376,6 @@ async function submitRiderEdit(event) {
   }
 }
 
-async function toggleRiderFollow() {
-  const profile = riderProfileState.profile;
-  if (!profile || profile.isOwner) return;
-  if (!customerState.account) {
-    showCommunityAuthPrompt();
-    return;
-  }
-  const button = document.querySelector("[data-rider-follow]");
-  button.disabled = true;
-  try {
-    const result = await apiRequest(`/api/public/customer-account/profiles/${encodeURIComponent(profile.id)}/follow`, { method: "POST" });
-    profile.isFollowing = result.isFollowing;
-    profile.followerCount = result.followerCount;
-    renderRiderProfile(profile);
-  } catch (error) {
-    window.alert(error.message || "Unable to update follow status.");
-  } finally {
-    button.disabled = false;
-  }
-}
-
 function updateProfileHeaderAuth() {
   const loggedIn = Boolean(customerState.account);
   document.querySelector("[data-profile-header-login]").hidden = loggedIn;
@@ -412,7 +386,6 @@ function updateProfileHeaderAuth() {
 
 function bindRiderProfilePage() {
   document.querySelectorAll("[data-rider-edit]").forEach((button) => button.addEventListener("click", () => openRiderEditModal(button.dataset.riderEdit)));
-  document.querySelector("[data-rider-follow]")?.addEventListener("click", toggleRiderFollow);
   document.querySelector("[data-rider-edit-form]")?.addEventListener("submit", submitRiderEdit);
   document.querySelector("[data-rider-edit-form]")?.addEventListener("input", () => { document.querySelector("[data-rider-edit-save]").disabled = !riderEditIsDirty(); });
   document.querySelector("[data-rider-edit-form]")?.addEventListener("change", () => { document.querySelector("[data-rider-edit-save]").disabled = !riderEditIsDirty(); });

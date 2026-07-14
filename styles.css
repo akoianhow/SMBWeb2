@@ -2001,8 +2001,8 @@ body.is-catalog-mode .product-section {
 
 .events-list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .event-public-card,
@@ -2079,6 +2079,11 @@ body.is-catalog-mode .product-section {
   padding: 14px;
 }
 
+.event-public-card-body {
+  gap: 7px;
+  padding: 11px;
+}
+
 .event-public-card h2 {
   margin: 0;
   color: #202020;
@@ -2090,7 +2095,7 @@ body.is-catalog-mode .product-section {
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
 }
 
 .event-public-card p,
@@ -2136,16 +2141,17 @@ body.is-catalog-mode .product-section {
 
 .event-meta-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: 1fr;
+  gap: 3px;
 }
 
-.event-meta-grid > div,
-.event-facts div {
+.event-meta-grid > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
   min-width: 0;
-  padding: 8px;
-  background: #f7f7f7;
-  border: 1px solid #e7e7e7;
+  padding: 0;
 }
 
 .event-meta-full {
@@ -2191,7 +2197,6 @@ body.is-catalog-mode .product-section {
 
 .event-meta-grid > div > span,
 .event-facts span {
-  display: block;
   color: #777777;
   font-size: 10px;
   font-weight: 900;
@@ -2200,10 +2205,17 @@ body.is-catalog-mode .product-section {
 
 .event-meta-grid > div > strong,
 .event-facts strong {
-  display: block;
+  min-width: 0;
   overflow-wrap: anywhere;
   color: #202020;
   font-size: 12px;
+}
+
+.event-meta-grid > div > strong {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-detail-view {
@@ -2224,7 +2236,17 @@ body.is-catalog-mode .product-section {
 
 .event-detail-main {
   display: grid;
-  grid-template-rows: 360px auto;
+  grid-template-rows: auto auto;
+}
+
+.event-detail-poster {
+  width: 100%;
+  height: clamp(180px, 28vw, 300px);
+  min-height: 0;
+}
+
+.event-detail-poster img {
+  object-fit: cover;
 }
 
 .event-detail-copy h1 {
@@ -2266,7 +2288,28 @@ body.is-catalog-mode .product-section {
 
 .event-facts {
   display: grid;
-  gap: 8px;
+  gap: 0;
+}
+
+.event-facts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid #ececec;
+}
+
+.event-facts div:last-child {
+  border-bottom: 0;
+}
+
+.event-facts strong {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-panel-link {
@@ -2545,12 +2588,12 @@ body.is-catalog-mode .product-section {
   }
 
   .events-toolbar,
-  .events-list {
+  .events-toolbar {
     grid-template-columns: 1fr;
   }
 
   .event-detail-main {
-    grid-template-rows: 240px auto;
+    grid-template-rows: auto auto;
   }
 }
 
@@ -2595,20 +2638,91 @@ body.is-catalog-mode .product-section {
   }
 
   .event-public-card {
-    grid-template-rows: 160px auto;
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
-  .event-meta-grid,
   .event-registration-grid {
     grid-template-columns: 1fr;
   }
 
   .event-detail-main {
-    grid-template-rows: 220px auto;
+    grid-template-rows: auto auto;
   }
 
   .event-detail-copy h1 {
     font-size: 24px;
+  }
+
+  .events-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .event-public-card-body {
+    gap: 5px;
+    padding: 8px;
+  }
+
+  .event-public-card h2 {
+    font-size: 14px;
+  }
+
+  .event-card-summary {
+    display: none;
+  }
+
+  .event-status-row {
+    gap: 5px;
+  }
+
+  .event-status {
+    min-height: 20px;
+    padding: 0 5px;
+    font-size: 8px;
+  }
+
+  .event-status-row > strong,
+  .event-meta-grid > div > strong {
+    font-size: 10px;
+  }
+
+  .event-meta-grid > div > span {
+    font-size: 8px;
+  }
+
+  .event-public-card-body > button {
+    min-height: 34px;
+    padding: 0 7px;
+    font-size: 9px;
+  }
+
+  .event-type-badge {
+    top: 6px;
+    left: 6px;
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+
+  .event-detail-copy,
+  .event-info-panel {
+    gap: 7px;
+    padding: 11px;
+  }
+
+  .event-info-panel h2 {
+    font-size: 15px;
+  }
+
+  .event-facts div {
+    padding: 6px 0;
+  }
+
+  .event-facts span {
+    font-size: 9px;
+  }
+
+  .event-facts strong {
+    font-size: 11px;
   }
 
   .event-registration-modal {

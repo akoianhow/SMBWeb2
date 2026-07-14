@@ -4198,7 +4198,7 @@ function renderEventCard(eventItem) {
     createEventMetaItem("Date", formatEventDate(eventItem.assemblyAt)),
     createEventMetaItem("Assembly", formatEventTime(eventItem.assemblyAt)),
     createEventMetaItem("Meetup", eventItem.meetupPlace || "SarapMagBike Quezon City", "event-meta-full"),
-    createEventSlotsProgress(eventItem)
+    createEventMetaItem("Slots", getEventCapacityLabel(eventItem), "event-meta-full")
   );
 
   const action = document.createElement("button");

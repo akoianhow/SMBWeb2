@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="View a SarapMagBike community rider profile, posts, and cycling interests.">
+    <title>Rider Profile | SarapMagBike</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260714-profile-testimonials">
+  </head>
+  <body class="is-rider-profile-page">
+    <div class="page-bg"></div>
+    <header class="rider-profile-site-header">
+      <div class="wrap rider-profile-site-header-inner">
+        <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+          <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+          <span class="logo-tag">QUEZON CITY</span>
+        </a>
+        <nav aria-label="Profile navigation">
+          <a href="index.html#community">Community</a>
+          <button type="button" data-profile-header-login>Log in</button>
+          <a href="index.html#profile-register" data-profile-header-register>Create account</a>
+          <a href="profile.html" data-profile-header-account hidden>My profile</a>
+          <button type="button" data-profile-header-logout hidden>Log out</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap rider-profile-page" data-community-view>
+      <section class="rider-profile-state" data-rider-profile-state>
+        <h1>Loading profile</h1>
+        <p>Checking this SarapMagBike community rider.</p>
+      </section>
+
+      <section class="rider-profile-shell" data-rider-profile hidden>
+        <div class="rider-profile-cover" data-rider-cover></div>
+        <div class="rider-profile-summary">
+          <div class="rider-profile-avatar" data-rider-avatar>SMB</div>
+          <div class="rider-profile-identity">
+            <h1 data-rider-name>Rider</h1>
+            <p class="rider-profile-username" data-rider-username>@rider</p>
+            <p class="rider-profile-location" data-rider-location hidden></p>
+            <p class="rider-profile-bio" data-rider-bio>No bio added yet.</p>
+            <div class="rider-profile-counts">
+              <span><strong data-rider-followers>0</strong> followers</span>
+              <span><strong data-rider-following>0</strong> following</span>
+              <span><strong data-rider-post-count>0</strong> posts</span>
+            </div>
+          </div>
+          <div class="rider-profile-primary-actions">
+            <button type="button" data-rider-follow hidden>Follow</button>
+            <button type="button" data-rider-edit="identity" hidden>Edit profile</button>
+          </div>
+        </div>
+
+        <div class="rider-profile-content">
+          <aside class="rider-profile-sidebar">
+            <article class="rider-profile-panel" data-rider-panel="about">
+              <header><h2>About Me</h2><button type="button" data-rider-edit="about" hidden>Edit</button></header>
+              <dl>
+                <div><dt>Member since</dt><dd data-rider-member-since>—</dd></div>
+                <div><dt>Occupation</dt><dd data-rider-occupation>Not set</dd></div>
+                <div><dt>Birthday</dt><dd data-rider-birthday>Private</dd></div>
+                <div><dt>Location</dt><dd data-rider-hometown>Not shared</dd></div>
+              </dl>
+            </article>
+
+            <article class="rider-profile-panel" data-rider-panel="cycling">
+              <header><h2>Cycling Preferences</h2><button type="button" data-rider-edit="cycling" hidden>Edit</button></header>
+              <dl>
+                <div><dt>Bike types</dt><dd data-rider-types>Not set</dd></div>
+                <div><dt>Discipline</dt><dd data-rider-discipline>Not set</dd></div>
+                <div><dt>Pace</dt><dd data-rider-pace>Not set</dd></div>
+                <div><dt>Distance</dt><dd data-rider-distance>Not set</dd></div>
+                <div><dt>Ride style</dt><dd data-rider-style>Not set</dd></div>
+                <div><dt>Schedule</dt><dd data-rider-schedule>Not set</dd></div>
+              </dl>
+            </article>
+
+            <article class="rider-profile-panel" data-rider-panel="social">
+              <header><h2>Social Links</h2><button type="button" data-rider-edit="social" hidden>Edit</button></header>
+              <div class="rider-profile-social" data-rider-social><p>No public links yet.</p></div>
+            </article>
+
+            <article id="testimonials" class="rider-profile-panel rider-testimonials-panel" data-rider-panel="testimonials">
+              <header><h2>Testimonials</h2><button type="button" data-testimonial-open hidden>Add</button></header>
+              <div class="rider-testimonial-list" data-testimonial-list><p>No testimonials yet.</p></div>
+            </article>
+          </aside>
+
+          <section class="rider-profile-activity" aria-label="Community posts">
+            <div class="rider-profile-activity-header">
+              <div><p>Community</p><h2>Posts</h2></div>
+              <button type="button" data-community-composer-launcher hidden>Create post</button>
+            </div>
+            <div class="community-posts" data-community-posts>
+              <article class="community-state-card"><h3>Loading posts</h3><p>Checking this rider's approved discussions.</p></article>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="rider-profile-edit-modal" data-rider-edit-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="rider-edit-title">
+        <header><div><p>Edit profile panel</p><h2 id="rider-edit-title" data-rider-edit-title>Edit profile</h2></div><button type="button" data-rider-edit-close aria-label="Close">×</button></header>
+        <form data-rider-edit-form>
+          <div data-rider-edit-fields></div>
+          <div class="rider-profile-modal-actions"><button type="submit" data-rider-edit-save disabled>Save changes</button><button type="button" data-rider-edit-cancel>Cancel</button></div>
+          <p class="profile-message" data-rider-edit-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="rider-profile-edit-modal rider-testimonial-modal" data-testimonial-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="testimonial-title">
+        <header><div><p>Rider testimonial</p><h2 id="testimonial-title">Add testimonial</h2></div><button type="button" data-testimonial-close aria-label="Close">×</button></header>
+        <form data-testimonial-form>
+          <label>Testimonial<textarea name="body" maxlength="300" rows="6" placeholder="Share a genuine riding or community experience with this rider." required></textarea></label>
+          <div class="rider-testimonial-counter"><span>Public testimonial</span><strong data-testimonial-counter>0 / 300</strong></div>
+          <div class="rider-profile-modal-actions"><button type="submit" data-testimonial-save disabled>Save testimonial</button><button type="button" data-testimonial-remove hidden>Remove</button><button type="button" data-testimonial-cancel>Cancel</button></div>
+          <p class="profile-message" data-testimonial-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="community-auth-prompt" data-community-auth-prompt hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-auth-title">
+        <h2 id="community-auth-title">Log in to join the community</h2>
+        <p>Guests can view profiles and approved posts. Log in to follow riders, post, like, or reply.</p>
+        <form class="community-login-form" data-community-login-form hidden>
+          <label>Username<input name="username" autocomplete="username" required></label>
+          <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+          <input class="website-field" name="website" tabindex="-1" aria-hidden="true">
+          <button type="submit">Log in</button>
+          <p data-community-login-message role="status"></p>
+        </form>
+        <div class="community-auth-actions"><button type="button" data-community-prompt-login>Log in</button><button type="button" data-community-prompt-register>Create account</button><button type="button" data-community-prompt-close>Close</button></div>
+      </div>
+    </div>
+
+    <div class="community-create-modal" data-community-create-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="community-create-title">
+        <div class="community-thread-header"><div><p>Community post</p><h2 id="community-create-title">What's on your mind?</h2></div><button type="button" data-community-create-close>Close</button></div>
+        <form class="community-composer" data-community-composer>
+          <textarea name="body" maxlength="2000" placeholder="Share a ride, bike question, shop experience, or useful cycling tip." required></textarea>
+          <p data-community-warning>Do not post order numbers, payment details, phone numbers, addresses, or private service concerns.</p>
+          <div class="community-composer-categories" data-community-composer-categories aria-label="Discussion categories"></div>
+          <div class="community-photo-previews" data-community-photo-previews></div>
+          <div class="community-composer-actions"><label class="community-photo-add">Add photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple></label><button type="submit">Post</button></div>
+          <p class="community-message" data-community-message role="status"></p>
+        </form>
+      </div>
+    </div>
+
+    <div class="community-thread-modal" data-community-thread-modal hidden><div role="dialog" aria-modal="true" aria-labelledby="community-thread-title"><div class="community-thread-header"><div><p>Community discussion</p><h2 id="community-thread-title">Replies</h2></div><button type="button" data-community-thread-close>Close</button></div><div class="community-thread-content" data-community-thread-content></div></div></div>
+    <div class="community-photo-modal" data-community-photo-modal hidden><div role="dialog" aria-modal="true"><div class="community-photo-stage"><button class="community-photo-close" type="button" data-community-photo-close>Back</button><button class="community-photo-nav community-photo-prev" type="button" data-community-photo-prev>‹</button><figure><img data-community-photo-viewer-image alt="Post photo"><figcaption data-community-photo-counter></figcaption></figure><button class="community-photo-nav community-photo-next" type="button" data-community-photo-next>›</button></div><aside class="community-photo-panel" data-community-photo-panel></aside></div></div>
+    <div class="community-edit-modal" data-community-edit-modal hidden><div role="dialog" aria-modal="true" aria-labelledby="community-edit-title"><div class="community-thread-header"><div><p>Edit post</p><h2 id="community-edit-title">Update your discussion</h2></div><button type="button" data-community-edit-close>Close</button></div><form class="community-edit-form" data-community-edit-form><div class="community-edit-author" data-community-edit-author></div><div class="community-edit-media" data-community-edit-media></div><textarea name="body" maxlength="2000" required></textarea><div class="community-edit-actions"><button type="submit" data-community-edit-save disabled>Save Post</button><button type="button" data-community-edit-cancel>Close</button></div><div class="community-edit-confirm" data-community-edit-confirm hidden><p>You have unsaved changes.</p><div><button type="button" data-community-edit-confirm-save>Save changes</button><button type="button" data-community-edit-confirm-discard>Discard changes</button><button type="button" data-community-edit-confirm-keep>Keep editing</button></div></div><p class="community-message" data-community-edit-message role="status"></p></form></div></div>
+
+    <script src="script.js?v=20260714-rider-profile"></script>
+    <script src="profile.js?v=20260714-profile-testimonials"></script>
+  </body>
+</html>

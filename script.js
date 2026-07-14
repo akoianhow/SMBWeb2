@@ -2191,6 +2191,10 @@ function isOwnCommunityPost(post) {
   return Boolean(accountId && authorId && String(accountId).toLowerCase() === String(authorId).toLowerCase());
 }
 
+function getCommunityAuthorProfileUrl(authorAccountId) {
+  return authorAccountId ? `profile.html?id=${encodeURIComponent(authorAccountId)}` : "";
+}
+
 function renderCommunityPostHeader(post) {
   const header = document.createElement("div");
   header.className = "community-post-header";
@@ -2198,10 +2202,26 @@ function renderCommunityPostHeader(post) {
   const authorName = getCommunityPostAuthorName(post);
   const avatar = renderCommunityAvatar(authorName, getCommunityPostAuthorAvatar(post));
   avatar.classList.add("community-post-avatar");
+  const authorProfileUrl = getCommunityAuthorProfileUrl(post.authorCustomerAccountId);
+  const avatarElement = authorProfileUrl ? document.createElement("a") : avatar;
+  if (authorProfileUrl) {
+    avatarElement.href = authorProfileUrl;
+    avatarElement.className = "community-author-avatar-link";
+    avatarElement.setAttribute("aria-label", `View ${authorName}'s profile`);
+    avatarElement.append(avatar);
+  }
 
   const identity = document.createElement("div");
   identity.className = "community-post-identity";
-  identity.append(createTextElement("strong", authorName));
+  if (authorProfileUrl) {
+    const authorLink = document.createElement("a");
+    authorLink.className = "community-author-name-link";
+    authorLink.href = authorProfileUrl;
+    authorLink.textContent = authorName;
+    identity.append(authorLink);
+  } else {
+    identity.append(createTextElement("strong", authorName));
+  }
 
   const detail = document.createElement("div");
   detail.className = "community-post-detail";
@@ -2221,7 +2241,7 @@ function renderCommunityPostHeader(post) {
   detail.append(dot, globe);
   identity.append(detail);
 
-  header.append(avatar, identity);
+  header.append(avatarElement, identity);
 
   const menu = renderCommunityPostMenu(post);
   header.append(menu);
@@ -2410,7 +2430,16 @@ function renderCommunityCommentPreview(comment) {
   content.className = "community-comment-content";
   const heading = document.createElement("div");
   heading.className = "community-comment-heading";
-  heading.append(createTextElement("strong", authorName));
+  const authorProfileUrl = getCommunityAuthorProfileUrl(comment.authorCustomerAccountId);
+  if (authorProfileUrl) {
+    const link = document.createElement("a");
+    link.className = "community-author-name-link";
+    link.href = authorProfileUrl;
+    link.textContent = authorName;
+    heading.append(link);
+  } else {
+    heading.append(createTextElement("strong", authorName));
+  }
   content.append(heading, createTextElement("p", comment.body));
   item.append(avatar, content);
   return item;
@@ -2597,10 +2626,17 @@ function renderCommunityComment(comment, postId, childNodes = []) {
   content.className = "community-comment-content";
   const heading = document.createElement("div");
   heading.className = "community-comment-heading";
-  heading.append(
-    createTextElement("strong", authorName),
-    createTextElement("span", comment.isStaffAnswer ? "Staff answer" : formatCommunityTime(comment.createdAt))
-  );
+  const authorProfileUrl = getCommunityAuthorProfileUrl(comment.authorCustomerAccountId);
+  if (authorProfileUrl) {
+    const link = document.createElement("a");
+    link.className = "community-author-name-link";
+    link.href = authorProfileUrl;
+    link.textContent = authorName;
+    heading.append(link);
+  } else {
+    heading.append(createTextElement("strong", authorName));
+  }
+  heading.append(createTextElement("span", comment.isStaffAnswer ? "Staff answer" : formatCommunityTime(comment.createdAt)));
   content.append(heading, createTextElement("p", comment.body));
   const actions = document.createElement("div");
   actions.className = "community-comment-actions";
@@ -5109,6 +5145,7 @@ async function loginCustomer(event) {
   const form = event.currentTarget;
   const wasInCommunity = document.body.classList.contains("is-community-mode");
   const isComingSoonPage = document.body.classList.contains("is-coming-soon-page");
+  const isRiderProfilePage = document.body.classList.contains("is-rider-profile-page");
   const message = form.querySelector("[data-community-login-message]");
   const submitButton = form.querySelector("button[type='submit']");
   setMessage(message, "", "");
@@ -5131,7 +5168,9 @@ async function loginCustomer(event) {
     setMessage(message, "Logged in.", "success");
     hideCommunityAuthPrompt();
     document.querySelector("[data-community-login-form]")?.setAttribute("hidden", "");
-    if (wasInCommunity) {
+    if (isRiderProfilePage) {
+      return;
+    } else if (wasInCommunity) {
       openCommunityPage(false);
     } else if (isComingSoonPage) {
       showProfileMode(false);
@@ -5287,7 +5326,7 @@ function bindCustomerAccountUi() {
     button.addEventListener("click", (event) => {
       event.preventDefault();
       if (customerState.account) {
-        openEditProfileForm();
+        window.location.href = "profile.html";
         return;
       }
       openRegisterForm();
@@ -5298,7 +5337,7 @@ function bindCustomerAccountUi() {
   document.querySelector("[data-mobile-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelector("[data-coming-soon-header-menu-toggle]")?.addEventListener("click", toggleComingSoonHeaderMenu);
   document.querySelector("[data-mobile-header-menu-toggle]")?.addEventListener("click", toggleMobileHeaderMenu);
-  document.querySelector("[data-edit-profile]")?.addEventListener("click", openEditProfileForm);
+  document.querySelector("[data-edit-profile]")?.addEventListener("click", () => { window.location.href = "profile.html"; });
   document.querySelector("[data-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-coming-soon-header-logout]")?.addEventListener("click", logoutCustomer);
   document.querySelector("[data-mobile-header-logout]")?.addEventListener("click", logoutCustomer);

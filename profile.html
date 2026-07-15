@@ -6,7 +6,7 @@
     <meta name="description" content="View a SarapMagBike community rider profile, posts, and cycling interests.">
     <title>Rider Profile | SarapMagBike</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260715-stay-signed-in">
+    <link rel="stylesheet" href="styles.css?v=20260715-collapsible-profile-panels">
   </head>
   <body class="is-rider-profile-page">
     <div class="page-bg"></div>
@@ -53,32 +53,41 @@
 
         <div class="rider-profile-content">
           <aside class="rider-profile-sidebar">
-            <article class="rider-profile-panel" data-rider-panel="about">
-              <header><h2>About Me</h2><button type="button" data-rider-edit="about" hidden>Edit</button></header>
-              <dl>
-                <div><dt>Member since</dt><dd data-rider-member-since>—</dd></div>
-                <div><dt>Occupation</dt><dd data-rider-occupation>Not set</dd></div>
-                <div><dt>Birthday</dt><dd data-rider-birthday>Private</dd></div>
-                <div><dt>Location</dt><dd data-rider-hometown>Not shared</dd></div>
-              </dl>
-            </article>
+            <details class="rider-profile-panel" data-rider-panel="about">
+              <summary>About Me</summary>
+              <div class="rider-profile-panel-body">
+                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="about" hidden>Edit</button></div>
+                <dl>
+                  <div><dt>Member since</dt><dd data-rider-member-since>—</dd></div>
+                  <div><dt>Occupation</dt><dd data-rider-occupation>Not set</dd></div>
+                  <div><dt>Birthday</dt><dd data-rider-birthday>Private</dd></div>
+                  <div><dt>Location</dt><dd data-rider-hometown>Not shared</dd></div>
+                </dl>
+              </div>
+            </details>
 
-            <article class="rider-profile-panel" data-rider-panel="cycling">
-              <header><h2>Cycling Preferences</h2><button type="button" data-rider-edit="cycling" hidden>Edit</button></header>
-              <dl>
-                <div><dt>Bike types</dt><dd data-rider-types>Not set</dd></div>
-                <div><dt>Discipline</dt><dd data-rider-discipline>Not set</dd></div>
-                <div><dt>Pace</dt><dd data-rider-pace>Not set</dd></div>
-                <div><dt>Distance</dt><dd data-rider-distance>Not set</dd></div>
-                <div><dt>Ride style</dt><dd data-rider-style>Not set</dd></div>
-                <div><dt>Schedule</dt><dd data-rider-schedule>Not set</dd></div>
-              </dl>
-            </article>
+            <details class="rider-profile-panel" data-rider-panel="cycling">
+              <summary>Cycling Preferences</summary>
+              <div class="rider-profile-panel-body">
+                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="cycling" hidden>Edit</button></div>
+                <dl>
+                  <div><dt>Bike types</dt><dd data-rider-types>Not set</dd></div>
+                  <div><dt>Discipline</dt><dd data-rider-discipline>Not set</dd></div>
+                  <div><dt>Pace</dt><dd data-rider-pace>Not set</dd></div>
+                  <div><dt>Distance</dt><dd data-rider-distance>Not set</dd></div>
+                  <div><dt>Ride style</dt><dd data-rider-style>Not set</dd></div>
+                  <div><dt>Schedule</dt><dd data-rider-schedule>Not set</dd></div>
+                </dl>
+              </div>
+            </details>
 
-            <article class="rider-profile-panel" data-rider-panel="social">
-              <header><h2>Social Links</h2><button type="button" data-rider-edit="social" hidden>Edit</button></header>
-              <div class="rider-profile-social" data-rider-social aria-label="Rider social links"></div>
-            </article>
+            <details class="rider-profile-panel" data-rider-panel="social">
+              <summary>Social Links</summary>
+              <div class="rider-profile-panel-body">
+                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="social" hidden>Edit</button></div>
+                <div class="rider-profile-social" data-rider-social aria-label="Rider social links"></div>
+              </div>
+            </details>
 
             <article id="testimonials" class="rider-profile-panel rider-testimonials-panel" data-rider-panel="testimonials">
               <header><h2>Testimonials</h2><button type="button" data-testimonial-open hidden>Add</button></header>
@@ -156,6 +165,6 @@
     <div class="community-edit-modal" data-community-edit-modal hidden><div role="dialog" aria-modal="true" aria-labelledby="community-edit-title"><div class="community-thread-header"><div><p>Edit post</p><h2 id="community-edit-title">Update your discussion</h2></div><button type="button" data-community-edit-close>Close</button></div><form class="community-edit-form" data-community-edit-form><div class="community-edit-author" data-community-edit-author></div><div class="community-edit-media" data-community-edit-media></div><textarea name="body" maxlength="2000" required></textarea><div class="community-edit-actions"><button type="submit" data-community-edit-save disabled>Save Post</button><button type="button" data-community-edit-cancel>Close</button></div><div class="community-edit-confirm" data-community-edit-confirm hidden><p>You have unsaved changes.</p><div><button type="button" data-community-edit-confirm-save>Save changes</button><button type="button" data-community-edit-confirm-discard>Discard changes</button><button type="button" data-community-edit-confirm-keep>Keep editing</button></div></div><p class="community-message" data-community-edit-message role="status"></p></form></div></div>
 
     <script src="script.js?v=20260715-stay-signed-in"></script>
-    <script src="profile.js?v=20260714-compact-rider-profile"></script>
+    <script src="profile.js?v=20260715-collapsible-profile-panels"></script>
   </body>
 </html>

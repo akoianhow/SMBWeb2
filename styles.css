@@ -5770,6 +5770,7 @@ body.is-catalog-mode .product-section {
 
 .rider-profile-primary-actions button,
 .rider-profile-panel header button,
+.rider-profile-panel-body-actions button,
 .rider-profile-activity-header button {
   min-height: 40px;
   padding: 0 18px;
@@ -5845,6 +5846,70 @@ body.is-catalog-mode .product-section {
   color: var(--red);
   background: #fff0f1;
   font-size: 10px;
+}
+
+.rider-profile-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0;
+  color: #202020;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: left;
+  text-transform: uppercase;
+  list-style: none;
+  cursor: pointer;
+}
+
+.rider-profile-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.rider-profile-panel summary::after {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 50%;
+  color: var(--red);
+  background: #fff0f1;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rider-profile-panel[open] summary::after {
+  content: "−";
+}
+
+.rider-profile-panel summary:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+.rider-profile-panel-body-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rider-profile-panel-body-actions button {
+  min-height: 30px;
+  margin-top: 8px;
+  padding: 0 10px;
+  color: var(--red);
+  border: 0;
+  border-radius: 7px;
+  background: #fff0f1;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
 .rider-profile-panel dl {
@@ -6331,6 +6396,10 @@ body.is-catalog-mode .product-section {
   }
 
   .rider-profile-panel h2 {
+    font-size: 12px;
+  }
+
+  .rider-profile-panel summary {
     font-size: 12px;
   }
 

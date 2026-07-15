@@ -53,6 +53,223 @@ const branchContacts = {
   }
 };
 
+const publicLocationState = {
+  locations: [],
+  selected: null,
+  storageKey: "smb-public-location"
+};
+
+let resolvePublicLocationReady;
+window.smbPublicLocationReady = new Promise((resolve) => {
+  resolvePublicLocationReady = resolve;
+});
+
+function normalizePhoneLink(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+  if (digits.startsWith("09") && digits.length === 11) {
+    return `+63${digits.slice(1)}`;
+  }
+  return digits ? `+${digits}` : "";
+}
+
+function getSelectedPublicLocation() {
+  return publicLocationState.selected || {
+    slug: "quezon-city",
+    name: "Quezon City",
+    address: branchContacts["Quezon City"].address,
+    phone: branchContacts["Quezon City"].phone,
+    websiteMode: "live",
+    isComingSoon: false,
+    isDefault: true
+  };
+}
+
+function getSelectedPublicLocationSlug() {
+  return getSelectedPublicLocation().slug;
+}
+
+function getSelectedPublicLocationName() {
+  return getSelectedPublicLocation().name;
+}
+
+function withPublicLocation(path) {
+  const url = new URL(path, window.location.origin);
+  url.searchParams.set("location", getSelectedPublicLocationSlug());
+  return `${url.pathname}${url.search}`;
+}
+
+window.getSelectedPublicLocation = getSelectedPublicLocation;
+window.getSelectedPublicLocationSlug = getSelectedPublicLocationSlug;
+
+async function initializePublicLocations() {
+  const fallback = getSelectedPublicLocation();
+  try {
+    const rows = await apiRequest("/api/public/catalog/locations");
+    publicLocationState.locations = Array.isArray(rows) ? rows : [];
+  } catch {
+    publicLocationState.locations = [fallback];
+  }
+
+  publicLocationState.locations.forEach((location) => {
+    const fallbackContact = branchContacts[location.name];
+    branchContacts[location.name] = {
+      shortName: location.name,
+      address: location.address || fallbackContact?.address || "Address not published",
+      phone: location.phone || fallbackContact?.phone || "Contact branch",
+      tel: normalizePhoneLink(location.phone || fallbackContact?.phone)
+    };
+    location.address = branchContacts[location.name].address;
+    location.phone = branchContacts[location.name].phone;
+  });
+
+  const requestedSlug = initialPageParams.get("location");
+  const storedSlug = window.localStorage.getItem(publicLocationState.storageKey);
+  publicLocationState.selected = publicLocationState.locations.find((location) => location.slug === requestedSlug)
+    || publicLocationState.locations.find((location) => location.slug === storedSlug)
+    || publicLocationState.locations.find((location) => location.isDefault)
+    || publicLocationState.locations[0]
+    || null;
+
+  if (publicLocationState.selected) {
+    window.localStorage.setItem(publicLocationState.storageKey, publicLocationState.selected.slug);
+  }
+  updatePublicLocationUi();
+  resolvePublicLocationReady?.(publicLocationState.selected);
+}
+
+function updatePublicLocationUi() {
+  const selected = getSelectedPublicLocation();
+  document.body.dataset.publicLocation = selected.slug;
+  document.querySelectorAll(".logo-tag").forEach((pill) => {
+    pill.textContent = `${selected.name} ▾`;
+    pill.classList.add("public-location-trigger");
+    pill.setAttribute("role", "button");
+    pill.setAttribute("tabindex", "0");
+    pill.setAttribute("aria-haspopup", "dialog");
+    pill.setAttribute("aria-label", `Current branch: ${selected.name}. Choose a branch.`);
+    if (pill.dataset.locationBound === "true") {
+      return;
+    }
+    pill.dataset.locationBound = "true";
+    pill.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openPublicLocationPicker();
+    });
+    pill.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openPublicLocationPicker();
+      }
+    });
+  });
+  document.querySelectorAll("[data-public-location-name]").forEach((element) => {
+    element.textContent = selected.name;
+  });
+  const appointmentEyebrow = document.querySelector(".appointment-intro .section-eyebrow");
+  if (appointmentEyebrow) {
+    appointmentEyebrow.textContent = `${selected.name} workshop`;
+  }
+  const comingSoonMessage = document.querySelector(".is-coming-soon-page .hero-message strong");
+  if (comingSoonMessage) {
+    comingSoonMessage.textContent = `${selected.name} is getting ready for the public website. Contact this branch for bikes, parts, accessories, services, and order concerns.`;
+  }
+}
+
+function ensurePublicLocationPicker() {
+  let modal = document.querySelector("[data-public-location-picker]");
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.className = "public-location-picker";
+  modal.dataset.publicLocationPicker = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <section role="dialog" aria-modal="true" aria-labelledby="public-location-title">
+      <header>
+        <div>
+          <span>SarapMagBike Shop</span>
+          <h2 id="public-location-title">Choose a branch</h2>
+          <p>Products, prices, stock, services, and events will update for your selected branch.</p>
+        </div>
+        <button type="button" data-public-location-close aria-label="Close branch selector">Close</button>
+      </header>
+      <div class="public-location-options" data-public-location-options></div>
+    </section>
+  `;
+  document.body.append(modal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal || event.target.closest("[data-public-location-close]")) {
+      closePublicLocationPicker();
+    }
+  });
+  return modal;
+}
+
+function openPublicLocationPicker() {
+  const modal = ensurePublicLocationPicker();
+  const options = modal.querySelector("[data-public-location-options]");
+  options.replaceChildren();
+  if (publicLocationState.locations.length === 0) {
+    options.append(createTextElement("p", "No public branches are available yet.", "public-location-empty"));
+  } else {
+    publicLocationState.locations.forEach((location) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = location.slug === getSelectedPublicLocationSlug() ? "active" : "";
+      button.innerHTML = `
+        <span><strong></strong><small></small></span>
+        <span class="public-location-option-status"></span>
+      `;
+      button.querySelector("strong").textContent = location.name;
+      button.querySelector("small").textContent = location.address || location.tenantName || "SarapMagBike branch";
+      const status = button.querySelector(".public-location-option-status");
+      status.textContent = location.isComingSoon ? "Coming Soon" : location.slug === getSelectedPublicLocationSlug() ? "Selected" : "View Branch";
+      status.classList.toggle("coming-soon", Boolean(location.isComingSoon));
+      button.addEventListener("click", () => selectPublicLocation(location));
+      options.append(button);
+    });
+  }
+  modal.hidden = false;
+  document.body.classList.add("has-public-location-picker");
+  modal.querySelector(".public-location-options button")?.focus();
+}
+
+function closePublicLocationPicker() {
+  const modal = document.querySelector("[data-public-location-picker]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  document.body.classList.remove("has-public-location-picker");
+}
+
+function selectPublicLocation(location) {
+  closePublicLocationPicker();
+  window.localStorage.setItem(publicLocationState.storageKey, location.slug);
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.set("location", location.slug);
+
+  if (location.isComingSoon && !window.location.pathname.endsWith("/coming-soon.html")) {
+    const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    window.location.href = `coming-soon.html?location=${encodeURIComponent(location.slug)}&return=${encodeURIComponent(returnPath)}`;
+    return;
+  }
+
+  if (!location.isComingSoon && window.location.pathname.endsWith("/coming-soon.html")) {
+    const returnPath = initialPageParams.get("return");
+    const safeReturn = returnPath?.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "index.html";
+    const target = new URL(safeReturn, window.location.origin);
+    target.searchParams.set("location", location.slug);
+    window.location.href = `${target.pathname}${target.search}${target.hash}`;
+    return;
+  }
+
+  window.location.href = `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`;
+}
+
 const productImageGalleryState = new WeakMap();
 const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)");
 const scrambleLabelState = new WeakMap();
@@ -581,9 +798,10 @@ async function enforcePublicWebsiteMode() {
   }
 
   try {
-    const status = await apiRequest("/api/public/site-status?branch=Quezon%20City");
+    const status = await apiRequest(withPublicLocation("/api/public/site-status"));
     if (status?.isComingSoon) {
-      window.location.replace("coming-soon.html");
+      const returnPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      window.location.replace(`coming-soon.html?location=${encodeURIComponent(getSelectedPublicLocationSlug())}&return=${encodeURIComponent(returnPath)}`);
       return true;
     }
   } catch {
@@ -724,7 +942,7 @@ async function loadWebItems() {
     return state.items;
   }
 
-  const response = await fetch(`${getApiBaseUrl()}/api/public/web-items?branch=Quezon%20City`);
+  const response = await fetch(`${getApiBaseUrl()}${withPublicLocation("/api/public/web-items")}`);
   if (!response.ok) {
     throw new Error(`Request failed with ${response.status}`);
   }
@@ -829,7 +1047,7 @@ function productMatchesSearchQuery(item, query) {
 
 async function searchInventoryProducts(query) {
   const params = new URLSearchParams();
-  params.set("branch", "Quezon City");
+  params.set("location", getSelectedPublicLocationSlug());
   params.set("search", query);
 
   if (state.productSearchEndpointAvailable !== false) {
@@ -875,7 +1093,7 @@ function ensureProductSearchModal() {
     <section role="dialog" aria-modal="true" aria-labelledby="product-search-title">
       <header class="product-search-head">
         <div>
-          <span>Quezon City inventory</span>
+          <span><span data-public-location-name>${getSelectedPublicLocationName()}</span> inventory</span>
           <h2 id="product-search-title">Search Products</h2>
           <p data-product-search-summary>Type a brand, model, SKU, category, or barcode.</p>
         </div>
@@ -1092,7 +1310,7 @@ async function loadProductSearchPage() {
     return;
   }
 
-  setProductSearchPageState("Searching Products", "Checking SarapMagBike inventory matches for Quezon City.");
+  setProductSearchPageState("Searching Products", `Checking SarapMagBike inventory matches for ${getSelectedPublicLocationName()}.`);
 
   try {
     const result = await searchInventoryProducts(query);
@@ -1117,7 +1335,7 @@ function bindProductSearchPageUi() {
 
 async function runProductSearch(query) {
   const trimmedQuery = String(query || "").trim();
-  setProductSearchState("Searching Products", "Checking SarapMagBike inventory matches for Quezon City.");
+  setProductSearchState("Searching Products", `Checking SarapMagBike inventory matches for ${getSelectedPublicLocationName()}.`);
 
   try {
     const result = await searchInventoryProducts(trimmedQuery);
@@ -1612,7 +1830,7 @@ function renderServiceDetail(item) {
   actions.append(book, message);
   summary.append(
     badges,
-    createTextElement("p", "SarapMagBike Quezon City Workshop", "product-detail-eyebrow"),
+    createTextElement("p", `SarapMagBike ${getSelectedPublicLocationName()} Workshop`, "product-detail-eyebrow"),
     createTextElement("h1", serviceName),
     price,
     description,
@@ -1629,7 +1847,7 @@ function renderServiceDetail(item) {
   const details = document.createElement("article");
   const detailList = document.createElement("dl");
   detailList.className = "product-spec-table";
-  [["Category", category], ["Service code", getItemSku(item) || "Not specified"], ["Labor price", renderPrice(item).textContent], ["Branch", "Quezon City"]].forEach(([label, value]) => {
+  [["Category", category], ["Service code", getItemSku(item) || "Not specified"], ["Labor price", renderPrice(item).textContent], ["Branch", getSelectedPublicLocationName()]].forEach(([label, value]) => {
     const row = document.createElement("div");
     row.append(createTextElement("dt", label), createTextElement("dd", value));
     detailList.append(row);
@@ -1856,7 +2074,7 @@ async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
     state.sort = "featured";
   }
   setCatalogMode(true);
-  setGridState("Loading Catalog", "Checking SMBSystem catalog items for Quezon City.");
+  setGridState("Loading Catalog", `Checking SMBSystem catalog items for ${getSelectedPublicLocationName()}.`);
   if (updatePath) {
     updateCatalogUrl(categoryKey);
   }
@@ -1907,7 +2125,7 @@ async function loadHomeProductItems(filterKey = state.homeProductList) {
   const config = getHomeProductListConfig(state.homeProductList);
   updateHomeProductTabs(state.homeProductList);
   document.querySelector("[data-stock-note]").textContent = config.note;
-  setGridState(config.loadingTitle, "Checking SMBSystem web catalog items for Quezon City.");
+  setGridState(config.loadingTitle, `Checking SMBSystem web catalog items for ${getSelectedPublicLocationName()}.`);
 
   try {
     await loadWebItems();
@@ -3949,7 +4167,13 @@ function formatEventDateTime(value) {
 }
 
 function getEventPosterUrl(eventItem) {
-  return normalizeApiUrl(eventItem?.posterImageUrl || eventItem?.posterUrl || eventItem?.imageUrl || "");
+  const url = normalizeApiUrl(eventItem?.posterImageUrl || eventItem?.posterUrl || eventItem?.imageUrl || "");
+  if (!url) {
+    return "";
+  }
+  const parsed = new URL(url, window.location.origin);
+  parsed.searchParams.set("location", getSelectedPublicLocationSlug());
+  return parsed.toString();
 }
 
 function getEventRegisteredCount(eventItem) {
@@ -4104,7 +4328,7 @@ function setEventsState(title, detail, actionLabel) {
 
 function buildEventsQuery() {
   const params = new URLSearchParams();
-  params.set("branch", "Quezon City");
+  params.set("location", getSelectedPublicLocationSlug());
   if (eventsState.search) {
     params.set("search", eventsState.search);
   }
@@ -4211,7 +4435,7 @@ function renderEventCard(eventItem) {
   meta.append(
     createEventMetaItem("Date", formatEventDate(eventItem.assemblyAt)),
     createEventMetaItem("Assembly", formatEventTime(eventItem.assemblyAt)),
-    createEventMetaItem("Meetup", eventItem.meetupPlace || "SarapMagBike Quezon City", "event-meta-full"),
+    createEventMetaItem("Meetup", eventItem.meetupPlace || `SarapMagBike ${getSelectedPublicLocationName()}`, "event-meta-full"),
     createEventMetaItem("Slots", getEventCapacityLabel(eventItem), "event-meta-full")
   );
 
@@ -4247,7 +4471,7 @@ async function openEventDetail(eventId, { updateUrl = true } = {}) {
   content.replaceChildren(createEventDetailState("Loading event details", "Checking SMBSystem for the latest event information."));
 
   try {
-    const eventItem = await apiRequest(`/api/public/events/${eventId}?branch=Quezon%20City`);
+    const eventItem = await apiRequest(withPublicLocation(`/api/public/events/${eventId}`));
     eventsState.activeEvent = eventItem;
     renderEventDetail(eventItem);
     if (updateUrl) {
@@ -4346,7 +4570,7 @@ function renderEventFacts(eventItem) {
     ["Assembly", formatEventDateTime(eventItem.assemblyAt)],
     ["Starts", eventItem.startsAt ? formatEventDateTime(eventItem.startsAt) : "TBA"],
     ["Ends", eventItem.endsAt ? formatEventDateTime(eventItem.endsAt) : "TBA"],
-    ["Meetup", eventItem.meetupPlace || "SarapMagBike Quezon City"],
+    ["Meetup", eventItem.meetupPlace || `SarapMagBike ${getSelectedPublicLocationName()}`],
     ["Slots", getEventCapacityLabel(eventItem)],
     ["Registration closes", eventItem.registrationClosesAt ? formatEventDateTime(eventItem.registrationClosesAt) : "Not set"]
   ].forEach(([label, value]) => {
@@ -4665,7 +4889,7 @@ async function submitEventPaymentProof(event) {
   submit.disabled = true;
   setMessage(message, "Uploading proof of payment...");
   try {
-    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/payment-proof`, {
+    const updated = await apiRequest(withPublicLocation(`/api/public/events/${eventsState.activeEvent.id}/payment-proof`), {
       method: "POST",
       body: JSON.stringify({
         paymentProofBase64: await readFileAsBase64(file),
@@ -4693,7 +4917,7 @@ async function submitEventAttendance(event) {
 
   setMessage(message, "Confirming attendance...");
   try {
-    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/attendance-confirmation`, {
+    const updated = await apiRequest(withPublicLocation(`/api/public/events/${eventsState.activeEvent.id}/attendance-confirmation`), {
       body: JSON.stringify({ attendanceCode: form.elements.attendanceCode.value.trim() }),
       method: "POST"
     });
@@ -4748,7 +4972,7 @@ async function submitEventRegistration(event) {
   setMessage(message, "Saving registration...");
   try {
     const payload = await buildEventRegistrationPayload(form);
-    const updated = await apiRequest(`/api/public/events/${eventsState.activeEvent.id}/registration`, {
+    const updated = await apiRequest(withPublicLocation(`/api/public/events/${eventsState.activeEvent.id}/registration`), {
       body: JSON.stringify(payload),
       method: "POST"
     });
@@ -4766,7 +4990,7 @@ async function withdrawEventRegistration(eventId) {
   }
 
   try {
-    const updated = await apiRequest(`/api/public/events/${eventId}/registration`, { method: "DELETE" });
+    const updated = await apiRequest(withPublicLocation(`/api/public/events/${eventId}/registration`), { method: "DELETE" });
     eventsState.activeEvent = updated;
     renderEventDetail(updated);
   } catch (error) {
@@ -5825,20 +6049,16 @@ function renderProductDetailGallery(item) {
 function renderBranchAvailability(item) {
   const availability = document.createElement("div");
   availability.className = "product-branch-list";
-
-  Object.entries(branchContacts).forEach(([branchName, branch]) => {
-    const card = document.createElement("article");
-    card.className = "product-branch-card";
-    const actualStatus = branchName === "Quezon City"
-      ? getAvailabilityLabel(item)
-      : getFieldValue(item, [`${branchName.toLowerCase()}Availability`, "otherBranchAvailability"]) || "ASK BRANCH";
-    card.append(
-      createTextElement("strong", branchName),
-      createTextElement("span", actualStatus, actualStatus === "AVAILABLE" ? "available" : "ask"),
-      createTextElement("p", `${branch.address} | ${branch.phone}`)
-    );
-    availability.append(card);
-  });
+  const selected = getSelectedPublicLocation();
+  const actualStatus = getAvailabilityLabel(item);
+  const card = document.createElement("article");
+  card.className = "product-branch-card";
+  card.append(
+    createTextElement("strong", selected.name),
+    createTextElement("span", actualStatus, actualStatus === "AVAILABLE" ? "available" : "ask"),
+    createTextElement("p", `${selected.address || "Address not published"} | ${selected.phone || "Contact branch"}`)
+  );
+  availability.append(card);
 
   return availability;
 }
@@ -6110,14 +6330,14 @@ function renderProductDetail(item) {
   messenger.target = "_blank";
   messenger.rel = "noreferrer";
   messenger.textContent = "Messenger";
-  const callQc = document.createElement("a");
-  callQc.href = `tel:${branchContacts["Quezon City"].tel}`;
-  callQc.textContent = "Call QC";
+  const callBranch = document.createElement("a");
+  callBranch.href = `tel:${normalizePhoneLink(getSelectedPublicLocation().phone)}`;
+  callBranch.textContent = `Call ${getSelectedPublicLocationName()}`;
   const copyLink = document.createElement("button");
   copyLink.type = "button";
   copyLink.textContent = "Copy link";
   copyLink.addEventListener("click", () => copyCurrentProductLink(copyLink));
-  actions.append(messenger, callQc, copyLink);
+  actions.append(messenger, callBranch, copyLink);
 
   summary.append(
     badges,
@@ -6126,7 +6346,7 @@ function renderProductDetail(item) {
     price,
     detail,
     actions,
-    createTextElement("p", "Default branch context: Quezon City. Message us before visiting so staff can confirm current availability.", "product-detail-note")
+    createTextElement("p", `Showing ${getSelectedPublicLocationName()} inventory. Message the branch before visiting so staff can confirm current availability.`, "product-detail-note")
   );
 
   detailShell.append(renderProductDetailGallery(item), summary);
@@ -6189,6 +6409,7 @@ async function loadProductDetailPage() {
 }
 
 async function startCatalog() {
+  await initializePublicLocations();
   if (await enforcePublicWebsiteMode()) {
     return;
   }

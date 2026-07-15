@@ -25,8 +25,10 @@
   async function load() {
     grid.setAttribute("aria-busy","true");const end=addDays(state.weekStart,6);
     try {
+      await window.smbPublicLocationReady;
+      const location=window.getSelectedPublicLocationSlug();
       try { state.session=await apiRequest("/api/public/customer-account/session"); } catch { state.session=null; }
-      state.data=await apiRequest(`/api/public/service-appointments/availability?branch=${encodeURIComponent("Quezon City")}&from=${dateKey(state.weekStart)}&to=${dateKey(end)}`);
+      state.data=await apiRequest(`/api/public/service-appointments/availability?location=${encodeURIComponent(location)}&from=${dateKey(state.weekStart)}&to=${dateKey(end)}`);
       render();await loadMine();
     } catch(error) { show(error.message||"Unable to load workshop availability.");grid.innerHTML='<p class="appointment-empty">Schedule unavailable.</p>'; }
     finally { grid.setAttribute("aria-busy","false"); }
@@ -54,7 +56,7 @@
 
   async function lockSelected() {
     if(!state.selected)return;
-    try { await apiRequest("/api/public/service-appointments",{method:"POST",body:JSON.stringify({branch:"Quezon City",offeringId:state.selected.offeringId,startsAt:state.selected.start.toISOString(),customerNotes:null,website:""})});show("Appointment confirmed and locked. Please arrive at least 5 minutes early.",true);await load();showScheduledAppointmentsTooltip(); }
+    try { await apiRequest("/api/public/service-appointments",{method:"POST",body:JSON.stringify({location:window.getSelectedPublicLocationSlug(),offeringId:state.selected.offeringId,startsAt:state.selected.start.toISOString(),customerNotes:null,website:""})});show("Appointment confirmed and locked. Please arrive at least 5 minutes early.",true);await load();showScheduledAppointmentsTooltip(); }
     catch(error){if(error.status===401){show("Sign in or register to lock this selected appointment. Your slot is not saved yet.");document.querySelector('[data-customer-login-form] input[name="username"]')?.focus();}else if(error.status===422&&error.details?.contactRequired){openAppointmentContactModal();}else show(error.message||"Unable to lock appointment.");}
   }
 

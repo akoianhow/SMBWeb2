@@ -434,12 +434,167 @@ p {
 }
 
 .logo-tag {
-  display: block;
+  display: inline-flex;
+  width: fit-content;
+  min-height: 24px;
+  align-items: center;
   margin-top: 7px;
+  padding: 0 9px;
   color: #2c2c2c;
+  background: #f2f2f2;
+  border: 1px solid #d8d8d8;
+  border-radius: 999px;
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.logo-tag.public-location-trigger {
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.logo-tag.public-location-trigger:hover,
+.logo-tag.public-location-trigger:focus-visible {
+  background: #ffffff;
+  border-color: var(--red);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+body.has-public-location-picker {
+  overflow: hidden;
+}
+
+.public-location-picker {
+  position: fixed;
+  z-index: 12000;
+  inset: 0;
+  display: grid;
+  place-items: start center;
+  padding: 110px 16px 24px;
+  background: rgba(15, 15, 15, 0.52);
+}
+
+.public-location-picker[hidden] {
+  display: none;
+}
+
+.public-location-picker > section {
+  width: min(440px, 100%);
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #d5d5d5;
+  border-radius: 14px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.34);
+}
+
+.public-location-picker header {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.public-location-picker header span {
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.public-location-picker h2 {
+  margin: 3px 0 4px;
+  font-size: 23px;
+}
+
+.public-location-picker p {
+  margin: 0;
+  color: #666666;
+  font-size: 12px;
+}
+
+.public-location-picker header button {
+  min-width: 64px;
+  height: 36px;
+  padding: 0 12px;
+  color: #ffffff;
+  background: #242424;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.public-location-options {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+}
+
+.public-location-options > button {
+  display: flex;
+  min-height: 68px;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  text-align: left;
+  background: #f7f7f7;
+  border: 1px solid #dddddd;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.public-location-options > button:hover,
+.public-location-options > button:focus-visible,
+.public-location-options > button.active {
+  background: #fff5f5;
+  border-color: var(--red);
+  outline: none;
+}
+
+.public-location-options > button > span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.public-location-options strong {
+  color: #222222;
+  font-size: 14px;
+}
+
+.public-location-options small {
+  overflow: hidden;
+  color: #666666;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.public-location-option-status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  color: #ffffff;
+  background: var(--red);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.public-location-option-status.coming-soon {
+  color: #4e3500;
+  background: #ffd46b;
+}
+
+.public-location-empty {
+  padding: 20px;
+  text-align: center;
 }
 
 .search-form {
@@ -6304,6 +6459,34 @@ body.is-catalog-mode .product-section {
 }
 
 @media (max-width: 760px) {
+  .public-location-picker {
+    place-items: end stretch;
+    padding: 0;
+  }
+
+  .public-location-picker > section {
+    width: 100%;
+    max-height: min(78vh, 620px);
+    overflow: auto;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .public-location-picker header {
+    position: sticky;
+    z-index: 2;
+    top: 0;
+    padding: 18px;
+    background: #ffffff;
+  }
+
+  .public-location-options {
+    padding: 12px 14px calc(18px + env(safe-area-inset-bottom));
+  }
+
+  .public-location-options > button {
+    min-height: 74px;
+  }
+
   .rider-profile-site-header-inner {
     min-height: 64px;
     gap: 8px;

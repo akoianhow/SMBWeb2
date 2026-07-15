@@ -23,15 +23,19 @@ const catalogShortcutTitles = {
   "tires-tubes": "Tires & Tubes"
 };
 
+const initialPageParams = new URLSearchParams(window.location.search);
+const requestedCatalogSort = initialPageParams.get("sort");
+const validCatalogSorts = new Set(["featured", "price-asc", "price-desc", "newest"]);
+
 const state = {
   activeCategory: null,
-  activeSubcategory: "All",
+  activeSubcategory: initialPageParams.get("subcategory") || "All",
   categoryGroups: [],
   homeProductList: "new",
   itemDisplayOrder: new Map(),
   items: [],
   productSearchEndpointAvailable: null,
-  sort: "featured"
+  sort: validCatalogSorts.has(requestedCatalogSort) ? requestedCatalogSort : "featured"
 };
 
 const branchContacts = {
@@ -1760,6 +1764,7 @@ function renderSubcategoryFilters() {
     button.className = filter === state.activeSubcategory ? "active" : "";
     button.addEventListener("click", () => {
       state.activeSubcategory = filter;
+      updateCatalogUrl(state.activeCategory, { replace: true });
       renderCatalog();
     });
     filters.append(button);
@@ -1778,15 +1783,26 @@ function getRequestedCatalogKey() {
   return (params.get("catalog") || "").trim();
 }
 
-function updateCatalogUrl(categoryKey) {
+function updateCatalogUrl(categoryKey, { replace = false } = {}) {
   if (!document.querySelector("[data-web-items-grid]")) {
     return;
   }
 
   const params = new URLSearchParams(window.location.search);
   params.set("catalog", categoryKey);
+  if (state.activeSubcategory === "All") {
+    params.delete("subcategory");
+  } else {
+    params.set("subcategory", state.activeSubcategory);
+  }
+  if (state.sort === "featured") {
+    params.delete("sort");
+  } else {
+    params.set("sort", state.sort);
+  }
   const query = params.toString();
-  window.history.pushState({ view: "catalog", category: categoryKey }, "", `index.html${query ? `?${query}` : ""}#products`);
+  const method = replace ? "replaceState" : "pushState";
+  window.history[method]({ view: "catalog", category: categoryKey }, "", `index.html${query ? `?${query}` : ""}#products`);
 }
 
 function getCatalogShortcutTitle(categoryKey) {
@@ -1835,7 +1851,10 @@ function renderCatalog() {
 }
 
 async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
-  state.activeSubcategory = "All";
+  if (updatePath) {
+    state.activeSubcategory = "All";
+    state.sort = "featured";
+  }
   setCatalogMode(true);
   setGridState("Loading Catalog", "Checking SMBSystem catalog items for Quezon City.");
   if (updatePath) {
@@ -1853,6 +1872,11 @@ async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
       return;
     }
     state.activeCategory = resolvedCategoryKey;
+    const categoryGroup = getCategoryGroup(resolvedCategoryKey);
+    if (!categoryGroup?.filters.includes(state.activeSubcategory)) {
+      state.activeSubcategory = "All";
+      updateCatalogUrl(resolvedCategoryKey, { replace: true });
+    }
     renderCatalog();
   } catch (error) {
     setGridState("Catalog Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
@@ -2811,6 +2835,10 @@ function openCommunityThreadModal(postId) {
   communityState.activeThreadPostId = postId;
   content.replaceChildren(renderCommunityPostThread(post));
   modal.hidden = false;
+  const url = new URL(window.location.href);
+  url.searchParams.set("thread", postId);
+  url.hash = "community";
+  window.history.replaceState({ ...(window.history.state || {}), view: "community", thread: postId }, "", `${url.pathname}${url.search}${url.hash}`);
 }
 
 function closeCommunityThreadModal() {
@@ -2822,6 +2850,11 @@ function closeCommunityThreadModal() {
   }
   if (modal) {
     modal.hidden = true;
+  }
+  const url = new URL(window.location.href);
+  if (url.searchParams.has("thread")) {
+    url.searchParams.delete("thread");
+    window.history.replaceState({ ...(window.history.state || {}), view: "community" }, "", `${url.pathname}${url.search}${url.hash}`);
   }
 }
 
@@ -3651,6 +3684,7 @@ function bindCatalogUi() {
 
   document.querySelector("[data-sort-select]")?.addEventListener("change", (event) => {
     state.sort = event.target.value;
+    updateCatalogUrl(state.activeCategory, { replace: true });
     renderCatalog();
   });
 }
@@ -6185,10 +6219,15 @@ async function startCatalog() {
   }
   if (document.body.classList.contains("is-coming-soon-page") && document.querySelector("[data-community-view]")) {
     updateCommunityAuthState();
-    loadCommunityDiscussions();
+    await loadCommunityDiscussions();
   }
   if (window.location.pathname === "/community" || window.location.hash === "#community") {
     openCommunityPage(false);
+    await loadCommunityDiscussions();
+    const requestedThreadId = new URLSearchParams(window.location.search).get("thread");
+    if (requestedThreadId) {
+      openCommunityThreadModal(requestedThreadId);
+    }
   }
 }
 

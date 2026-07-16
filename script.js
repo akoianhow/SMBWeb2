@@ -349,11 +349,17 @@ const communityState = {
 const eventsState = {
   activeEvent: null,
   events: [],
+  isLoading: false
+};
+
+const notificationState = {
+  items: [],
+  unreadCount: 0,
+  skip: 0,
+  take: 20,
+  hasMore: false,
   isLoading: false,
-  search: "",
-  searchTimer: null,
-  selectedStatus: "public",
-  selectedType: "all"
+  pollTimer: null
 };
 
 const GENERAL_CATEGORY_SLUGS = ["general", "community-tips"];
@@ -1570,6 +1576,81 @@ function setMobileNavActive(key) {
   document.querySelectorAll("[data-mobile-nav]").forEach((link) => {
     link.classList.toggle("active", link.dataset.mobileNav === key);
   });
+}
+
+function getDefaultMobileNavKey() {
+  const path = window.location.pathname;
+  if (path.endsWith("events.html")) return "events";
+  if (path.endsWith("services.html") || path.endsWith("service.html") || path.endsWith("appointments.html")) return "services";
+  if (path.endsWith("stories.html") || path.endsWith("story.html")) return "stories";
+  if (window.location.hash === "#community") return "community";
+  if (window.location.hash === "#top") return "home";
+  return "catalog";
+}
+
+function getMobileNavGroupMarkup({ clone = false } = {}) {
+  const tabIndex = clone ? ' tabindex="-1"' : "";
+  return `
+    <a href="index.html#top" data-mobile-nav="home" aria-label="Home"${tabIndex}><span aria-hidden="true">⌂</span>Home</a>
+    <button type="button" data-mobile-nav="notifications" data-notification-trigger aria-label="Notifications"${tabIndex}><span class="mobile-nav-notification-icon" aria-hidden="true">🔔</span><b data-notification-badge hidden>0</b>Alerts</button>
+    <a href="index.html#products" data-mobile-nav="catalog" aria-label="Catalog"${tabIndex}><span aria-hidden="true">▦</span>Catalog</a>
+    <a href="services.html" data-mobile-nav="services" aria-label="Services"${tabIndex}><span aria-hidden="true">⚙</span>Services</a>
+    <a href="events.html" data-mobile-nav="events" aria-label="Events"${tabIndex}><span aria-hidden="true">◴</span>Events</a>
+    <a href="index.html#community" data-community-link data-mobile-nav="community" aria-label="Community"${tabIndex}><span aria-hidden="true">◉</span>Community</a>
+    <a href="stories.html" data-mobile-nav="stories" aria-label="Stories"${tabIndex}><span aria-hidden="true">▤</span>Stories</a>
+  `;
+}
+
+function setupMobileNavigationBelt() {
+  document.querySelectorAll(".mobile-bottom-nav").forEach((nav) => {
+    if (nav.dataset.mobileBeltReady === "true") return;
+    nav.dataset.mobileBeltReady = "true";
+    nav.classList.add("is-continuous-belt");
+    nav.replaceChildren();
+
+    const previous = document.createElement("div");
+    previous.className = "mobile-bottom-nav-track";
+    previous.dataset.mobileNavClone = "";
+    previous.setAttribute("aria-hidden", "true");
+    previous.innerHTML = getMobileNavGroupMarkup({ clone: true });
+    const current = document.createElement("div");
+    current.className = "mobile-bottom-nav-track";
+    current.dataset.mobileNavPrimary = "";
+    current.innerHTML = getMobileNavGroupMarkup();
+    const next = document.createElement("div");
+    next.className = "mobile-bottom-nav-track";
+    next.dataset.mobileNavClone = "";
+    next.setAttribute("aria-hidden", "true");
+    next.innerHTML = getMobileNavGroupMarkup({ clone: true });
+    nav.append(previous, current, next);
+
+    let normalizing = false;
+    const centerBelt = () => {
+      const width = current.getBoundingClientRect().width;
+      if (!width) return;
+      const activeItem = current.querySelector(".active");
+      const activeOffset = activeItem ? activeItem.offsetLeft + (activeItem.offsetWidth / 2) - (nav.clientWidth / 2) : 0;
+      nav.scrollLeft = width + Math.max(0, activeOffset);
+    };
+    const normalize = () => {
+      if (normalizing) return;
+      const width = current.getBoundingClientRect().width;
+      if (!width) return;
+      if (nav.scrollLeft < width * 0.3) {
+        normalizing = true;
+        nav.scrollLeft += width;
+        normalizing = false;
+      } else if (nav.scrollLeft > width * 1.7) {
+        normalizing = true;
+        nav.scrollLeft -= width;
+        normalizing = false;
+      }
+    };
+    nav.addEventListener("scroll", normalize, { passive: true });
+    window.setTimeout(centerBelt, 0);
+    window.addEventListener("resize", centerBelt);
+  });
+  setMobileNavActive(getDefaultMobileNavKey());
 }
 
 function setCatalogMode(isCatalogMode) {
@@ -4329,15 +4410,6 @@ function setEventsState(title, detail, actionLabel) {
 function buildEventsQuery() {
   const params = new URLSearchParams();
   params.set("location", getSelectedPublicLocationSlug());
-  if (eventsState.search) {
-    params.set("search", eventsState.search);
-  }
-  if (eventsState.selectedType !== "all") {
-    params.set("eventType", eventsState.selectedType);
-  }
-  if (eventsState.selectedStatus && eventsState.selectedStatus !== "public") {
-    params.set("status", eventsState.selectedStatus);
-  }
   return params.toString();
 }
 
@@ -4379,7 +4451,7 @@ function renderEventsList() {
   }
 
   if (eventsState.events.length === 0) {
-    setEventsState("No events found", "There are no public SarapMagBike events matching the current filters.");
+    setEventsState("No upcoming events", "There are no upcoming public events for this branch right now.");
     return;
   }
 
@@ -5003,27 +5075,6 @@ function bindEventsUi() {
     return;
   }
 
-  document.querySelector("[data-events-type]")?.addEventListener("change", (event) => {
-    eventsState.selectedType = event.target.value;
-    document.querySelectorAll("[data-events-chip]").forEach((chip) => chip.classList.toggle("active", chip.dataset.eventsChip === eventsState.selectedType || (eventsState.selectedType === "all" && chip.dataset.eventsChip === "all")));
-    loadEventsPageEvents();
-  });
-  document.querySelector("[data-events-status]")?.addEventListener("change", (event) => {
-    eventsState.selectedStatus = event.target.value;
-    loadEventsPageEvents();
-  });
-  document.querySelector("[data-events-refresh]")?.addEventListener("click", loadEventsPageEvents);
-  document.querySelectorAll("[data-events-chip]").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      eventsState.selectedType = chip.dataset.eventsChip || "all";
-      const select = document.querySelector("[data-events-type]");
-      if (select) {
-        select.value = eventsState.selectedType;
-      }
-      document.querySelectorAll("[data-events-chip]").forEach((item) => item.classList.toggle("active", item === chip));
-      loadEventsPageEvents();
-    });
-  });
   document.querySelector("[data-events-back]")?.addEventListener("click", showEventListView);
   document.querySelector("[data-event-registration-form]")?.addEventListener("submit", submitEventRegistration);
   document.querySelector("[data-event-registration-close]")?.addEventListener("click", closeEventRegistrationModal);
@@ -5056,7 +5107,6 @@ function bindEventsUi() {
     } else {
       document.querySelector("[data-event-detail]")?.setAttribute("hidden", "");
       document.querySelector("[data-events-list-layout]")?.removeAttribute("hidden");
-      document.querySelector("[data-events-toolbar]")?.removeAttribute("hidden");
     }
   });
 }
@@ -5067,6 +5117,252 @@ const customerState = {
   mode: "register",
   profileImage: null
 };
+
+function updateNotificationBadges(count = 0) {
+  notificationState.unreadCount = Math.max(0, Number(count) || 0);
+  document.querySelectorAll("[data-notification-badge]").forEach((badge) => {
+    badge.textContent = notificationState.unreadCount > 99 ? "99+" : String(notificationState.unreadCount);
+    badge.hidden = notificationState.unreadCount === 0;
+  });
+  document.querySelectorAll("[data-notification-trigger]").forEach((trigger) => {
+    trigger.setAttribute("aria-label", notificationState.unreadCount > 0
+      ? `Notifications, ${notificationState.unreadCount} unread`
+      : "Notifications");
+  });
+}
+
+function ensureDesktopNotificationTrigger() {
+  const header = document.querySelector(".header-main");
+  if (!header || header.querySelector(".desktop-notification-button")) return;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "desktop-notification-button";
+  button.dataset.notificationTrigger = "";
+  button.setAttribute("aria-label", "Notifications");
+  button.innerHTML = '<span aria-hidden="true">🔔</span><b data-notification-badge hidden>0</b>';
+  header.insertBefore(button, header.querySelector(".lock-box"));
+}
+
+function ensureNotificationDrawer() {
+  let drawer = document.querySelector("[data-notification-drawer]");
+  if (drawer) return drawer;
+
+  drawer = document.createElement("div");
+  drawer.className = "notification-drawer";
+  drawer.dataset.notificationDrawer = "";
+  drawer.hidden = true;
+  drawer.innerHTML = `
+    <section role="dialog" aria-modal="true" aria-labelledby="notification-drawer-title">
+      <header>
+        <div>
+          <span>Customer updates</span>
+          <h2 id="notification-drawer-title">Notifications</h2>
+        </div>
+        <button type="button" data-notification-close aria-label="Close notifications">Close</button>
+      </header>
+      <div class="notification-drawer-tools">
+        <p data-notification-summary>Loading notifications...</p>
+        <button type="button" data-notification-read-all>Mark all as read</button>
+      </div>
+      <div class="notification-list" data-notification-list aria-live="polite"></div>
+      <button class="notification-load-more" type="button" data-notification-load-more hidden>Load more</button>
+    </section>
+  `;
+  document.body.append(drawer);
+  drawer.addEventListener("click", (event) => {
+    if (event.target === drawer || event.target.closest("[data-notification-close]")) {
+      closeNotificationDrawer();
+    }
+  });
+  drawer.querySelector("[data-notification-read-all]")?.addEventListener("click", markAllNotificationsRead);
+  drawer.querySelector("[data-notification-load-more]")?.addEventListener("click", () => loadNotifications(false));
+  return drawer;
+}
+
+function getNotificationIcon(type) {
+  if (type === "post_like" || type === "comment_like") return "♥";
+  if (type === "testimonial_received") return "★";
+  if (type === "new_event") return "◴";
+  if (type === "event_registration_updated") return "✓";
+  return "↩";
+}
+
+function formatNotificationTime(value) {
+  const date = new Date(value);
+  const seconds = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: date.getFullYear() === new Date().getFullYear() ? undefined : "numeric" });
+}
+
+function renderNotificationItem(item) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `notification-item${item.isUnread ? " is-unread" : ""}`;
+  const avatar = document.createElement("span");
+  avatar.className = "notification-item-avatar";
+  if (item.actorAvatarUrl) {
+    const image = document.createElement("img");
+    image.src = normalizeApiUrl(item.actorAvatarUrl);
+    image.alt = item.actorName ? `${item.actorName} profile picture` : "Customer profile picture";
+    image.loading = "lazy";
+    avatar.append(image);
+  } else {
+    avatar.textContent = getNotificationIcon(item.type);
+  }
+  const content = document.createElement("span");
+  content.className = "notification-item-content";
+  content.append(
+    createTextElement("strong", item.title || "Notification"),
+    createTextElement("span", item.message || "You have a new update."),
+    createTextElement("small", formatNotificationTime(item.createdAt))
+  );
+  const unread = document.createElement("i");
+  unread.setAttribute("aria-label", item.isUnread ? "Unread" : "Read");
+  button.append(avatar, content, unread);
+  button.addEventListener("click", () => openNotification(item));
+  return button;
+}
+
+function renderNotifications() {
+  const drawer = ensureNotificationDrawer();
+  const list = drawer.querySelector("[data-notification-list]");
+  const summary = drawer.querySelector("[data-notification-summary]");
+  const readAll = drawer.querySelector("[data-notification-read-all]");
+  const loadMore = drawer.querySelector("[data-notification-load-more]");
+  summary.textContent = notificationState.unreadCount > 0
+    ? `${notificationState.unreadCount} unread ${notificationState.unreadCount === 1 ? "update" : "updates"}`
+    : "You're all caught up.";
+  readAll.hidden = notificationState.unreadCount === 0;
+  loadMore.hidden = !notificationState.hasMore;
+  list.replaceChildren();
+  if (notificationState.items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "notification-empty";
+    empty.append(createTextElement("strong", "No notifications yet"), createTextElement("p", "Replies, likes, testimonials, events, and registration updates will appear here."));
+    list.append(empty);
+    return;
+  }
+  notificationState.items.forEach((item) => list.append(renderNotificationItem(item)));
+}
+
+async function loadNotificationUnreadCount() {
+  if (!customerState.account) {
+    updateNotificationBadges(0);
+    return;
+  }
+  try {
+    const result = await apiRequest("/api/public/customer-account/notifications/unread-count");
+    updateNotificationBadges(result?.unreadCount || 0);
+  } catch {
+    updateNotificationBadges(0);
+  }
+}
+
+async function loadNotifications(reset = true) {
+  if (!customerState.account || notificationState.isLoading) return;
+  notificationState.isLoading = true;
+  if (reset) {
+    notificationState.skip = 0;
+    notificationState.items = [];
+  }
+  const drawer = ensureNotificationDrawer();
+  if (reset) {
+    drawer.querySelector("[data-notification-list]").innerHTML = '<div class="notification-empty"><strong>Loading notifications</strong><p>Checking your latest customer updates.</p></div>';
+  }
+  try {
+    const result = await apiRequest(`/api/public/customer-account/notifications?skip=${notificationState.skip}&take=${notificationState.take}`);
+    const rows = Array.isArray(result?.items) ? result.items : [];
+    notificationState.items = reset ? rows : [...notificationState.items, ...rows];
+    notificationState.skip = notificationState.items.length;
+    notificationState.hasMore = Boolean(result?.hasMore);
+    updateNotificationBadges(result?.unreadCount || 0);
+    renderNotifications();
+  } catch (error) {
+    const list = drawer.querySelector("[data-notification-list]");
+    list.innerHTML = '<div class="notification-empty"><strong>Notifications unavailable</strong><p>Please close this panel and try again.</p></div>';
+  } finally {
+    notificationState.isLoading = false;
+  }
+}
+
+function openNotificationDrawer() {
+  if (!customerState.account) {
+    if (getCustomerLoginForm()) {
+      openCommunityLoginForm();
+    } else {
+      window.location.href = "index.html?login=1#community";
+    }
+    return;
+  }
+  const drawer = ensureNotificationDrawer();
+  drawer.hidden = false;
+  document.body.classList.add("has-notification-drawer");
+  setMobileNavActive("notifications");
+  loadNotifications(true);
+  drawer.querySelector("[data-notification-close]")?.focus();
+}
+
+function closeNotificationDrawer() {
+  const drawer = document.querySelector("[data-notification-drawer]");
+  if (!drawer) return;
+  drawer.hidden = true;
+  document.body.classList.remove("has-notification-drawer");
+  setMobileNavActive(getDefaultMobileNavKey());
+}
+
+async function markAllNotificationsRead() {
+  try {
+    await apiRequest("/api/public/customer-account/notifications/read-all", { method: "POST" });
+    notificationState.items = notificationState.items.map((item) => ({ ...item, isUnread: false, readAt: item.readAt || new Date().toISOString() }));
+    updateNotificationBadges(0);
+    renderNotifications();
+  } catch {
+    // Keep the current unread state when the request cannot be completed.
+  }
+}
+
+async function openNotification(item) {
+  try {
+    if (item.isUnread) {
+      await apiRequest(`/api/public/customer-account/notifications/${encodeURIComponent(item.id)}/read`, { method: "PATCH" });
+      updateNotificationBadges(Math.max(0, notificationState.unreadCount - 1));
+    }
+  } catch {
+    // Navigation remains available even if marking the notification read fails.
+  }
+  const target = new URL(String(item.link || "index.html"), window.location.origin);
+  if (target.origin === window.location.origin) {
+    window.location.href = `${target.pathname}${target.search}${target.hash}`;
+  }
+}
+
+function initializeNotifications() {
+  ensureDesktopNotificationTrigger();
+  ensureNotificationDrawer();
+  document.querySelectorAll("[data-notification-trigger]").forEach((button) => {
+    if (button.dataset.notificationBound === "true") return;
+    button.dataset.notificationBound = "true";
+    button.addEventListener("click", openNotificationDrawer);
+  });
+  window.addEventListener("customer-session-changed", () => {
+    loadNotificationUnreadCount();
+    if (!customerState.account) closeNotificationDrawer();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) loadNotificationUnreadCount();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !document.querySelector("[data-notification-drawer]")?.hidden) closeNotificationDrawer();
+  });
+  window.clearInterval(notificationState.pollTimer);
+  notificationState.pollTimer = window.setInterval(loadNotificationUnreadCount, 60000);
+}
 
 function getCustomerLoginForm() {
   return document.querySelector("[data-customer-login-form]");
@@ -6416,6 +6712,8 @@ async function startCatalog() {
 
   bindScrambleLabels();
   renderCategoryNav();
+  setupMobileNavigationBelt();
+  initializeNotifications();
   bindCustomerAccountUi();
   bindCatalogUi();
   bindProductSearchUi();
@@ -6448,6 +6746,9 @@ async function startCatalog() {
     const requestedThreadId = new URLSearchParams(window.location.search).get("thread");
     if (requestedThreadId) {
       openCommunityThreadModal(requestedThreadId);
+    }
+    if (new URLSearchParams(window.location.search).get("login") === "1") {
+      openCommunityLoginForm();
     }
   }
 }

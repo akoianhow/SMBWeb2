@@ -1591,13 +1591,13 @@ function getDefaultMobileNavKey() {
 function getMobileNavGroupMarkup({ clone = false } = {}) {
   const tabIndex = clone ? ' tabindex="-1"' : "";
   return `
-    <a href="index.html#top" data-mobile-nav="home" aria-label="Home"${tabIndex}><span aria-hidden="true">⌂</span>Home</a>
-    <button type="button" data-mobile-nav="notifications" data-notification-trigger aria-label="Notifications"${tabIndex}><span class="mobile-nav-notification-icon" aria-hidden="true">🔔</span><b data-notification-badge hidden>0</b>Alerts</button>
-    <a href="index.html#products" data-mobile-nav="catalog" aria-label="Catalog"${tabIndex}><span aria-hidden="true">▦</span>Catalog</a>
-    <a href="services.html" data-mobile-nav="services" aria-label="Services"${tabIndex}><span aria-hidden="true">⚙</span>Services</a>
-    <a href="events.html" data-mobile-nav="events" aria-label="Events"${tabIndex}><span aria-hidden="true">◴</span>Events</a>
-    <a href="index.html#community" data-community-link data-mobile-nav="community" aria-label="Community"${tabIndex}><span aria-hidden="true">◉</span>Community</a>
-    <a href="stories.html" data-mobile-nav="stories" aria-label="Stories"${tabIndex}><span aria-hidden="true">▤</span>Stories</a>
+    <a href="index.html#top" data-mobile-nav="home" aria-label="Home"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m3.5 10.5 8.5-7 8.5 7v9.5h-6v-6h-5v6h-6z"/></svg></span>Home</a>
+    <button type="button" data-mobile-nav="notifications" data-notification-trigger aria-label="Notifications"${tabIndex}><span class="mobile-nav-notification-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M9.5 21h5"/></svg></span><b data-notification-badge hidden>0</b>Alerts</button>
+    <a href="index.html#products" data-mobile-nav="catalog" aria-label="Catalog"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>Catalog</a>
+    <a href="services.html" data-mobile-nav="services" aria-label="Services"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5 5L4 17l3 3 5.7-5.7a4 4 0 0 0 5-5l-2.4 2.4-3-3z"/></svg></span>Services</a>
+    <a href="events.html" data-mobile-nav="events" aria-label="Events"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18M8 14h3M13 14h3M8 18h3"/></svg></span>Events</a>
+    <a href="index.html#community" data-community-link data-mobile-nav="community" aria-label="Community"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H9l-5 3 1.5-4A8 8 0 1 1 21 15z"/></svg></span>Community</a>
+    <a href="stories.html" data-mobile-nav="stories" aria-label="Stories"${tabIndex}><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4h14a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM7 8h10M7 12h10M7 16h6"/></svg></span>Stories</a>
   `;
 }
 

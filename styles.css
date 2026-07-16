@@ -1219,6 +1219,13 @@ body.is-catalog-mode .content {
   text-transform: uppercase;
 }
 
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+
 .hero-message .hero-events-action {
   background: #222222;
 }
@@ -7159,8 +7166,16 @@ body.is-catalog-mode .product-section {
   }
 
   .hero-message a {
-    min-height: 34px;
-    border-radius: 8px;
+    min-height: 28px;
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .hero-actions {
+    gap: 4px;
   }
 
   .feature-tiles {
@@ -7725,8 +7740,8 @@ body.is-catalog-mode .product-section {
     z-index: 50;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(54px, 1fr));
-    min-height: 64px;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+    min-height: 56px;
+    padding: 4px 8px calc(4px + env(safe-area-inset-bottom));
     background: rgba(255, 255, 255, 0.98);
     border-top: 1px solid #d8d8d8;
     box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.12);
@@ -7746,13 +7761,23 @@ body.is-catalog-mode .product-section {
   .mobile-bottom-nav span {
     display: grid;
     place-items: center;
-    width: 26px;
-    height: 24px;
-    color: #ffffff;
-    background: #2a2a2a;
-    border-radius: 8px;
-    font-size: 14px;
+    width: 22px;
+    height: 22px;
+    color: #303030;
+    background: transparent;
+    border-radius: 0;
+    font-size: 13px;
     line-height: 1;
+  }
+
+  .mobile-bottom-nav span svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
   .mobile-bottom-nav a.active {
@@ -7760,7 +7785,8 @@ body.is-catalog-mode .product-section {
   }
 
   .mobile-bottom-nav a.active span {
-    background: var(--red);
+    color: var(--red);
+    background: transparent;
   }
 
   .service-grid {
@@ -8876,7 +8902,7 @@ body.has-notification-drawer {
   .mobile-bottom-nav-track {
     display: grid;
     grid-auto-flow: column;
-    grid-auto-columns: 72px;
+    grid-auto-columns: 66px;
     flex: 0 0 auto;
     min-width: max-content;
     padding: 0 4px;
@@ -8893,7 +8919,7 @@ body.has-notification-drawer {
     background: transparent;
     border: 0;
     font-family: inherit;
-    font-size: 9px;
+    font-size: 8px;
     font-weight: 900;
     text-transform: uppercase;
     cursor: pointer;
@@ -8904,7 +8930,8 @@ body.has-notification-drawer {
   }
 
   .mobile-bottom-nav :is(a, button).active > span {
-    background: var(--red);
+    color: var(--red);
+    background: transparent;
   }
 
   .mobile-bottom-nav [data-notification-badge] {

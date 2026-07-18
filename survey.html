@@ -9,7 +9,7 @@
     >
     <title>Customer Survey | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260716-mobile-alignment">
+    <link rel="stylesheet" href="styles.css?v=20260718-global-mobile-header-10">
   </head>
   <body class="survey-page">
     <div class="page-bg"></div>
@@ -209,9 +209,9 @@
 
     <script src="config.js?v=20260703-staging-api"></script>
     <script>
-      const year = document.querySelector("#year");
-      if (year) {
-        year.textContent = new Date().getFullYear();
+      const surveyYear = document.querySelector("#year");
+      if (surveyYear) {
+        surveyYear.textContent = new Date().getFullYear();
       }
 
       const surveyForm = document.querySelector("[data-survey-form]");
@@ -312,5 +312,6 @@
         });
       }
     </script>
+    <script src="script.js?v=20260718-global-mobile-header-10"></script>
   </body>
 </html>

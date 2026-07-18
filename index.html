@@ -9,9 +9,9 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260716-mobile-alignment">
+    <link rel="stylesheet" href="styles.css?v=20260718-global-mobile-header-10">
   </head>
-  <body>
+  <body class="smb-home-page">
     <div class="page-bg"></div>
 
     <header class="topbar">
@@ -76,8 +76,30 @@
         <span class="logo-tag">QUEZON CITY</span>
       </a>
       <div class="mobile-header-actions" aria-label="Mobile quick actions">
-        <button class="mobile-header-login" type="button" data-mobile-header-login>Login</button>
-        <button class="mobile-header-register" type="button" data-open-register data-mobile-header-register>Register</button>
+        <button
+          class="mobile-header-search"
+          type="button"
+          data-product-search-open
+          aria-label="Search products"
+          title="Search"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+        </button>
+        <button
+          class="mobile-header-account"
+          type="button"
+          data-mobile-header-login
+          aria-label="Log in or create an account"
+          title="Account"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
+          </svg>
+        </button>
         <div class="mobile-header-session" data-mobile-header-session hidden>
           <button class="mobile-header-avatar-button" type="button" data-mobile-header-menu-toggle aria-label="Open account menu" aria-expanded="false">
             <span data-mobile-header-avatar>SMB</span>
@@ -317,6 +339,12 @@
           </article>
         </div>
 
+        <div class="product-list-actions" data-home-product-actions>
+          <a href="index.html?catalog=all&amp;list=new#products" data-view-all-products>View All</a>
+        </div>
+
+        <nav class="catalog-pagination" data-catalog-pagination aria-label="Product pages" hidden></nav>
+
       </section>
 
       <section class="mobile-service-strip" aria-label="Mobile service shortcuts" data-home-section>
@@ -333,7 +361,7 @@
         <article class="sale-banner banner-tires">
           <h2>Tires & Tubes</h2>
           <p>Get up to 20% off selected essentials.</p>
-          <a href="#contact">Check Stock</a>
+          <a href="index.html?catalog=tires-tubes#products" data-category-link="tires-tubes">Check Stock</a>
         </article>
         <article class="sale-banner banner-shoes">
           <h2>Services</h2>
@@ -418,14 +446,14 @@
 
     <div class="community-auth-prompt" data-community-auth-prompt hidden>
       <div role="dialog" aria-modal="true" aria-labelledby="community-auth-title">
-        <h2 id="community-auth-title">Please log in or create an account to join the discussion.</h2>
-        <p>Guests can read approved posts, but an account is required to start discussions, reply, like, report, or upload photos.</p>
+        <h2 id="community-auth-title">Log in to your SarapMagBike account</h2>
+        <p>Access your customer profile and join SarapMagBike community discussions.</p>
         <form class="community-login-form" data-community-login-form hidden>
           <div class="community-login-brand">
             <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
             <div>
               <strong>SarapMagBike Account</strong>
-              <span>Log in to join community discussions.</span>
+              <span>Log in to continue.</span>
             </div>
           </div>
           <label>
@@ -588,6 +616,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260716-mobile-alignment"></script>
+    <script src="script.js?v=20260718-global-mobile-header-10"></script>
   </body>
 </html>

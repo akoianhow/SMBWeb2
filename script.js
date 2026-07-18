@@ -26,10 +26,16 @@ const catalogShortcutTitles = {
 const initialPageParams = new URLSearchParams(window.location.search);
 const requestedCatalogSort = initialPageParams.get("sort");
 const validCatalogSorts = new Set(["featured", "price-asc", "price-desc", "newest"]);
+const validHomeProductLists = new Set(["new", "popular", "sale"]);
+const catalogPageSize = 20;
 
 const state = {
   activeCategory: null,
   activeSubcategory: initialPageParams.get("subcategory") || "All",
+  catalogListFilter: validHomeProductLists.has(initialPageParams.get("list"))
+    ? initialPageParams.get("list")
+    : null,
+  catalogPage: Math.max(1, Number.parseInt(initialPageParams.get("page") || "1", 10) || 1),
   categoryGroups: [],
   homeProductList: "new",
   itemDisplayOrder: new Map(),
@@ -302,6 +308,7 @@ const scrambleLabelSelector = [
 ].join(", ");
 const homeProductLists = {
   new: {
+    catalogTitle: "New Arrivals",
     emptyDetail: "Mark items as Display on Web and New Item in SMBSystem to show them here.",
     emptyTitle: "No New Arrivals Yet",
     loadingTitle: "Loading New Arrivals",
@@ -310,6 +317,7 @@ const homeProductLists = {
     filter: (item) => Boolean(item.isNew)
   },
   popular: {
+    catalogTitle: "Popular Items",
     emptyDetail: "Mark items as Display on Web and Popular in SMBSystem to show them here.",
     emptyTitle: "No Popular Items Yet",
     loadingTitle: "Loading Popular Items",
@@ -318,6 +326,7 @@ const homeProductLists = {
     filter: (item) => Boolean(item.isPopular)
   },
   sale: {
+    catalogTitle: "Promos",
     emptyDetail: "Mark items as Display on Web and Sale in SMBSystem to show promos here.",
     emptyTitle: "No Promos Yet",
     loadingTitle: "Loading Promos",
@@ -882,12 +891,13 @@ function getAvailabilityLabel(item) {
 }
 
 function renderWebItemCard(item) {
-  const card = document.createElement("article");
-  card.className = "product-card is-clickable";
-  card.tabIndex = 0;
   const imageUrls = getProductImageUrls(item);
   const productName = getItemName(item);
   const detailUrl = getProductDetailUrl(item);
+  const card = document.createElement("a");
+  card.className = "product-card is-clickable";
+  card.href = detailUrl;
+  card.setAttribute("aria-label", `View details for ${productName}`);
 
   if (item.isNew) {
     card.append(createTextElement("span", "New", "badge"));
@@ -903,38 +913,15 @@ function renderWebItemCard(item) {
     item.stockStatus || item.availabilityLabel || "Ask availability"
   ].filter(Boolean).join(" / ");
 
-  const action = document.createElement("a");
-  const availabilityLabel = getAvailabilityLabel(item);
-  action.href = detailUrl;
-  action.textContent = "View Details";
-  action.className = availabilityLabel === "OUT OF STOCK" ? "is-out-of-stock" : "is-available";
-  action.setAttribute("aria-label", `View details for ${productName}`);
-
   card.append(
     renderProductPhoto(item),
     createTextElement("h3", productName),
     createTextElement("p", detail),
-    renderPrice(item),
-    action
+    renderPrice(item)
   );
-
-  card.addEventListener("click", (event) => {
-    if (event.target.closest("a, button")) {
-      return;
-    }
-    window.location.href = detailUrl;
-  });
-
-  card.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter" || event.target.closest("a, button")) {
-      return;
-    }
-    window.location.href = detailUrl;
-  });
 
   if (imageUrls.length > 1) {
     card.classList.add("has-image-gallery");
-    card.setAttribute("aria-label", `${productName} image gallery preview`);
     card.append(renderProductImageGallery(imageUrls));
     showProductGalleryCard(card, 0);
     bindProductImageGallery(card);
@@ -1107,7 +1094,7 @@ function ensureProductSearchModal() {
       </header>
       <div class="product-search-body">
         <form class="product-search-form" data-product-search-form>
-          <input type="search" data-product-search-input aria-label="Search inventory products" placeholder="Search bikes, parts, service">
+          <input type="search" data-product-search-input aria-label="Search inventory products" placeholder="Search bikes, parts, brands, or SKU">
           <button type="submit">Search</button>
         </form>
         <p class="product-search-note" data-product-search-note></p>
@@ -1341,6 +1328,13 @@ function bindProductSearchPageUi() {
 
 async function runProductSearch(query) {
   const trimmedQuery = String(query || "").trim();
+  if (!trimmedQuery) {
+    setProductSearchState(
+      "Search SarapMagBike inventory",
+      "Enter a bike, part, brand, model, SKU, category, or barcode."
+    );
+    return;
+  }
   setProductSearchState("Searching Products", `Checking SarapMagBike inventory matches for ${getSelectedPublicLocationName()}.`);
 
   try {
@@ -1432,6 +1426,10 @@ function isProductSearchForm(form) {
 }
 
 function bindProductSearchUi() {
+  document.querySelectorAll("[data-product-search-open]").forEach((button) => {
+    button.addEventListener("click", () => submitProductSearch(""));
+  });
+
   document.querySelectorAll(".search-form").forEach((form) => {
     if (!isProductSearchForm(form) || form.dataset.productSearchBound) {
       return;
@@ -1467,6 +1465,46 @@ function bindProductSearchUi() {
       closeProductSearchModal();
     }
   });
+}
+
+function ensureStandardMobileHeaderActions() {
+  const header = document.querySelector(".header-main, .rider-profile-site-header-inner");
+  const logo = header?.querySelector(".logo");
+  if (!header || !logo) {
+    return;
+  }
+
+  let actions = header.querySelector(".mobile-header-actions");
+  if (!actions) {
+    actions = document.createElement("div");
+    logo.insertAdjacentElement("afterend", actions);
+  }
+  actions.className = "mobile-header-actions";
+  actions.setAttribute("aria-label", "Mobile quick actions");
+  actions.innerHTML = `
+    <button class="mobile-header-search" type="button" data-product-search-open aria-label="Search products" title="Search">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+    </button>
+    <button class="mobile-header-account" type="button" data-mobile-header-login aria-label="Log in or create an account" title="Account">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="8" r="4"></circle>
+        <path d="M4.5 21a7.5 7.5 0 0 1 15 0"></path>
+      </svg>
+    </button>
+    <div class="mobile-header-session" data-mobile-header-session hidden>
+      <button class="mobile-header-avatar-button" type="button" data-mobile-header-menu-toggle aria-label="Open account menu" aria-expanded="false">
+        <span data-mobile-header-avatar>SMB</span>
+      </button>
+      <div class="mobile-header-menu" data-mobile-header-menu hidden>
+        <strong data-mobile-header-name>Customer</strong>
+        <span data-mobile-header-email></span>
+        <button type="button" data-mobile-header-logout>Logout</button>
+      </div>
+    </div>
+  `;
 }
 
 function isPublicProduct(item) {
@@ -1551,24 +1589,46 @@ function itemMatchesSubcategory(item) {
   return normalizeText(getItemWebCategory(item)) === normalizeText(state.activeSubcategory);
 }
 
+function compareStableCatalogOrder(a, b) {
+  const orderA = Number(a.webDisplayOrder ?? a.displayOrder ?? a.webSortOrder ?? a.sortOrder);
+  const orderB = Number(b.webDisplayOrder ?? b.displayOrder ?? b.webSortOrder ?? b.sortOrder);
+  const normalizedOrderA = Number.isFinite(orderA) ? orderA : Number.MAX_SAFE_INTEGER;
+  const normalizedOrderB = Number.isFinite(orderB) ? orderB : Number.MAX_SAFE_INTEGER;
+  if (normalizedOrderA !== normalizedOrderB) {
+    return normalizedOrderA - normalizedOrderB;
+  }
+
+  const nameDelta = sortByName(getItemName(a), getItemName(b));
+  if (nameDelta !== 0) {
+    return nameDelta;
+  }
+  return sortByName(String(getItemIdentifier(a)), String(getItemIdentifier(b)));
+}
+
 function getCatalogItems() {
+  const listConfig = state.activeCategory === "all" && state.catalogListFilter
+    ? getHomeProductListConfig(state.catalogListFilter)
+    : null;
   const filtered = state.items
     .filter(isPublicProduct)
-    .filter((item) => itemMatchesCategory(item, state.activeCategory))
-    .filter(itemMatchesSubcategory);
+    .filter((item) => !listConfig || listConfig.filter(item))
+    .filter((item) => state.activeCategory === "all" || itemMatchesCategory(item, state.activeCategory))
+    .filter((item) => state.activeCategory === "all" || itemMatchesSubcategory(item));
 
   return filtered.sort((a, b) => {
     if (state.sort === "price-asc") {
-      return getProductPrice(a) - getProductPrice(b);
+      return getProductPrice(a) - getProductPrice(b) || compareStableCatalogOrder(a, b);
     }
     if (state.sort === "price-desc") {
-      return getProductPrice(b) - getProductPrice(a);
+      return getProductPrice(b) - getProductPrice(a) || compareStableCatalogOrder(a, b);
     }
     if (state.sort === "newest") {
       const newItemDelta = Number(Boolean(b.isNew)) - Number(Boolean(a.isNew));
-      return newItemDelta || getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b);
+      return newItemDelta || compareStableCatalogOrder(a, b);
     }
-    return getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b);
+    return state.activeCategory === "all"
+      ? compareStableCatalogOrder(a, b)
+      : getRandomItemDisplayRank(a) - getRandomItemDisplayRank(b);
   });
 }
 
@@ -1660,11 +1720,15 @@ function setCatalogMode(isCatalogMode) {
   document.querySelector("[data-community-view]")?.setAttribute("hidden", "");
   const catalogPanel = document.querySelector("[data-catalog-panel]");
   const homeProducts = document.querySelector("[data-home-products]");
+  const homeProductActions = document.querySelector("[data-home-product-actions]");
   if (catalogPanel) {
     catalogPanel.hidden = !isCatalogMode;
   }
   if (homeProducts) {
     homeProducts.hidden = isCatalogMode;
+  }
+  if (homeProductActions) {
+    homeProductActions.hidden = isCatalogMode;
   }
   document.querySelectorAll("[data-home-section]").forEach((section) => {
     section.hidden = isCatalogMode;
@@ -1676,6 +1740,7 @@ function returnToHome({ updatePath = false } = {}) {
   showCommunityMode(false);
   state.activeCategory = null;
   state.activeSubcategory = "All";
+  state.catalogPage = 1;
   updateActiveCategoryNav();
   loadHomeProductItems(state.homeProductList);
   showProfileMode(false);
@@ -2051,10 +2116,19 @@ function updateActiveCategoryNav() {
 function renderSubcategoryFilters() {
   const filters = document.querySelector("[data-subcategory-filters]");
   const group = getCategoryGroup(state.activeCategory);
-  if (!filters || !group) {
+  if (!filters) {
+    return;
+  }
+  if (state.activeCategory === "all") {
+    filters.replaceChildren();
+    filters.hidden = true;
+    return;
+  }
+  if (!group) {
     return;
   }
 
+  filters.hidden = false;
   filters.replaceChildren();
   group.filters.forEach((filter) => {
     const button = document.createElement("button");
@@ -2063,6 +2137,7 @@ function renderSubcategoryFilters() {
     button.className = filter === state.activeSubcategory ? "active" : "";
     button.addEventListener("click", () => {
       state.activeSubcategory = filter;
+      state.catalogPage = 1;
       updateCatalogUrl(state.activeCategory, { replace: true });
       renderCatalog();
     });
@@ -2089,6 +2164,11 @@ function updateCatalogUrl(categoryKey, { replace = false } = {}) {
 
   const params = new URLSearchParams(window.location.search);
   params.set("catalog", categoryKey);
+  if (categoryKey === "all" && state.catalogListFilter) {
+    params.set("list", state.catalogListFilter);
+  } else {
+    params.delete("list");
+  }
   if (state.activeSubcategory === "All") {
     params.delete("subcategory");
   } else {
@@ -2098,6 +2178,11 @@ function updateCatalogUrl(categoryKey, { replace = false } = {}) {
     params.delete("sort");
   } else {
     params.set("sort", state.sort);
+  }
+  if (categoryKey === "all" && state.catalogPage > 1) {
+    params.set("page", String(state.catalogPage));
+  } else {
+    params.delete("page");
   }
   const query = params.toString();
   const method = replace ? "replaceState" : "pushState";
@@ -2126,33 +2211,129 @@ function openServicesPage() {
   window.location.href = "services.html";
 }
 
-function renderCatalog() {
-  const grid = getWebItemsGrid();
-  const group = getCategoryGroup(state.activeCategory);
-  if (!grid || !group) {
+function getCatalogPageHref(page) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("catalog", "all");
+  params.delete("subcategory");
+  if (page > 1) {
+    params.set("page", String(page));
+  } else {
+    params.delete("page");
+  }
+  return `index.html?${params.toString()}#products`;
+}
+
+function renderCatalogPagination(totalItems) {
+  const pagination = document.querySelector("[data-catalog-pagination]");
+  if (!pagination) {
     return;
   }
 
-  document.querySelector("[data-stock-note]").textContent = "Stocks and prices may change. Message us to confirm before visiting or ordering.";
+  pagination.replaceChildren();
+  const totalPages = Math.max(1, Math.ceil(totalItems / catalogPageSize));
+  state.catalogPage = Math.min(Math.max(1, state.catalogPage), totalPages);
+  if (state.activeCategory !== "all" || totalPages <= 1) {
+    pagination.hidden = true;
+    return;
+  }
+
+  const previous = state.catalogPage === 1
+    ? createTextElement("span", "‹", "is-disabled catalog-pagination-icon")
+    : document.createElement("a");
+  if (previous instanceof HTMLAnchorElement) {
+    previous.href = getCatalogPageHref(state.catalogPage - 1);
+    previous.textContent = "‹";
+    previous.className = "catalog-pagination-icon";
+    previous.setAttribute("aria-label", "Previous page");
+    previous.title = "Previous page";
+  } else {
+    previous.setAttribute("aria-disabled", "true");
+    previous.setAttribute("aria-label", "Previous page");
+  }
+  const summary = createTextElement(
+    "span",
+    `${state.catalogPage} / ${totalPages} · ${totalItems}`,
+    "catalog-pagination-summary"
+  );
+  summary.setAttribute("aria-label", `Page ${state.catalogPage} of ${totalPages}, ${totalItems} items`);
+  summary.setAttribute("aria-live", "polite");
+  const next = state.catalogPage === totalPages
+    ? createTextElement("span", "›", "is-disabled catalog-pagination-icon")
+    : document.createElement("a");
+  if (next instanceof HTMLAnchorElement) {
+    next.href = getCatalogPageHref(state.catalogPage + 1);
+    next.textContent = "›";
+    next.className = "catalog-pagination-icon";
+    next.setAttribute("aria-label", "Next page");
+    next.title = "Next page";
+  } else {
+    next.setAttribute("aria-disabled", "true");
+    next.setAttribute("aria-label", "Next page");
+  }
+  pagination.append(previous, summary, next);
+  pagination.hidden = false;
+}
+
+function renderCatalog() {
+  const grid = getWebItemsGrid();
+  const group = getCategoryGroup(state.activeCategory);
+  const isAllProducts = state.activeCategory === "all";
+  if (!grid || (!isAllProducts && !group)) {
+    return;
+  }
+
   renderSubcategoryFilters();
   updateActiveCategoryNav();
 
   const items = getCatalogItems();
+  const totalPages = Math.max(1, Math.ceil(items.length / catalogPageSize));
+  state.catalogPage = isAllProducts
+    ? Math.min(Math.max(1, state.catalogPage), totalPages)
+    : 1;
+  const visibleItems = isAllProducts
+    ? items.slice((state.catalogPage - 1) * catalogPageSize, state.catalogPage * catalogPageSize)
+    : items;
+  if (isAllProducts) {
+    const firstItem = items.length === 0 ? 0 : ((state.catalogPage - 1) * catalogPageSize) + 1;
+    const lastItem = Math.min(state.catalogPage * catalogPageSize, items.length);
+    const listTitle = state.catalogListFilter
+      ? getHomeProductListConfig(state.catalogListFilter).catalogTitle.toLowerCase()
+      : "published products";
+    document.querySelector("[data-stock-note]").textContent =
+      `Showing ${firstItem}-${lastItem} of ${items.length} ${listTitle}. Stocks and prices may change. Message us to confirm before visiting or ordering.`;
+  } else {
+    document.querySelector("[data-stock-note]").textContent =
+      "Stocks and prices may change. Message us to confirm before visiting or ordering.";
+  }
 
   grid.replaceChildren();
   if (items.length === 0) {
-    setGridState(`No ${group.title} Found`, "No publicly available products found for this category right now. Message us to check latest stock.");
+    setGridState(
+      isAllProducts ? "No Products Found" : `No ${group.title} Found`,
+      "No publicly available products were found right now. Message us to check the latest stock."
+    );
   } else {
-    items.forEach((item) => grid.append(renderWebItemCard(item)));
+    visibleItems.forEach((item) => grid.append(renderWebItemCard(item)));
   }
 
+  renderCatalogPagination(items.length);
   updateCatalogControls();
 }
 
 async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
   if (updatePath) {
     state.activeSubcategory = "All";
+    state.catalogListFilter = null;
     state.sort = "featured";
+    state.catalogPage = 1;
+  } else {
+    const params = new URLSearchParams(window.location.search);
+    state.activeSubcategory = params.get("subcategory") || "All";
+    state.catalogListFilter = categoryKey === "all" && validHomeProductLists.has(params.get("list"))
+      ? params.get("list")
+      : null;
+    state.sort = validCatalogSorts.has(params.get("sort")) ? params.get("sort") : "featured";
+    state.catalogPage = Math.max(1, Number.parseInt(params.get("page") || "1", 10) || 1);
   }
   setCatalogMode(true);
   setGridState("Loading Catalog", `Checking SMBSystem catalog items for ${getSelectedPublicLocationName()}.`);
@@ -2162,7 +2343,7 @@ async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
 
   try {
     await loadWebItems();
-    const resolvedCategoryKey = resolveCategoryKey(categoryKey);
+    const resolvedCategoryKey = categoryKey === "all" ? "all" : resolveCategoryKey(categoryKey);
     if (!resolvedCategoryKey) {
       state.activeCategory = null;
       updateActiveCategoryNav();
@@ -2172,7 +2353,9 @@ async function openCategoryCatalog(categoryKey, { updatePath = false } = {}) {
     }
     state.activeCategory = resolvedCategoryKey;
     const categoryGroup = getCategoryGroup(resolvedCategoryKey);
-    if (!categoryGroup?.filters.includes(state.activeSubcategory)) {
+    if (resolvedCategoryKey === "all") {
+      state.activeSubcategory = "All";
+    } else if (!categoryGroup?.filters.includes(state.activeSubcategory)) {
       state.activeSubcategory = "All";
       updateCatalogUrl(resolvedCategoryKey, { replace: true });
     }
@@ -2196,6 +2379,17 @@ function updateHomeProductTabs(filterKey) {
   });
 }
 
+function updateHomeViewAllLink(filterKey) {
+  const link = document.querySelector("[data-view-all-products]");
+  if (!link) {
+    return;
+  }
+
+  const selectedFilter = validHomeProductLists.has(filterKey) ? filterKey : "new";
+  link.href = `index.html?catalog=all&list=${encodeURIComponent(selectedFilter)}#products`;
+  link.setAttribute("aria-label", `View all ${getHomeProductListConfig(selectedFilter).catalogTitle}`);
+}
+
 async function loadHomeProductItems(filterKey = state.homeProductList) {
   const webItemsGrid = getWebItemsGrid();
   if (!webItemsGrid) {
@@ -2203,8 +2397,11 @@ async function loadHomeProductItems(filterKey = state.homeProductList) {
   }
 
   state.homeProductList = homeProductLists[filterKey] ? filterKey : "new";
+  state.catalogPage = 1;
+  document.querySelector("[data-catalog-pagination]")?.setAttribute("hidden", "");
   const config = getHomeProductListConfig(state.homeProductList);
   updateHomeProductTabs(state.homeProductList);
+  updateHomeViewAllLink(state.homeProductList);
   document.querySelector("[data-stock-note]").textContent = config.note;
   setGridState(config.loadingTitle, `Checking SMBSystem web catalog items for ${getSelectedPublicLocationName()}.`);
 
@@ -2297,6 +2494,50 @@ function showCommunityAuthPrompt() {
   }
 }
 
+function ensureCustomerLoginPrompt() {
+  if (document.querySelector("[data-community-auth-prompt]")) {
+    return;
+  }
+
+  const prompt = document.createElement("div");
+  prompt.className = "community-auth-prompt";
+  prompt.dataset.communityAuthPrompt = "";
+  prompt.hidden = true;
+  prompt.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="customer-auth-title">
+      <h2 id="customer-auth-title">Log in to your SarapMagBike account</h2>
+      <p>Access your customer profile and join SarapMagBike community discussions.</p>
+      <form class="community-login-form" data-community-login-form>
+        <div class="community-login-brand">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+          <div>
+            <strong>SarapMagBike Account</strong>
+            <span>Log in to continue.</span>
+          </div>
+        </div>
+        <label>
+          Username
+          <input type="text" name="username" autocomplete="username" required>
+        </label>
+        <label>
+          Password
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+        <div class="community-login-actions">
+          <button type="submit">Log in</button>
+          <button class="community-login-register" type="button" data-open-register>Create account</button>
+        </div>
+        <p data-community-login-message role="status"></p>
+      </form>
+      <div class="community-auth-actions">
+        <button type="button" data-community-prompt-close>Close</button>
+      </div>
+    </div>
+  `;
+  document.body.append(prompt);
+}
+
 function hideCommunityAuthPrompt() {
   const prompt = document.querySelector("[data-community-auth-prompt]");
   if (prompt) {
@@ -2305,7 +2546,6 @@ function hideCommunityAuthPrompt() {
 }
 
 function openCommunityLoginForm() {
-  openCommunityPage(false);
   const form = document.querySelector("[data-community-login-form]");
   if (form) {
     if (form.closest("[data-community-auth-prompt]")) {
@@ -3813,9 +4053,17 @@ function bindCommunityUi() {
     openCommunityCreateModal();
   });
   document.querySelector("[data-community-login]")?.addEventListener("click", openCommunityLoginForm);
-  document.querySelector("[data-community-login-form]")?.addEventListener("submit", loginCustomer);
+  const communityLoginForm = document.querySelector("[data-community-login-form]");
+  if (communityLoginForm && communityLoginForm.dataset.customerLoginBound !== "true") {
+    communityLoginForm.dataset.customerLoginBound = "true";
+    communityLoginForm.addEventListener("submit", loginCustomer);
+  }
   document.querySelector("[data-community-register]")?.addEventListener("click", openRegisterForm);
-  document.querySelector("[data-community-prompt-close]")?.addEventListener("click", hideCommunityAuthPrompt);
+  const communityPromptClose = document.querySelector("[data-community-prompt-close]");
+  if (communityPromptClose && communityPromptClose.dataset.authCloseBound !== "true") {
+    communityPromptClose.dataset.authCloseBound = "true";
+    communityPromptClose.addEventListener("click", hideCommunityAuthPrompt);
+  }
   document.querySelector("[data-community-prompt-register]")?.addEventListener("click", () => {
     hideCommunityAuthPrompt();
     openRegisterForm();
@@ -3983,6 +4231,7 @@ function bindCatalogUi() {
 
   document.querySelector("[data-sort-select]")?.addEventListener("change", (event) => {
     state.sort = event.target.value;
+    state.catalogPage = 1;
     updateCatalogUrl(state.activeCategory, { replace: true });
     renderCatalog();
   });
@@ -5129,18 +5378,26 @@ function updateNotificationBadges(count = 0) {
       ? `Notifications, ${notificationState.unreadCount} unread`
       : "Notifications");
   });
+  document.querySelectorAll("[data-avatar-notification-trigger]").forEach((trigger) => {
+    trigger.hidden = notificationState.unreadCount === 0;
+  });
 }
 
-function ensureDesktopNotificationTrigger() {
-  const header = document.querySelector(".header-main");
-  if (!header || header.querySelector(".desktop-notification-button")) return;
-  const button = document.createElement("button");
-  button.type = "button";
-  button.className = "desktop-notification-button";
-  button.dataset.notificationTrigger = "";
-  button.setAttribute("aria-label", "Notifications");
-  button.innerHTML = '<span aria-hidden="true">🔔</span><b data-notification-badge hidden>0</b>';
-  header.insertBefore(button, header.querySelector(".lock-box"));
+function ensureAccountNotificationTrigger() {
+  document.querySelectorAll("[data-customer-session]").forEach((session) => {
+    if (session.querySelector("[data-avatar-notification-trigger]")) return;
+    const avatar = session.querySelector("[data-account-menu-toggle]");
+    if (!avatar) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "account-notification-button";
+    button.dataset.notificationTrigger = "";
+    button.dataset.avatarNotificationTrigger = "";
+    button.setAttribute("aria-label", "Notifications");
+    button.hidden = true;
+    button.innerHTML = '<b data-notification-badge hidden>0</b>';
+    avatar.insertAdjacentElement("afterend", button);
+  });
 }
 
 function ensureNotificationDrawer() {
@@ -5343,7 +5600,7 @@ async function openNotification(item) {
 }
 
 function initializeNotifications() {
-  ensureDesktopNotificationTrigger();
+  ensureAccountNotificationTrigger();
   ensureNotificationDrawer();
   document.querySelectorAll("[data-notification-trigger]").forEach((button) => {
     if (button.dataset.notificationBound === "true") return;
@@ -5510,6 +5767,21 @@ function hasProfileSurface() {
 function routeToProfileSurface(mode = "register") {
   const target = mode === "edit" ? "profile-edit" : "profile-register";
   window.location.href = `index.html#${target}`;
+}
+
+function getSafeCustomerReturnUrl() {
+  const requested = new URLSearchParams(window.location.search).get("returnTo");
+  if (!requested) {
+    return "";
+  }
+  try {
+    const target = new URL(requested, window.location.origin);
+    return target.origin === window.location.origin
+      ? `${target.pathname}${target.search}${target.hash}`
+      : "";
+  } catch {
+    return "";
+  }
 }
 
 function handleProfileDeepLink() {
@@ -5848,6 +6120,11 @@ async function submitProfile(event) {
       updateCustomerHeader();
       window.dispatchEvent(new CustomEvent("customer-session-changed"));
       setMessage(message, "Profile created. You are now logged in.", "success");
+      const returnUrl = getSafeCustomerReturnUrl();
+      if (returnUrl) {
+        window.location.href = returnUrl;
+        return;
+      }
       await openEditProfileForm();
       return;
     }
@@ -6060,7 +6337,13 @@ async function submitChangePassword(event) {
 
 function bindCustomerAccountUi() {
   addStaySignedInControls();
-  getCustomerLoginForm()?.addEventListener("submit", loginCustomer);
+  document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
+    if (form.dataset.customerLoginBound === "true") {
+      return;
+    }
+    form.dataset.customerLoginBound = "true";
+    form.addEventListener("submit", loginCustomer);
+  });
   document.querySelectorAll("[data-open-register]").forEach((button) => {
     button.addEventListener("click", openRegisterForm);
   });
@@ -6077,6 +6360,13 @@ function bindCustomerAccountUi() {
   document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelector("[data-mobile-header-login]")?.addEventListener("click", openCommunityLoginForm);
+  document.querySelectorAll("[data-community-prompt-close]").forEach((button) => {
+    if (button.dataset.authCloseBound === "true") {
+      return;
+    }
+    button.dataset.authCloseBound = "true";
+    button.addEventListener("click", hideCommunityAuthPrompt);
+  });
   document.querySelector("[data-coming-soon-header-menu-toggle]")?.addEventListener("click", toggleComingSoonHeaderMenu);
   document.querySelector("[data-mobile-header-menu-toggle]")?.addEventListener("click", toggleMobileHeaderMenu);
   document.querySelector("[data-edit-profile]")?.addEventListener("click", () => { window.location.href = "profile.html"; });
@@ -6160,47 +6450,57 @@ function getFieldValue(item, fieldNames) {
 }
 
 function sanitizeRichText(html) {
+  const source = String(html || "");
   const template = document.createElement("template");
-  template.innerHTML = String(html || "");
-  const allowedTags = new Set(["A", "B", "BR", "EM", "I", "LI", "OL", "P", "STRONG", "U", "UL"]);
+  if (/<\/?[a-z][\s\S]*>/i.test(source)) {
+    template.innerHTML = source;
+  } else {
+    const plainText = document.createElement("div");
+    plainText.textContent = source;
+    template.innerHTML = plainText.innerHTML.replace(/\r\n?|\n/g, "<br>");
+  }
+
+  const allowedTags = new Set(["A", "B", "BR", "DIV", "EM", "I", "LI", "OL", "P", "SPAN", "STRONG", "U", "UL"]);
 
   const cleanNode = (node) => {
-    Array.from(node.childNodes).forEach((child) => {
-      if (child.nodeType === Node.TEXT_NODE) {
-        return;
-      }
+    if (node.nodeType === Node.TEXT_NODE) {
+      return document.createTextNode(node.textContent || "");
+    }
+    if (node.nodeType !== Node.ELEMENT_NODE) {
+      return null;
+    }
 
-      if (child.nodeType !== Node.ELEMENT_NODE) {
-        child.remove();
-        return;
-      }
+    const element = node;
+    const cleanedChildren = Array.from(element.childNodes)
+      .map(cleanNode)
+      .filter(Boolean);
 
-      const element = child;
-      if (!allowedTags.has(element.tagName)) {
-        element.replaceWith(document.createTextNode(element.textContent || ""));
-        return;
-      }
+    if (!allowedTags.has(element.tagName)) {
+      const fragment = document.createDocumentFragment();
+      cleanedChildren.forEach((child) => fragment.append(child));
+      return fragment;
+    }
 
-      Array.from(element.attributes).forEach((attribute) => {
-        const isSafeLink = element.tagName === "A"
-          && attribute.name === "href"
-          && /^(https?:|mailto:|tel:)/i.test(attribute.value);
-        if (!isSafeLink) {
-          element.removeAttribute(attribute.name);
-        }
-      });
-
-      if (element.tagName === "A") {
-        element.target = "_blank";
-        element.rel = "noreferrer";
-      }
-
-      cleanNode(element);
-    });
+    const cleanElement = document.createElement(element.tagName.toLowerCase());
+    cleanedChildren.forEach((child) => cleanElement.append(child));
+    if (element.tagName === "A" && /^(https?:|mailto:|tel:)/i.test(element.getAttribute("href") || "")) {
+      cleanElement.href = element.getAttribute("href");
+      cleanElement.target = "_blank";
+      cleanElement.rel = "noreferrer";
+    }
+    return cleanElement;
   };
 
-  cleanNode(template.content);
-  return template.innerHTML;
+  const cleanFragment = document.createDocumentFragment();
+  Array.from(template.content.childNodes).forEach((node) => {
+    const cleaned = cleanNode(node);
+    if (cleaned) {
+      cleanFragment.append(cleaned);
+    }
+  });
+  const container = document.createElement("div");
+  container.append(cleanFragment);
+  return container.innerHTML;
 }
 
 function renderProductDescription(description) {
@@ -6713,6 +7013,8 @@ async function startCatalog() {
   bindScrambleLabels();
   renderCategoryNav();
   setupMobileNavigationBelt();
+  ensureStandardMobileHeaderActions();
+  ensureCustomerLoginPrompt();
   initializeNotifications();
   bindCustomerAccountUi();
   bindCatalogUi();

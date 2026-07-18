@@ -9,7 +9,7 @@
     >
     <title>Search Products | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260716-mobile-alignment">
+    <link rel="stylesheet" href="styles.css?v=20260718-global-mobile-header-10">
   </head>
   <body class="search-page">
     <div class="page-bg"></div>
@@ -35,7 +35,7 @@
         <span class="logo-tag">QUEZON CITY</span>
       </a>
       <form class="search-form" action="search.html">
-        <input type="search" name="search" aria-label="Search" placeholder="Search bikes, parts, service">
+        <input type="search" name="search" aria-label="Search" placeholder="Search bikes, parts, brands, or SKU">
         <button type="submit">Search</button>
       </form>
       <div class="cart-box" aria-label="Message SarapMagBike">
@@ -63,6 +63,16 @@
           <h1>Search Products</h1>
           <p data-product-search-page-summary>Type at least 2 characters to search SarapMagBike inventory and web catalog items.</p>
         </div>
+
+        <form class="product-search-page-form" data-product-search-page-form>
+          <input
+            type="search"
+            data-product-search-page-input
+            aria-label="Search inventory products"
+            placeholder="Search bikes, parts, brands, or SKU"
+          >
+          <button type="submit">Search</button>
+        </form>
 
         <p class="product-search-note" data-product-search-page-note></p>
         <div class="product-search-page-results" data-product-search-page-results>
@@ -126,6 +136,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260716-mobile-alignment"></script>
+    <script src="script.js?v=20260718-global-mobile-header-10"></script>
   </body>
 </html>

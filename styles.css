@@ -7036,6 +7036,26 @@ body.is-catalog-mode .product-section {
     font-size: 11px;
   }
 
+  .mobile-header-actions .mobile-header-profile-link {
+    display: inline-flex;
+    min-height: auto;
+    margin-top: 10px;
+    padding: 0;
+    color: var(--red);
+    background: transparent;
+    border-radius: 0;
+    font-size: 11px;
+    line-height: 1.3;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .mobile-header-actions .mobile-header-profile-link:hover,
+  .mobile-header-actions .mobile-header-profile-link:focus-visible {
+    color: #a30f15;
+    background: transparent;
+  }
+
   .mobile-header-actions a {
     display: inline-flex;
     align-items: center;

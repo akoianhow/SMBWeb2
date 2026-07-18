@@ -1501,6 +1501,7 @@ function ensureStandardMobileHeaderActions() {
       <div class="mobile-header-menu" data-mobile-header-menu hidden>
         <strong data-mobile-header-name>Customer</strong>
         <span data-mobile-header-email></span>
+        <a class="mobile-header-profile-link" href="profile.html">View profile</a>
         <button type="button" data-mobile-header-logout>Logout</button>
       </div>
     </div>

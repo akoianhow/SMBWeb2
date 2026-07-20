@@ -553,7 +553,9 @@ function slugify(value) {
 }
 
 function getItemIdentifier(item) {
-  return item.productId
+  return item.publicId
+    ?? item.productGroupId
+    ?? item.productId
     ?? item.id
     ?? item.itemId
     ?? item.inventoryItemId
@@ -883,6 +885,9 @@ function renderProductPhoto(item) {
 
 function getAvailabilityLabel(item) {
   const stockStatus = normalizeText(item.stockStatus || item.availabilityLabel);
+  if (stockStatus.includes("made to order")) {
+    return "MADE TO ORDER";
+  }
   if (stockStatus.includes("out of stock") || stockStatus.includes("sold out") || stockStatus.includes("unavailable")) {
     return "OUT OF STOCK";
   }
@@ -910,6 +915,7 @@ function renderWebItemCard(item) {
   const detail = [
     item.brand,
     item.category,
+    item.hasVariants && Array.isArray(item.variants) ? `${item.variants.length} options` : "",
     item.stockStatus || item.availabilityLabel || "Ask availability"
   ].filter(Boolean).join(" / ");
 
@@ -6901,10 +6907,87 @@ function bindProductStickyInquiry(sticky, actions) {
   window.addEventListener("resize", updateSticky);
 }
 
+function getSelectedProductVariant(item) {
+  if (!item.hasVariants || !Array.isArray(item.variants) || item.variants.length === 0) {
+    return null;
+  }
+
+  return item.variants.find((variant) => String(variant.productId) === String(item._selectedVariantId))
+    || item.variants.find((variant) => variant.isDefault)
+    || item.variants.find((variant) => variant.isAvailable)
+    || item.variants[0];
+}
+
+function renderProductVariantPicker(item, selectedVariant) {
+  const picker = document.createElement("section");
+  picker.className = "product-variant-picker";
+  picker.append(createTextElement("h2", "Choose an option"));
+
+  const controls = document.createElement("div");
+  controls.className = "product-variant-controls";
+  const mode = item.variantMode || "size";
+  const dimensions = [
+    ...(mode !== "color" ? [{ key: "size", label: "Size" }] : []),
+    ...(mode !== "size" ? [{ key: "color", label: "Color" }] : [])
+  ];
+
+  dimensions.forEach(({ key, label }) => {
+    const field = document.createElement("label");
+    field.append(createTextElement("span", label));
+    const select = document.createElement("select");
+    const values = [...new Set(item.variants.map((variant) => variant[key]).filter(Boolean))];
+    values.forEach((value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = value;
+      option.selected = selectedVariant?.[key] === value;
+      select.append(option);
+    });
+    select.addEventListener("change", () => {
+      const requested = Object.fromEntries(
+        [...controls.querySelectorAll("select")].map((control) => [control.dataset.variantKey, control.value])
+      );
+      const nextVariant = item.variants.find((variant) =>
+        dimensions.every((dimension) => variant[dimension.key] === requested[dimension.key])
+      ) || item.variants.find((variant) => variant[key] === select.value);
+      if (nextVariant) {
+        renderProductDetail({ ...item, _selectedVariantId: nextVariant.productId });
+      }
+    });
+    select.dataset.variantKey = key;
+    field.append(select);
+    controls.append(field);
+  });
+
+  picker.append(controls);
+  if (selectedVariant) {
+    const status = document.createElement("p");
+    status.className = selectedVariant.isAvailable ? "available" : "unavailable";
+    status.textContent = `${selectedVariant.sku} · ${selectedVariant.stockStatus}`;
+    picker.append(status);
+  }
+  return picker;
+}
+
 function renderProductDetail(item) {
   const root = getProductDetailRoot();
   if (!root) {
     return;
+  }
+
+  const selectedVariant = getSelectedProductVariant(item);
+  if (selectedVariant) {
+    item = {
+      ...item,
+      _selectedVariantId: selectedVariant.productId,
+      productId: selectedVariant.productId,
+      sku: selectedVariant.sku,
+      retailPrice: selectedVariant.retailPrice,
+      onHand: selectedVariant.onHand,
+      stockStatus: selectedVariant.stockStatus,
+      size: selectedVariant.size,
+      color: selectedVariant.color
+    };
   }
 
   const productName = getItemName(item);
@@ -6957,6 +7040,7 @@ function renderProductDetail(item) {
     createTextElement("h1", productName),
     price,
     detail,
+    ...(selectedVariant ? [renderProductVariantPicker(item, selectedVariant)] : []),
     actions,
     createTextElement("p", `Showing ${getSelectedPublicLocationName()} inventory. Message the branch before visiting so staff can confirm current availability.`, "product-detail-note")
   );

@@ -6359,6 +6359,21 @@ function bindCustomerAccountUi() {
     });
   });
   document.querySelector("[data-account-menu-toggle]")?.addEventListener("click", toggleAccountMenu);
+  const accountMenuHeader = document.querySelector(".account-menu-header");
+  if (accountMenuHeader) {
+    const identity = accountMenuHeader.querySelector("div");
+    if (identity && !identity.querySelector(".account-menu-profile-link")) {
+      const profileLink = document.createElement("a");
+      profileLink.className = "account-menu-profile-link";
+      profileLink.href = "profile.html";
+      profileLink.setAttribute("aria-label", "View your profile");
+      while (identity.firstChild) {
+        profileLink.appendChild(identity.firstChild);
+      }
+      identity.appendChild(profileLink);
+      profileLink.addEventListener("click", () => setAccountMenuOpen(false));
+    }
+  }
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelector("[data-mobile-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelectorAll("[data-community-prompt-close]").forEach((button) => {

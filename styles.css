@@ -359,6 +359,29 @@ p {
   border-bottom: 1px solid #eeeeee;
 }
 
+.account-menu-profile-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.account-menu-profile-link strong {
+  color: var(--red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.account-menu-profile-link:hover strong,
+.account-menu-profile-link:focus-visible strong {
+  color: #a30f15;
+}
+
+.account-menu-profile-link:focus-visible {
+  border-radius: 2px;
+  outline: 2px solid var(--red);
+  outline-offset: 4px;
+}
+
 .account-menu-header > span {
   width: 52px;
   height: 52px;

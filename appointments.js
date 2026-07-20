@@ -8,48 +8,7 @@
   const pendingAppointmentKey="smbweb2.pendingAppointment";
   const pendingAppointment=readPendingAppointment();
   const refinementStyle=document.createElement("style");refinementStyle.textContent=`.appointment-shell>header{display:grid;grid-template-columns:auto minmax(220px,1fr) auto;align-items:center;gap:14px}.appointment-header-chips{position:relative;min-width:0;color:var(--muted);font-size:10px}.appointment-header-chips .appointment-chips{margin:0;justify-content:center}.appointment-header-chips .appointment-chip{padding:5px 9px}.scheduled-appointments-tooltip{position:absolute;z-index:60;top:calc(100% + 15px);left:50%;width:max-content;max-width:min(280px,90vw);padding:10px 14px;border-radius:4px;background:#202020;color:#fff;font-size:12px;font-weight:800;letter-spacing:.1px;box-shadow:0 10px 28px rgba(0,0,0,.28);opacity:0;pointer-events:none;transform:translate(-50%,-8px);transition:opacity .45s ease,transform .45s ease}.scheduled-appointments-tooltip:before{content:"";position:absolute;bottom:100%;left:50%;border:8px solid transparent;border-bottom-color:#202020;transform:translateX(-50%)}.scheduled-appointments-tooltip.is-visible{opacity:1;transform:translate(-50%,0)}.appointment-day.today{background:#fff2d8;box-shadow:inset 0 -3px 0 #df2027;color:#202020}.appointment-day.today mark{display:block;margin-top:3px;padding:1px 5px;border-radius:10px;background:#df2027;color:#fff;font-size:8px;font-weight:900;letter-spacing:.6px}.appointment-striped-key:before{content:"";width:11px;height:11px;border:1px solid var(--line);background:repeating-linear-gradient(135deg,#eceeef 0,#eceeef 4px,#cfd3d6 4px,#cfd3d6 6px)}.appointment-grid-wrap{position:relative;max-height:calc(100vh - 170px);min-height:420px;overflow:auto;overscroll-behavior:contain}.appointment-day{position:sticky;top:0;z-index:20;box-shadow:0 1px 0 rgba(0,0,0,.08)}.appointment-day:first-child{left:0;z-index:30}.appointment-time{position:sticky;left:0;z-index:15;box-shadow:1px 0 0 rgba(0,0,0,.08)}.reservation-cost{font-weight:800;color:#fff!important}.appointment-contact-modal,.appointment-lock-modal{position:fixed;z-index:10000;inset:0;display:grid;place-items:center;padding:18px;background:rgba(0,0,0,.62)}.appointment-contact-modal[hidden],.appointment-lock-modal[hidden]{display:none}.appointment-contact-modal section,.appointment-lock-modal section{width:min(460px,100%);border-top:5px solid var(--red);border-radius:8px;background:#fff;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.35)}.appointment-contact-modal h2,.appointment-lock-modal h2{margin:0 0 6px}.appointment-contact-modal p,.appointment-lock-modal p{color:var(--muted)}.appointment-contact-modal label{display:grid;gap:5px;margin:12px 0;font-size:11px;font-weight:800;text-transform:uppercase}.appointment-contact-modal input{height:40px;border:1px solid var(--line);padding:0 10px;font:inherit}.appointment-contact-actions,.appointment-lock-actions{display:flex;gap:8px;margin-top:16px}.appointment-contact-actions button,.appointment-lock-actions button{min-height:38px;padding:0 14px;border:0;border-radius:4px;background:var(--red);color:#fff;font-weight:800}.appointment-contact-actions button[type=button],.appointment-lock-actions [data-lock-cancel]{background:#303030}.appointment-contact-message{min-height:18px;color:#a52127!important}.appointment-lock-modal section{width:min(390px,100%)}.appointment-lock-eyebrow{margin:0 0 4px!important;color:var(--red)!important;font-size:11px;font-weight:900;letter-spacing:.7px;text-transform:uppercase}.appointment-lock-summary{display:grid;gap:4px;margin:16px 0;padding:13px 14px;border-left:4px solid var(--red);background:#f4f4f4}.appointment-lock-summary strong{font-size:15px}.appointment-lock-summary span{color:#555;font-size:13px}.appointment-lock-actions button{flex:1}.appointment-lock-actions button:disabled{opacity:.65}@media(max-width:820px){.appointment-shell>header{grid-template-columns:1fr auto}.appointment-header-chips{grid-column:1/-1;grid-row:2}.appointment-header-chips .appointment-chips{justify-content:flex-start}.scheduled-appointments-tooltip{left:14px;transform:translateY(-8px)}.scheduled-appointments-tooltip:before{left:32px}.scheduled-appointments-tooltip.is-visible{transform:translateY(0)}.appointment-grid-wrap{max-height:calc(100vh - 130px);min-height:360px}.appointment-lock-modal section{padding:18px}.appointment-lock-actions{flex-direction:column}.appointment-lock-actions button{width:100%}}@media(prefers-reduced-motion:reduce){.scheduled-appointments-tooltip{transition:none}}`;document.head.appendChild(refinementStyle);
-  const state = { weekStart: pendingAppointment?.weekStart?startOfDay(new Date(pendingAppointment.weekStart)):startOfDay(new Date()), data: null, selected: null, session: null, focusAppointmentId: null };
-  const serviceGroups=[
-    {key:"quick",label:"Quick Installation",priceLabel:"₱50",prices:[50]},
-    {key:"standard",label:"Standard Installation & Adjustment",priceLabel:"₱75–₱100",prices:[75,100]},
-    {key:"advanced",label:"Advanced Installation & Service",priceLabel:"₱150",prices:[150]},
-    {key:"major",label:"Major Component Work",priceLabel:"₱200–₱250",prices:[200,250]},
-    {key:"assembly",label:"Bike Assembly",priceLabel:"₱500–₱800",prices:[500,800]},
-    {key:"overhaul",label:"Full Overhaul",priceLabel:"₱1,000",prices:[1000]}
-  ];
-  const serviceDisplayNames=new Map([
-    ["BIKE ASSEMBLY - GROUPSET / WHEELSET","Full Bike Build – Groupset / Wheelset"],
-    ["BIKE ASSEMBLY - SEMI KNOCKDOWN REGULAR - GROUPSET ONLY","Semi-Knockdown Bike Assembly"],
-    ["HYDAULIC BRAKE BLEED","Hydraulic Brake Bleed"],
-    ["INSTALLATION - ACCESSORIES (PEDAL/GRIP/SADDLE)","Accessory Installation – Pedal, Grip or Saddle"],
-    ["INSTALLATION - BAR TAPE","Bar Tape Installation"],
-    ["INSTALLATION - BOTTOM BRACKET - CARTRIDGE","Cartridge Bottom Bracket Installation"],
-    ["INSTALLATION - CABLE EXTERNAL","External Cable Installation"],
-    ["INSTALLATION - CABLE INTERNAL","Internal Cable Installation"],
-    ["INSTALLATION - CHAIN","Chain Installation"],
-    ["INSTALLATION - COGS/SPROCKET","Cogs / Sprocket Installation"],
-    ["INSTALLATION - CRANK CARTRIDGE","Cartridge Crank Installation"],
-    ["INSTALLATION - CRANK HALLOWTECH","Hollowtech Crank Installation"],
-    ["INSTALLATION - FORK COIL","Coil Fork Installation"],
-    ["INSTALLATION - HEADSET","Headset Installation"],
-    ["INSTALLATION - HYDRAULIC EXTERNAL","External Hydraulic Brake Installation"],
-    ["INSTALLATION - MTB HANDLE BAR","MTB Handlebar Installation"],
-    ["INSTALLATION - PLUG AND PLAY (FROM THE BOX)","Boxed Bike Assembly"],
-    ["INSTALLATION - RB HANDLE / LOOP BARS","Road / Loop Bar Installation"],
-    ["INSTALLATION - STEM / SEATPOST","Stem / Seatpost Installation"],
-    ["INSTALLATION - STI SHIFTER","STI Shifter Installation"],
-    ["INSTALLATION - TIRE (PER TIRE)","Tire Installation – Per Tire"],
-    ["INSTALLATION HYDRAULIC INTERNAL","Internal Hydraulic Brake Installation"],
-    ["OVERHAUL","Full Bicycle Overhaul"],
-    ["RE - WHEEL SET (CHANGE HUBS RIOS) PER RIM","Wheel Rebuild / Hub Replacement – Per Rim"],
-    ["REPACK - HEAD SET","Headset Repack"],
-    ["REPACK - HUBS (EACH)","Hub Repack – Each"],
-    ["REPACK - PRE HUB BODY","Freehub Body Service"],
-    ["REPLACEMENT - BRAKE SHOE","Brake Shoe Replacement"],
-    ["RIM TIRE ALLIGNMENT","Wheel and Tire Alignment"],
-    ["SERVICE - SEAT POST CUT","Seatpost Cutting"],
-    ["TUNE UP","Tune-Up"]
-  ]);
+  const state = { weekStart: pendingAppointment?.weekStart?startOfDay(new Date(pendingAppointment.weekStart)):startOfDay(new Date()), data: null, selected: null, session: null, activeAppointments: null, focusAppointmentId: null };
   let scheduledTooltipTimer=null;
 
   function startOfWeek(value) { const date=new Date(value);date.setHours(0,0,0,0);const day=date.getDay()||7;date.setDate(date.getDate()-day+1);return date; }
@@ -60,16 +19,28 @@
   function timeLabel(hour) { const whole=Math.floor(hour),minute=hour%1?"30":"00",suffix=whole>=12?"PM":"AM";return `${whole>12?whole-12:whole}:${minute} ${suffix}`; }
   function shortTime(value) { return new Date(value).toLocaleTimeString("en-PH",{timeZone:"Asia/Manila",hour:"numeric",minute:"2-digit"}); }
   function estimatedCostLabel(value) { return value==null?"Price to be confirmed":`₱${Number(value).toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2})}`; }
-  function servicePriceLabel(value){return value==null?"Price to confirm":`₱${Number(value).toLocaleString("en-PH",{maximumFractionDigits:0})}`;}
-  function serviceDisplayName(offering){const key=String(offering?.serviceName||"").replace(/\s+/g," ").trim().toUpperCase();return serviceDisplayNames.get(key)||String(offering?.serviceName||"Mechanic Service").replace(/\s+/g," ").trim();}
-  function getServiceGroup(offering){const cost=Number(offering?.estimatedCost);return serviceGroups.find(group=>group.prices.includes(cost))||{key:"other",label:"Other Mechanic Services",priceLabel:"Price varies",prices:[]};}
-  function getVisibleServiceGroups(){const groups=[...serviceGroups];if(state.data.offerings.some(offering=>getServiceGroup(offering).key==="other"))groups.push({key:"other",label:"Other Mechanic Services",priceLabel:"Price varies",prices:[]});return groups.filter(group=>state.data.offerings.some(offering=>getServiceGroup(offering).key===group.key));}
-  function renderServiceGroupOptions(select){select.dataset.group="";select.innerHTML='<option value="">Select service category…</option>'+getVisibleServiceGroups().map(group=>`<option value="group:${group.key}">${escapeHtml(group.label)} • ${escapeHtml(group.priceLabel)}</option>`).join("");}
-  function renderGroupedServiceOptions(select,groupKey){const group=getVisibleServiceGroups().find(item=>item.key===groupKey);if(!group){renderServiceGroupOptions(select);return}const offerings=state.data.offerings.filter(offering=>getServiceGroup(offering).key===groupKey).sort((a,b)=>serviceDisplayName(a).localeCompare(serviceDisplayName(b)));select.dataset.group=groupKey;select.innerHTML=`<option value="">Choose a service in ${escapeHtml(group.label)}…</option><option value="back">← Change service category</option>`+offerings.map(item=>`<option value="service:${item.id}" data-offering-id="${item.id}" data-minutes="${item.estimatedDurationMinutes}">${escapeHtml(serviceDisplayName(item))} • ${servicePriceLabel(item.estimatedCost)} • ${item.estimatedDurationMinutes} min</option>`).join("");}
-  function selectOfferingInPicker(select,offeringId){const offering=state.data.offerings.find(item=>String(item.id)===String(offeringId));if(!offering)return false;renderGroupedServiceOptions(select,getServiceGroup(offering).key);select.value=`service:${offering.id}`;select.dispatchEvent(new Event("change"));return true;}
+  function serviceDisplayName(offering){return String(offering?.serviceName||"Mechanic Service").replace(/\s+/g," ").trim();}
+  function getDatabaseServiceCategory(offering){return String(offering?.serviceCategory||"").trim()||"Uncategorized Services";}
+  function getGroupedOfferings(){
+    const groups=new Map();
+    state.data.offerings.forEach(offering=>{const category=getDatabaseServiceCategory(offering);if(!groups.has(category))groups.set(category,[]);groups.get(category).push(offering);});
+    return [...groups.entries()].map(([category,offerings])=>({category,offerings}));
+  }
+  function workshopCloseFor(start){
+    const [hour,minute]=String(state.data?.closesAt||"19:00").split(":").map(Number);
+    const close=new Date(start);close.setHours(hour,minute,0,0);return close;
+  }
+  function offeringAvailability(start,offering){
+    const minutes=Number(offering.estimatedDurationMinutes),end=new Date(start.getTime()+minutes*60000);
+    if(end>workshopCloseFor(start))return{available:false,end,reason:"Does not fit before closing"};
+    if(overlaps(start,end,state.data.busy))return{available:false,end,reason:"Overlaps an existing appointment"};
+    return{available:true,end,reason:""};
+  }
   function show(message,success=false) { alertBox.textContent=message;alertBox.className=`appointment-alert${success?" success":""}`;alertBox.hidden=false; }
   function overlaps(start,end,busy) { return busy.some(item=>start<new Date(item.endsAt)&&end>new Date(item.startsAt)); }
-  function clearSelection() { grid.querySelectorAll(".covered,.selected").forEach(cell=>cell.classList.remove("covered","selected"));grid.querySelector(".appointment-picker")?.remove();state.selected=null; }
+  function clearSelection() { closeServiceModal(false);grid.querySelectorAll(".covered,.selected").forEach(cell=>cell.classList.remove("covered","selected"));grid.querySelector(".appointment-picker")?.remove();state.selected=null; }
+  function appointmentLimit(){return Math.max(1,Number(state.data?.maxActiveAppointmentsPerCustomer)||3);}
+  function hasReachedAppointmentLimit(){return Boolean(state.session)&&Array.isArray(state.activeAppointments)&&state.activeAppointments.length>=appointmentLimit();}
   function dayRestriction(day) { const today=startOfDay(new Date()),latest=addDays(today,15),candidate=startOfDay(day);if(candidate<today)return{className:"past-date",label:"PAST DATE"};if(candidate>latest)return{className:"advance-closed",label:"BOOKING CLOSED"};if(candidate.getDay()===1)return{className:"shop-closed",label:"SHOP CLOSED"};return null; }
 
   async function load() {
@@ -90,7 +61,7 @@
     const todayKey=dateKey(new Date());
     days.forEach(day=>{const restriction=dayRestriction(day),isToday=dateKey(day)===todayKey,head=document.createElement("div");head.className=`appointment-day${restriction?` ${restriction.className}`:""}${isToday?" today":""}`;head.innerHTML=`${day.toLocaleDateString("en-PH",{weekday:"short"})}<small>${day.toLocaleDateString("en-PH",{month:"short",day:"numeric"})}</small>${isToday?'<mark>TODAY</mark>':restriction?`<em>${restriction.label}</em>`:""}`;grid.appendChild(head)});
     const hours=Array.from({length:18},(_,i)=>10+i*.5);
-    hours.forEach(hour=>{const label=document.createElement("div");label.className="appointment-time";label.textContent=timeLabel(hour);grid.appendChild(label);days.forEach(day=>{const start=localStart(day,hour),end=new Date(start.getTime()+30*60000),restriction=dayRestriction(day),pastTime=start<=new Date(),busy=overlaps(start,end,state.data.busy);const cell=document.createElement("div");cell.className=`appointment-cell${busy?" busy":""}${restriction?` disabled-date ${restriction.className}`:""}${pastTime&&!restriction?" disabled-time":""}`;cell.dataset.start=start.toISOString();if(!busy&&!restriction&&!pastTime)cell.addEventListener("click",()=>selectCell(cell,start));grid.appendChild(cell)})});
+    hours.forEach(hour=>{const label=document.createElement("div");label.className="appointment-time";label.textContent=timeLabel(hour);grid.appendChild(label);days.forEach(day=>{const start=localStart(day,hour),end=new Date(start.getTime()+30*60000),restriction=dayRestriction(day),pastTime=start<=new Date(),busy=overlaps(start,end,state.data.busy);const cell=document.createElement("div");cell.className=`appointment-cell${busy?" busy":""}${restriction?` disabled-date ${restriction.className}`:""}${pastTime&&!restriction?" disabled-time":""}`;cell.dataset.start=start.toISOString();if(!busy&&!restriction&&!pastTime){cell.tabIndex=0;cell.setAttribute("role","button");cell.setAttribute("aria-label",`Choose a service for ${start.toLocaleString("en-PH",{timeZone:"Asia/Manila",weekday:"long",month:"long",day:"numeric",hour:"numeric",minute:"2-digit"})}`);cell.addEventListener("click",()=>void selectCell(cell,start));cell.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();void selectCell(cell,start)}})}grid.appendChild(cell)})});
     renderReservations();
     weekLabel.textContent=`${days[0].toLocaleDateString("en-PH",{month:"short",day:"numeric"})}–${days[6].toLocaleDateString("en-PH",{month:"short",day:"numeric",year:"numeric"})}`;
   }
@@ -99,14 +70,121 @@
     state.data.busy.forEach(item=>{const startIso=new Date(item.startsAt).toISOString(),cell=grid.querySelector(`.appointment-cell[data-start="${startIso}"]`);if(!cell)return;const slots=Math.max(1,Math.round((new Date(item.endsAt)-new Date(item.startsAt))/1800000)),card=document.createElement("div");card.className=`reservation-card${item.isMine?" mine":" other"}${state.focusAppointmentId===item.id?" focused":""}`;card.style.setProperty("--reserved-slots",String(slots));const service=escapeHtml(item.serviceName),times=`${shortTime(item.startsAt)}–${shortTime(item.endsAt)}`;if(item.isMine){const avatar=item.customerAvatarUrl?`<img src="${escapeHtml(resolveUrl(item.customerAvatarUrl))}" alt="Your avatar">`:`<span>${escapeHtml(customerInitials(state.session?.username||"Customer"))}</span>`;card.innerHTML=`<div class="reservation-avatar">${avatar}</div><div><strong>${service}</strong><small>${times}</small><small class="reservation-cost">Estimated Cost: ${estimatedCostLabel(item.estimatedCost)}</small></div>`;}else{card.innerHTML=`<div><b>RESERVED</b><strong>${service}</strong><small>${times}</small></div>`;}cell.appendChild(card);if(state.focusAppointmentId===item.id){window.setTimeout(()=>card.scrollIntoView({behavior:"smooth",block:"center"}),50);state.focusAppointmentId=null;}});
   }
 
-  function selectCell(cell,start) {
-    clearSelection();cell.classList.add("selected");const picker=document.createElement("div");picker.className="appointment-picker";const select=document.createElement("select");renderServiceGroupOptions(select);picker.append(select);cell.appendChild(picker);picker.addEventListener("click",event=>event.stopPropagation());
-    select.addEventListener("change",()=>{grid.querySelectorAll(".covered").forEach(item=>item.classList.remove("covered"));state.selected=null;const option=select.selectedOptions[0],value=option?.value||"";if(!value)return;if(value==="back"){renderServiceGroupOptions(select);select.focus();return}if(value.startsWith("group:")){const groupKey=value.slice(6),group=getVisibleServiceGroups().find(item=>item.key===groupKey);renderGroupedServiceOptions(select,groupKey);show(`Choose the exact service under ${group?.label||"this category"}.`);select.focus();return}const offeringId=option.dataset.offeringId,minutes=Number(option.dataset.minutes),end=new Date(start.getTime()+minutes*60000);if(end.getHours()>19||(end.getHours()===19&&end.getMinutes()>0)||overlaps(start,end,state.data.busy)){show("Not allowed: this service overlaps an existing appointment or extends beyond workshop hours.");return}grid.querySelectorAll(".appointment-cell[data-start]").forEach(item=>{const slot=new Date(item.dataset.start);if(slot>=start&&slot<end)item.classList.add("covered")});const offering=state.data.offerings.find(item=>String(item.id)===String(offeringId)),displayName=serviceDisplayName(offering);state.selected={cell,start,end,offeringId,serviceName:displayName,durationMinutes:minutes};show(`Available: ${displayName} • ${servicePriceLabel(offering?.estimatedCost)} • ${minutes} min.`,true);openLockConfirmation()});const requested=state.data.offerings.find(item=>String(item.productId)===preselectedProductId);if(requested)selectOfferingInPicker(select,requested.id);
+  async function selectCell(cell,start) {
+    if(state.session&&state.activeAppointments===null)await loadMine();
+    if(hasReachedAppointmentLimit()){openAppointmentLimitModal();return;}
+    const requested=state.data.offerings.find(item=>String(item.productId)===preselectedProductId);
+    const retainedOfferingId=state.selected?.cell===cell?state.selected.offeringId:requested?.id;
+    clearSelection();cell.classList.add("selected");openServiceModal(cell,start,retainedOfferingId);
+  }
+
+  function ensureAppointmentLimitModal(){
+    let modal=document.querySelector("[data-appointment-limit-modal]");
+    if(modal)return modal;
+    modal=document.createElement("div");modal.className="appointment-limit-modal";modal.dataset.appointmentLimitModal="";modal.hidden=true;
+    modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="appointment-limit-title" aria-describedby="appointment-limit-message"><button class="appointment-limit-close" type="button" data-appointment-limit-close aria-label="Close appointment limit message">×</button><p class="appointment-limit-eyebrow">Appointment limit</p><div class="appointment-limit-count" data-appointment-limit-count></div><h2 id="appointment-limit-title">Maximum appointments reached</h2><p id="appointment-limit-message" data-appointment-limit-message></p><p class="appointment-limit-help">Cancel one of your existing appointments before booking another service.</p><button class="appointment-limit-action" type="button" data-appointment-limit-action>Okay</button></section>';
+    document.body.appendChild(modal);
+    modal.addEventListener("click",event=>{if(event.target===modal)closeAppointmentLimitModal()});
+    modal.addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();closeAppointmentLimitModal()}});
+    modal.querySelectorAll("[data-appointment-limit-close],[data-appointment-limit-action]").forEach(button=>button.addEventListener("click",()=>closeAppointmentLimitModal()));
+    return modal;
+  }
+
+  function openAppointmentLimitModal(){
+    clearSelection();closeLockConfirmation();clearPendingAppointment();
+    const limit=appointmentLimit(),count=Math.min(state.activeAppointments?.length||limit,limit),modal=ensureAppointmentLimitModal();
+    modal.querySelector("[data-appointment-limit-count]").textContent=`${count} / ${limit} active appointments`;
+    modal.querySelector("[data-appointment-limit-message]").textContent=`You already have ${count} active appointments. The maximum appointment allowed is ${limit}.`;
+    modal.hidden=false;document.body.classList.add("service-modal-open");
+    modal.querySelector("[data-appointment-limit-action]").focus();
+  }
+
+  function closeAppointmentLimitModal(){
+    const modal=document.querySelector("[data-appointment-limit-modal]");
+    if(!modal||modal.hidden)return;
+    modal.hidden=true;document.body.classList.remove("service-modal-open");
+  }
+
+  function applyOfferingSelection(cell,start,offering) {
+    const availability=offeringAvailability(start,offering);
+    if(!availability.available)return false;
+    grid.querySelectorAll(".covered").forEach(item=>item.classList.remove("covered"));
+    grid.querySelectorAll(".appointment-cell[data-start]").forEach(item=>{const slot=new Date(item.dataset.start);if(slot>=start&&slot<availability.end)item.classList.add("covered")});
+    state.selected={cell,start,end:availability.end,offeringId:String(offering.id),serviceName:serviceDisplayName(offering),durationMinutes:Number(offering.estimatedDurationMinutes)};
+    return true;
+  }
+
+  function ensureServiceModal() {
+    let modal=document.querySelector("[data-service-category-modal]");
+    if(modal)return modal;
+    modal=document.createElement("div");modal.className="service-category-modal";modal.dataset.serviceCategoryModal="";modal.hidden=true;
+    modal.innerHTML='<section role="dialog" aria-modal="true" aria-labelledby="service-category-title"><header class="service-category-modal-header"><div><h2 id="service-category-title">Choose a Service</h2><p data-service-slot-summary></p></div><button class="service-category-close" type="button" data-service-modal-close aria-label="Close service selection">×</button></header><div class="service-tree" data-service-category-list role="tree" aria-label="Service categories and services"></div><div class="service-selection-summary" data-service-selection-summary hidden></div><footer class="service-category-actions"><button class="service-category-cancel" type="button" data-service-modal-cancel>Cancel</button><button class="service-category-continue" type="button" data-service-modal-continue disabled>Continue</button></footer></section>';
+    document.body.appendChild(modal);
+    modal.addEventListener("click",event=>{if(event.target===modal)closeServiceModal()});
+    modal.addEventListener("keydown",event=>{if(event.key==="Escape"){event.preventDefault();closeServiceModal()}});
+    modal.querySelector("[data-service-modal-close]").addEventListener("click",()=>closeServiceModal());
+    modal.querySelector("[data-service-modal-cancel]").addEventListener("click",()=>closeServiceModal());
+    modal.querySelector("[data-service-modal-continue]").addEventListener("click",()=>{
+      if(!state.selected)return;
+      closeServiceModal(false);
+      show(`Available: ${state.selected.serviceName} • ${state.selected.durationMinutes} min.`,true);
+      openLockConfirmation();
+    });
+    return modal;
+  }
+
+  function renderServiceCategories(modal,cell,start,preselectedOfferingId) {
+    const list=modal.querySelector("[data-service-category-list]"),summary=modal.querySelector("[data-service-selection-summary]"),continueButton=modal.querySelector("[data-service-modal-continue]");
+    list.innerHTML="";summary.hidden=true;summary.textContent="";continueButton.disabled=true;
+    const grouped=getGroupedOfferings(),preselected=state.data.offerings.find(item=>String(item.id)===String(preselectedOfferingId));
+    grouped.forEach(group=>{
+      const details=document.createElement("details");details.className="service-tree-category";details.open=Boolean(preselected&&group.offerings.includes(preselected));details.setAttribute("role","treeitem");details.setAttribute("aria-expanded",String(details.open));
+      const heading=document.createElement("summary");heading.className="service-tree-branch";heading.innerHTML=`<span>${escapeHtml(group.category)}</span><small>${group.offerings.length}</small>`;
+      const options=document.createElement("div");options.className="service-tree-services";options.setAttribute("role","group");
+      group.offerings.forEach(offering=>{
+        const availability=offeringAvailability(start,offering),label=document.createElement("label");label.className=`service-tree-service${availability.available?"":" unavailable"}`;label.setAttribute("role","treeitem");
+        const input=document.createElement("input");input.type="radio";input.name="appointment-service";input.value=String(offering.id);input.disabled=!availability.available;
+        input.setAttribute("aria-describedby",`service-meta-${offering.id}`);
+        const copy=document.createElement("span");copy.className="service-tree-service-copy";
+        const name=document.createElement("strong");name.textContent=serviceDisplayName(offering);
+        const meta=document.createElement("small");meta.id=`service-meta-${offering.id}`;meta.textContent=availability.available?`${estimatedCostLabel(offering.estimatedCost)} • ${offering.estimatedDurationMinutes} min`:`${offering.estimatedDurationMinutes} min • ${availability.reason}`;
+        const duration=document.createElement("b");duration.textContent=`${offering.estimatedDurationMinutes} min`;
+        copy.append(name,meta);label.append(input,copy,duration);options.appendChild(label);
+        input.addEventListener("change",()=>{
+          if(!applyOfferingSelection(cell,start,offering))return;
+          summary.textContent=`Selected: ${state.selected.serviceName} • Ends at ${shortTime(state.selected.end)}`;
+          summary.hidden=false;continueButton.disabled=false;
+        });
+        if(preselected&&String(preselected.id)===String(offering.id)&&availability.available){input.checked=true;applyOfferingSelection(cell,start,offering);summary.textContent=`Selected: ${state.selected.serviceName} • Ends at ${shortTime(state.selected.end)}`;summary.hidden=false;continueButton.disabled=false;}
+      });
+      details.append(heading,options);
+      details.addEventListener("toggle",()=>{details.setAttribute("aria-expanded",String(details.open));if(!details.open)return;list.querySelectorAll("details[open]").forEach(item=>{if(item!==details)item.open=false})});
+      list.appendChild(details);
+    });
+  }
+
+  function openServiceModal(cell,start,preselectedOfferingId=null) {
+    if(hasReachedAppointmentLimit()){openAppointmentLimitModal();return;}
+    const modal=ensureServiceModal();
+    modal.dataset.returnStart=cell.dataset.start||"";
+    modal.querySelector("[data-service-slot-summary]").textContent=start.toLocaleString("en-PH",{timeZone:"Asia/Manila",weekday:"long",month:"long",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
+    renderServiceCategories(modal,cell,start,preselectedOfferingId);
+    modal.hidden=false;document.body.classList.add("service-modal-open");
+    modal.querySelector(".service-tree-category[open] input:not(:disabled), .service-tree-branch, [data-service-modal-close]")?.focus();
+  }
+
+  function closeServiceModal(restoreFocus=true) {
+    const modal=document.querySelector("[data-service-category-modal]");
+    if(!modal||modal.hidden)return;
+    const returnStart=modal.dataset.returnStart;
+    modal.hidden=true;document.body.classList.remove("service-modal-open");
+    if(restoreFocus&&returnStart)grid.querySelector(`.appointment-cell[data-start="${returnStart}"]`)?.focus();
   }
 
   function openLockConfirmation() {
     if(!state.selected)return;
     if(!state.session){requestAppointmentAuthentication();return;}
+    if(hasReachedAppointmentLimit()){openAppointmentLimitModal();return;}
     clearPendingAppointment();
     let modal=document.querySelector("[data-appointment-lock-modal]");
     if(!modal){
@@ -151,11 +229,12 @@
   function restorePendingAppointment(){
     const pending=readPendingAppointment();
     if(!pending||!state.session||pending.location!==window.getSelectedPublicLocationSlug())return;
+    if(hasReachedAppointmentLimit()){openAppointmentLimitModal();return;}
     const start=new Date(pending.startsAt),cell=grid.querySelector(`.appointment-cell[data-start="${start.toISOString()}"]`);
-    if(!cell||!state.data.offerings.some(item=>String(item.id)===String(pending.offeringId)))return;
-    selectCell(cell,start);
-    const select=cell.querySelector(".appointment-picker select");
-    selectOfferingInPicker(select,pending.offeringId);
+    const offering=state.data.offerings.find(item=>String(item.id)===String(pending.offeringId));
+    if(!cell||!offering)return;
+    clearSelection();cell.classList.add("selected");
+    if(applyOfferingSelection(cell,start,offering))openLockConfirmation();
   }
   async function handleCustomerSessionChanged(){
     try{state.session=await apiRequest("/api/public/customer-account/session")}catch{state.session=null}
@@ -167,14 +246,15 @@
 
   async function lockSelected() {
     if(!state.selected)return;
+    if(hasReachedAppointmentLimit()){openAppointmentLimitModal();return;}
     try { await apiRequest("/api/public/service-appointments",{method:"POST",body:JSON.stringify({location:window.getSelectedPublicLocationSlug(),offeringId:state.selected.offeringId,startsAt:state.selected.start.toISOString(),customerNotes:null,website:""})});show("Appointment confirmed and locked. Please arrive at least 5 minutes early.",true);await load();showScheduledAppointmentsTooltip(); }
-    catch(error){if(error.status===401){show("Sign in or register to lock this selected appointment. Your slot is not saved yet.");document.querySelector('[data-customer-login-form] input[name="username"]')?.focus();}else if(error.status===422&&error.details?.contactRequired){openAppointmentContactModal();}else show(error.message||"Unable to lock appointment.");}
+    catch(error){if(error.status===401){show("Sign in or register to lock this selected appointment. Your slot is not saved yet.");document.querySelector('[data-customer-login-form] input[name="username"]')?.focus();}else if(error.status===409&&/active appointments/i.test(error.message||"")){await loadMine();openAppointmentLimitModal();}else if(error.status===422&&error.details?.contactRequired){openAppointmentContactModal();}else show(error.message||"Unable to lock appointment.");}
   }
 
   async function loadMine() {
-    if(!state.session){myContainer.innerHTML='<span>Sign in to view confirmed appointments.</span>';return;}
-    try { const rows=await apiRequest("/api/public/service-appointments/mine"),confirmed=rows.filter(item=>item.status==="confirmed"&&new Date(item.endsAt)>new Date());myContainer.innerHTML=confirmed.length?`<div class="appointment-chips">${confirmed.map(item=>`<div class="appointment-chip-wrap"><button class="appointment-chip" type="button" data-focus-id="${item.id}" data-focus-start="${item.startsAt}"><strong>${escapeHtml(item.serviceName)}</strong><small>${new Date(item.startsAt).toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</small><small>Estimated Cost: ${estimatedCostLabel(item.estimatedCost)}</small></button><button class="appointment-chip-cancel" type="button" data-cancel-id="${item.id}" aria-label="Cancel ${escapeHtml(item.serviceName)}">×</button></div>`).join("")}</div>`:'<span>No confirmed appointments.</span>';myContainer.querySelectorAll("[data-focus-id]").forEach(button=>button.addEventListener("click",()=>focusAppointment(button.dataset.focusId,button.dataset.focusStart)));myContainer.querySelectorAll("[data-cancel-id]").forEach(button=>button.addEventListener("click",()=>void cancel(button.dataset.cancelId))); }
-    catch(error){show(error.message||"Unable to load your appointments.");}
+    if(!state.session){state.activeAppointments=[];myContainer.innerHTML='<span>Sign in to view confirmed appointments.</span>';return;}
+    try { const rows=await apiRequest("/api/public/service-appointments/mine"),confirmed=rows.filter(item=>item.status==="confirmed"&&new Date(item.endsAt)>new Date());state.activeAppointments=confirmed;myContainer.innerHTML=confirmed.length?`<div class="appointment-chips">${confirmed.map(item=>`<div class="appointment-chip-wrap"><button class="appointment-chip" type="button" data-focus-id="${item.id}" data-focus-start="${item.startsAt}"><strong>${escapeHtml(item.serviceName)}</strong><small>${new Date(item.startsAt).toLocaleString("en-PH",{timeZone:"Asia/Manila",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})}</small><small>Estimated Cost: ${estimatedCostLabel(item.estimatedCost)}</small></button><button class="appointment-chip-cancel" type="button" data-cancel-id="${item.id}" aria-label="Cancel ${escapeHtml(item.serviceName)}">×</button></div>`).join("")}</div>`:'<span>No confirmed appointments.</span>';myContainer.querySelectorAll("[data-focus-id]").forEach(button=>button.addEventListener("click",()=>focusAppointment(button.dataset.focusId,button.dataset.focusStart)));myContainer.querySelectorAll("[data-cancel-id]").forEach(button=>button.addEventListener("click",()=>void cancel(button.dataset.cancelId))); }
+    catch(error){state.activeAppointments=null;show(error.message||"Unable to load your appointments.");}
   }
 
   function showScheduledAppointmentsTooltip(){window.clearTimeout(scheduledTooltipTimer);myContainer.querySelector(".scheduled-appointments-tooltip")?.remove();const tooltip=document.createElement("div");tooltip.className="scheduled-appointments-tooltip";tooltip.setAttribute("role","status");tooltip.textContent="Your scheduled appointments.";myContainer.appendChild(tooltip);window.requestAnimationFrame(()=>window.requestAnimationFrame(()=>{tooltip.classList.add("is-visible");scheduledTooltipTimer=window.setTimeout(()=>{tooltip.classList.remove("is-visible");window.setTimeout(()=>tooltip.remove(),500)},10000)}));}

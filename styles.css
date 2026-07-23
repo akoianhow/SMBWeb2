@@ -4722,6 +4722,166 @@ body.is-catalog-mode .product-section {
   background: #252525;
 }
 
+.account-recovery-links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  padding-top: 2px;
+}
+
+.community-auth-prompt .account-recovery-links button,
+.account-recovery-links button {
+  width: auto;
+  min-height: 0;
+  padding: 2px 0;
+  color: #b3131b;
+  border: 0;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-transform: none;
+  cursor: pointer;
+}
+
+.account-recovery-links button:hover,
+.account-recovery-links button:focus-visible {
+  color: var(--red);
+}
+
+.account-recovery-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.account-recovery-modal[hidden] {
+  display: none;
+}
+
+.account-recovery-modal > div {
+  width: min(480px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  border: 1px solid #d5d5d5;
+  background: #ffffff;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.32);
+}
+
+.account-recovery-modal header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.account-recovery-modal header .section-eyebrow {
+  margin: 0 0 4px;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.account-recovery-modal h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.account-recovery-modal .account-recovery-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  color: #222222;
+  border: 1px solid #cccccc;
+  background: #f4f4f4;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.account-recovery-modal form {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.account-recovery-modal form[hidden] {
+  display: none;
+}
+
+.account-recovery-modal form > p:first-child {
+  margin: 0;
+  color: #555555;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.account-recovery-modal label {
+  display: grid;
+  gap: 7px;
+  color: #202020;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.account-recovery-modal input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cfcfcf;
+  background: #ffffff;
+  font: inherit;
+}
+
+.account-recovery-modal form > button[type="submit"] {
+  min-height: 46px;
+  padding: 10px 16px;
+  color: #ffffff;
+  border: 0;
+  background: var(--red);
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.account-recovery-modal button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.account-recovery-message {
+  min-height: 18px;
+  margin: 0;
+  color: #555555;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.account-recovery-message.is-success {
+  color: #156b2f;
+  font-weight: 800;
+}
+
+.account-recovery-message.is-error {
+  color: var(--red-dark);
+  font-weight: 800;
+}
+
 .community-auth-actions {
   margin-top: 10px;
 }

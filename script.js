@@ -6390,14 +6390,217 @@ async function submitChangePassword(event) {
   }
 }
 
+function ensureAccountRecoveryUi() {
+  document.querySelectorAll("[data-community-login-form]").forEach((form) => {
+    if (form.querySelector("[data-account-recovery-links]")) {
+      return;
+    }
+    const links = document.createElement("div");
+    links.className = "account-recovery-links";
+    links.dataset.accountRecoveryLinks = "";
+    links.innerHTML = `
+      <button type="button" data-open-account-recovery="username">Forgot username?</button>
+      <button type="button" data-open-account-recovery="password">Forgot password?</button>
+    `;
+    const actions = form.querySelector(".community-login-actions");
+    if (actions) {
+      actions.insertAdjacentElement("afterend", links);
+    } else {
+      form.append(links);
+    }
+  });
+
+  if (document.querySelector("[data-account-recovery-modal]")) {
+    return;
+  }
+
+  const modal = document.createElement("div");
+  modal.className = "account-recovery-modal";
+  modal.dataset.accountRecoveryModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="account-recovery-title">
+      <header>
+        <div>
+          <p class="section-eyebrow">Account recovery</p>
+          <h2 id="account-recovery-title" data-account-recovery-title>Recover your account</h2>
+        </div>
+        <button type="button" class="account-recovery-close" data-close-account-recovery aria-label="Close account recovery">×</button>
+      </header>
+      <form data-account-recovery-request-form>
+        <p data-account-recovery-description>Enter the email address used during registration.</p>
+        <label>
+          Registered email
+          <input type="email" name="email" autocomplete="email" maxlength="240" required>
+        </label>
+        <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
+        <button type="submit" data-account-recovery-submit>Send recovery email</button>
+        <p class="account-recovery-message" data-account-recovery-message role="status"></p>
+      </form>
+      <form data-password-reset-form hidden>
+        <p>Create a new password for your SarapMagBike account.</p>
+        <label>
+          New password
+          <div class="password-control">
+            <input type="password" name="newPassword" autocomplete="new-password" minlength="8" required>
+            <button type="button" data-recovery-toggle-password>Show</button>
+          </div>
+        </label>
+        <label>
+          Confirm new password
+          <div class="password-control">
+            <input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" required>
+            <button type="button" data-recovery-toggle-password>Show</button>
+          </div>
+        </label>
+        <button type="submit">Reset password</button>
+        <p class="account-recovery-message" data-password-reset-message role="status"></p>
+      </form>
+    </div>
+  `;
+  document.body.append(modal);
+}
+
+function closeAccountRecovery() {
+  const modal = document.querySelector("[data-account-recovery-modal]");
+  if (modal) {
+    modal.hidden = true;
+  }
+}
+
+function openAccountRecovery(mode) {
+  ensureAccountRecoveryUi();
+  const modal = document.querySelector("[data-account-recovery-modal]");
+  const requestForm = modal?.querySelector("[data-account-recovery-request-form]");
+  const resetForm = modal?.querySelector("[data-password-reset-form]");
+  const title = modal?.querySelector("[data-account-recovery-title]");
+  const description = modal?.querySelector("[data-account-recovery-description]");
+  const submit = modal?.querySelector("[data-account-recovery-submit]");
+  const message = modal?.querySelector("[data-account-recovery-message]");
+  if (!modal || !requestForm || !resetForm) {
+    return;
+  }
+
+  modal.dataset.recoveryMode = mode;
+  modal.hidden = false;
+  requestForm.hidden = mode === "reset";
+  resetForm.hidden = mode !== "reset";
+  setMessage(message, "");
+  setMessage(modal.querySelector("[data-password-reset-message]"), "");
+
+  if (mode === "username") {
+    title.textContent = "Forgot username";
+    description.textContent = "Enter the email address used during registration. We will email your username.";
+    submit.textContent = "Email my username";
+    requestForm.elements.email.focus();
+    return;
+  }
+  if (mode === "password") {
+    title.textContent = "Forgot password";
+    description.textContent = "Enter the email address used during registration. We will send a secure password-reset link.";
+    submit.textContent = "Send reset link";
+    requestForm.elements.email.focus();
+    return;
+  }
+
+  title.textContent = "Reset password";
+  resetForm.elements.newPassword.focus();
+}
+
+async function submitAccountRecoveryRequest(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const modal = form.closest("[data-account-recovery-modal]");
+  const mode = modal?.dataset.recoveryMode === "username" ? "username" : "password";
+  const message = form.querySelector("[data-account-recovery-message]");
+  const submit = form.querySelector("button[type='submit']");
+  setMessage(message, "Sending...");
+  submit.disabled = true;
+
+  try {
+    const result = await apiRequest(`/api/public/customer-account/forgot-${mode}`, {
+      method: "POST",
+      body: JSON.stringify({
+        email: form.elements.email.value.trim(),
+        website: form.elements.website.value
+      })
+    });
+    form.reset();
+    setMessage(message, result.message || "If that email is registered, recovery instructions have been sent.", "success");
+  } catch (error) {
+    setMessage(message, error.message || "Unable to send the recovery email. Please try again.", "error");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+async function submitPasswordReset(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = form.querySelector("[data-password-reset-message]");
+  const submit = form.querySelector("button[type='submit']");
+  const token = new URLSearchParams(window.location.search).get("passwordResetToken") || "";
+  const newPassword = form.elements.newPassword.value;
+  const confirmPassword = form.elements.confirmPassword.value;
+  if (newPassword !== confirmPassword) {
+    setMessage(message, "Password and confirm password must match.", "error");
+    return;
+  }
+
+  setMessage(message, "Resetting password...");
+  submit.disabled = true;
+  try {
+    const result = await apiRequest("/api/public/customer-account/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, newPassword, confirmPassword })
+    });
+    form.reset();
+    const url = new URL(window.location.href);
+    url.searchParams.delete("passwordResetToken");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    setMessage(message, result.message || "Password reset successfully. You can now log in.", "success");
+    window.setTimeout(() => {
+      closeAccountRecovery();
+      openCommunityLoginForm();
+    }, 1200);
+  } catch (error) {
+    setMessage(message, error.message || "This reset link is invalid or expired.", "error");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
 function bindCustomerAccountUi() {
   addStaySignedInControls();
+  ensureAccountRecoveryUi();
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
     if (form.dataset.customerLoginBound === "true") {
       return;
     }
     form.dataset.customerLoginBound = "true";
     form.addEventListener("submit", loginCustomer);
+  });
+  document.querySelectorAll("[data-open-account-recovery]").forEach((button) => {
+    button.addEventListener("click", () => openAccountRecovery(button.dataset.openAccountRecovery));
+  });
+  document.querySelector("[data-close-account-recovery]")?.addEventListener("click", closeAccountRecovery);
+  document.querySelector("[data-account-recovery-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) {
+      closeAccountRecovery();
+    }
+  });
+  document.querySelector("[data-account-recovery-request-form]")?.addEventListener("submit", submitAccountRecoveryRequest);
+  document.querySelector("[data-password-reset-form]")?.addEventListener("submit", submitPasswordReset);
+  document.querySelectorAll("[data-recovery-toggle-password]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const input = button.closest(".password-control")?.querySelector("input");
+      if (!(input instanceof HTMLInputElement)) {
+        return;
+      }
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      button.textContent = show ? "Hide" : "Show";
+    });
   });
   document.querySelectorAll("[data-open-register]").forEach((button) => {
     button.addEventListener("click", openRegisterForm);
@@ -6503,6 +6706,9 @@ function bindCustomerAccountUi() {
 
   restoreCustomerSession();
   window.setTimeout(handleProfileDeepLink, 0);
+  if (initialPageParams.get("passwordResetToken")) {
+    window.setTimeout(() => openAccountRecovery("reset"), 0);
+  }
 }
 
 function getProductDetailRoot() {

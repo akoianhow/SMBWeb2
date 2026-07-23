@@ -4879,11 +4879,11 @@ function renderEventDetail(eventItem) {
   description.className = "event-description";
   description.innerHTML = sanitizeEventHtml(eventItem.descriptionHtml || eventItem.description || "");
   copy.append(statusRow, title, summary, description);
-  main.append(poster, copy);
+  main.append(poster, copy, renderEventActionPanel(eventItem));
 
   const aside = document.createElement("aside");
   aside.className = "event-detail-side";
-  aside.append(renderEventFacts(eventItem), renderEventParticipants(eventItem), renderEventActionPanel(eventItem));
+  aside.append(renderEventFacts(eventItem), renderEventParticipants(eventItem));
   shell.append(main, aside);
   content.replaceChildren(shell);
 }
@@ -5012,13 +5012,16 @@ function renderEventActionPanel(eventItem) {
       panel.append(createTextElement("p", "Your registration is currently waitlisted.", "event-muted"));
     }
     panel.append(renderEventRegistrationRecord(currentRegistration));
+    const registrationControls = document.createElement("div");
+    registrationControls.className = "event-registration-controls";
+    let registrationHelp = null;
     if (isCheckedIn) {
       const confirmed = document.createElement("button");
       confirmed.type = "button";
       confirmed.className = "event-attendance-confirmed";
       confirmed.textContent = "ATTENDANCE CONFIRMED";
       confirmed.disabled = true;
-      panel.append(confirmed);
+      registrationControls.append(confirmed);
     } else if (eventItem.isPaid && !paymentConfirmed) {
       const paymentAction = document.createElement("button");
       paymentAction.type = "button";
@@ -5032,8 +5035,8 @@ function renderEventActionPanel(eventItem) {
       if (!paymentAction.disabled) {
         paymentAction.addEventListener("click", openEventPaymentProofModal);
       }
-      panel.append(paymentAction);
-      panel.append(createTextElement(
+      registrationControls.append(paymentAction);
+      registrationHelp = createTextElement(
         "p",
         paymentStatus === "pending_review"
           ? "Your proof of payment is being reviewed by SarapMagBike staff."
@@ -5041,14 +5044,14 @@ function renderEventActionPanel(eventItem) {
             ? "Your previous proof was rejected. Upload a new, clear screenshot for review."
             : "Upload proof of payment. Attendance confirmation appears after staff confirms payment.",
         "event-muted"
-      ));
+      );
     } else if (isWaitlisted) {
       const waitlisted = document.createElement("button");
       waitlisted.type = "button";
       waitlisted.className = "event-waitlisted-action";
       waitlisted.textContent = "WAITLISTED";
       waitlisted.disabled = true;
-      panel.append(waitlisted);
+      registrationControls.append(waitlisted);
     } else {
       const confirmAttendance = document.createElement("button");
       confirmAttendance.type = "button";
@@ -5059,9 +5062,9 @@ function renderEventActionPanel(eventItem) {
         confirmAttendance.title = "The organizer has not enabled attendance confirmation yet.";
       }
       confirmAttendance.addEventListener("click", openEventAttendanceModal);
-      panel.append(confirmAttendance);
+      registrationControls.append(confirmAttendance);
       if (eventItem.attendanceConfirmationEnabled === false) {
-        panel.append(createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted"));
+        registrationHelp = createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted");
       }
     }
     if (!isCheckedIn) {
@@ -5070,7 +5073,13 @@ function renderEventActionPanel(eventItem) {
       withdraw.className = "event-danger-action";
       withdraw.textContent = "Withdraw Registration";
       withdraw.addEventListener("click", () => withdrawEventRegistration(eventItem.id));
-      panel.append(withdraw);
+      registrationControls.append(withdraw);
+    }
+    if (registrationControls.children.length > 0) {
+      panel.append(registrationControls);
+    }
+    if (registrationHelp) {
+      panel.append(registrationHelp);
     }
     return panel;
   }
@@ -5111,7 +5120,6 @@ function renderEventRegistrationRecord(registration) {
   const accountEmail = customerState.profile?.email || customerState.account?.email || "Not set";
   const eventItem = eventsState.activeEvent;
   const rows = [
-    ["Reg No", registration.registrationNumber || "Pending"],
     ["Registrant", accountName],
     ["Email", accountEmail],
     ["Status", getEventRegistrationStatusLabel(registration, eventItem)],

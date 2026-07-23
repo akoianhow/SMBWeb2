@@ -9,7 +9,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260718-mobile-profile-link">
+    <link rel="stylesheet" href="styles.css?v=20260723-event-registration-v2">
   </head>
   <body class="is-events-page">
     <div class="page-bg"></div>
@@ -262,8 +262,15 @@
             <label class="span-2">Notes<textarea name="notes" placeholder="Optional ride notes for staff"></textarea></label>
           </div>
           <p class="event-form-note">Participant name and email come from your public customer profile. Your display name and avatar may appear in the public participant list. Emergency and contact details stay private in SMBSystem.</p>
+          <label class="event-waiver" data-event-waiver>
+            <input name="waiverAccepted" type="checkbox" required data-event-waiver-checkbox>
+            <span>
+              <strong>Bike ride waiver (required)</strong>
+              I voluntarily join this ride and understand cycling involves risks of injury, collision, equipment failure, weather, and road hazards. I confirm I am fit to ride, will wear a helmet, obey traffic and organizer instructions, and ride within my ability. I accept these ordinary risks and release SarapMagBike, YPP Enterprises OPC, organizers, sponsors, and volunteers from related claims to the extent allowed by law. I authorize reasonable emergency assistance if needed.
+            </span>
+          </label>
           <div class="event-modal-actions">
-            <button type="submit" data-event-registration-submit>Confirm Registration</button>
+            <button type="submit" data-event-registration-submit disabled>Confirm Registration</button>
             <button type="button" data-event-registration-cancel>Cancel</button>
           </div>
           <p class="event-registration-message" data-event-registration-message role="status"></p>
@@ -369,6 +376,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260718-mobile-profile-link"></script>
+    <script src="script.js?v=20260723-event-registration-v2"></script>
   </body>
 </html>

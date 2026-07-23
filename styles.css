@@ -2893,6 +2893,47 @@ body.is-catalog-mode .product-section {
   color: var(--red);
 }
 
+.event-waiver {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid #d8d8d8;
+  color: #404040;
+  background: #f8f8f8;
+  font-size: 12px;
+  line-height: 1.45;
+  cursor: pointer;
+}
+
+.event-waiver[hidden] {
+  display: none;
+}
+
+.event-waiver input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+  accent-color: var(--red);
+}
+
+.event-waiver span {
+  display: grid;
+  gap: 4px;
+}
+
+.event-waiver strong {
+  color: #202020;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.event-modal-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
 .event-registration-record {
   display: grid;
   gap: 8px;

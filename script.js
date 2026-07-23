@@ -4993,7 +4993,12 @@ function renderEventActionPanel(eventItem) {
     const isWaitlisted = currentRegistration.status === "waitlisted";
     const paymentStatus = String(currentRegistration.paymentStatus || "unpaid").toLowerCase();
     const paymentConfirmed = !eventItem.isPaid || paymentStatus === "paid" || paymentStatus === "waived";
-    panel.append(createTextElement("p", isCheckedIn ? "Your attendance is confirmed." : `You are ${currentRegistration.status === "waitlisted" ? "waitlisted" : "registered"} for this event.`));
+    panel.append(createTextElement("p", `You registered to this event. Reg No: ${currentRegistration.registrationNumber || "Pending"}`));
+    if (isCheckedIn) {
+      panel.append(createTextElement("p", "Your attendance is confirmed.", "event-muted"));
+    } else if (isWaitlisted) {
+      panel.append(createTextElement("p", "Your registration is currently waitlisted.", "event-muted"));
+    }
     panel.append(renderEventRegistrationRecord(currentRegistration));
     if (isCheckedIn) {
       const confirmed = document.createElement("button");
@@ -5094,6 +5099,7 @@ function renderEventRegistrationRecord(registration) {
   const accountEmail = customerState.profile?.email || customerState.account?.email || "Not set";
   const eventItem = eventsState.activeEvent;
   const rows = [
+    ["Reg No", registration.registrationNumber || "Pending"],
     ["Registrant", accountName],
     ["Email", accountEmail],
     ["Status", getEventRegistrationStatusLabel(registration, eventItem)],
@@ -5121,6 +5127,7 @@ function openEventRegistrationModal() {
   const title = document.querySelector("#event-registration-title");
   const message = document.querySelector("[data-event-registration-message]");
   const paymentFields = document.querySelector("[data-event-payment-fields]");
+  const waiver = document.querySelector("[data-event-waiver]");
   const feeLabel = document.querySelector("[data-event-registration-fee]");
   if (!eventItem || !modal || !form) {
     return;
@@ -5139,6 +5146,16 @@ function openEventRegistrationModal() {
     form.elements.paymentProof.value = "";
   }
   form.elements.notes.value = "";
+  const isRide = eventItem.eventType === "ride";
+  form.elements.waiverAccepted.checked = false;
+  form.elements.waiverAccepted.required = isRide;
+  if (waiver) {
+    waiver.hidden = !isRide;
+  }
+  const submit = document.querySelector("[data-event-registration-submit]");
+  if (submit) {
+    submit.disabled = isRide;
+  }
   if (paymentFields) {
     paymentFields.hidden = !eventItem.isPaid;
   }
@@ -5277,7 +5294,8 @@ async function buildEventRegistrationPayload(form) {
     emergencyContactName: form.elements.emergencyContactName.value.trim() || null,
     emergencyContactPhone: form.elements.emergencyContactPhone.value.trim() || null,
     bikeType: form.elements.bikeType.value.trim() || null,
-    notes: form.elements.notes.value.trim() || null
+    notes: form.elements.notes.value.trim() || null,
+    waiverAccepted: eventsState.activeEvent?.eventType !== "ride" || form.elements.waiverAccepted.checked
   };
 
   if (paymentProof) {
@@ -5294,6 +5312,10 @@ async function submitEventRegistration(event) {
   const form = event.currentTarget;
   const message = document.querySelector("[data-event-registration-message]");
   if (!eventsState.activeEvent) {
+    return;
+  }
+  if (eventsState.activeEvent.eventType === "ride" && !form.elements.waiverAccepted.checked) {
+    setMessage(message, "Accept the bike ride waiver before registering.", "error");
     return;
   }
 
@@ -5333,6 +5355,12 @@ function bindEventsUi() {
 
   document.querySelector("[data-events-back]")?.addEventListener("click", showEventListView);
   document.querySelector("[data-event-registration-form]")?.addEventListener("submit", submitEventRegistration);
+  document.querySelector("[data-event-waiver-checkbox]")?.addEventListener("change", (event) => {
+    const submit = document.querySelector("[data-event-registration-submit]");
+    if (submit) {
+      submit.disabled = !event.currentTarget.checked;
+    }
+  });
   document.querySelector("[data-event-registration-close]")?.addEventListener("click", closeEventRegistrationModal);
   document.querySelector("[data-event-registration-cancel]")?.addEventListener("click", closeEventRegistrationModal);
   document.querySelector("[data-event-registration-modal]")?.addEventListener("click", (event) => {

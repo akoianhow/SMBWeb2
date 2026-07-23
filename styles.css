@@ -2934,6 +2934,48 @@ body.is-catalog-mode .product-section {
   opacity: 0.45;
 }
 
+.event-registration-notice {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border: 2px solid #e8202a;
+  border-left-width: 8px;
+  color: #151515;
+  background: #fff4f4;
+  box-shadow: 0 4px 14px rgba(232, 32, 42, 0.12);
+}
+
+.event-registration-notice svg {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  fill: none;
+  stroke: #e8202a;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.event-registration-notice div {
+  display: grid;
+  gap: 2px;
+}
+
+.event-registration-notice span {
+  color: #555555;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.event-registration-notice strong {
+  color: #171717;
+  font-size: clamp(24px, 5vw, 34px);
+  font-weight: 950;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+}
+
 .event-registration-record {
   display: grid;
   gap: 8px;

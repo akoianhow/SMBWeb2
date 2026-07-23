@@ -4993,7 +4993,19 @@ function renderEventActionPanel(eventItem) {
     const isWaitlisted = currentRegistration.status === "waitlisted";
     const paymentStatus = String(currentRegistration.paymentStatus || "unpaid").toLowerCase();
     const paymentConfirmed = !eventItem.isPaid || paymentStatus === "paid" || paymentStatus === "waived";
-    panel.append(createTextElement("p", `You registered to this event. Reg No: ${currentRegistration.registrationNumber || "Pending"}`));
+    const registrationNotice = document.createElement("div");
+    registrationNotice.className = "event-registration-notice";
+    const ticketIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    ticketIcon.setAttribute("aria-hidden", "true");
+    ticketIcon.setAttribute("viewBox", "0 0 24 24");
+    ticketIcon.innerHTML = '<path d="M2 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 0 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path>';
+    const registrationNoticeCopy = document.createElement("div");
+    registrationNoticeCopy.append(
+      createTextElement("span", "You registered to this event."),
+      createTextElement("strong", `Reg No: ${currentRegistration.registrationNumber || "Pending"}`)
+    );
+    registrationNotice.append(ticketIcon, registrationNoticeCopy);
+    panel.append(registrationNotice);
     if (isCheckedIn) {
       panel.append(createTextElement("p", "Your attendance is confirmed.", "event-muted"));
     } else if (isWaitlisted) {

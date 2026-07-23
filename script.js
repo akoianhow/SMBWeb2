@@ -4879,11 +4879,11 @@ function renderEventDetail(eventItem) {
   description.className = "event-description";
   description.innerHTML = sanitizeEventHtml(eventItem.descriptionHtml || eventItem.description || "");
   copy.append(statusRow, title, summary, description);
-  main.append(poster, copy, renderEventActionPanel(eventItem));
+  main.append(poster, copy);
 
   const aside = document.createElement("aside");
   aside.className = "event-detail-side";
-  aside.append(renderEventFacts(eventItem), renderEventParticipants(eventItem));
+  aside.append(renderEventFacts(eventItem), renderEventActionPanel(eventItem), renderEventParticipants(eventItem));
   shell.append(main, aside);
   content.replaceChildren(shell);
 }

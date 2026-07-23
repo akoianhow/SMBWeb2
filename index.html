@@ -9,7 +9,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260723-account-recovery">
+    <link rel="stylesheet" href="styles.css?v=20260723-desktop-login-modal">
   </head>
   <body class="smb-home-page">
     <div class="page-bg"></div>
@@ -24,19 +24,10 @@
         <div class="topbar-options">
           <span>English</span>
           <span>Prices in PHP</span>
-          <form class="customer-login" data-customer-login-form>
-            <label>
-              <span>Username</span>
-              <input type="text" name="username" autocomplete="username" aria-label="Customer username">
-            </label>
-            <label>
-              <span>Password</span>
-              <input type="password" name="password" autocomplete="current-password" aria-label="Customer password">
-            </label>
-            <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
-            <button type="submit">Login</button>
+          <div class="customer-login" data-customer-login-form aria-label="Customer account">
+            <button type="button" data-desktop-header-login>Login</button>
             <button type="button" data-open-register>Register</button>
-          </form>
+          </div>
           <div class="customer-session" data-customer-session hidden>
             <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
               <span data-account-avatar>SMB</span>
@@ -617,6 +608,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260723-account-recovery"></script>
+    <script src="script.js?v=20260723-desktop-login-modal"></script>
   </body>
 </html>

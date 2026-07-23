@@ -217,7 +217,7 @@ p {
   cursor: pointer;
 }
 
-.customer-login button[type="button"],
+.customer-login button[data-open-register],
 .customer-session button {
   background: #242424;
   border: 1px solid #5c5c5c;

@@ -4978,7 +4978,7 @@ function renderEventActionPanel(eventItem) {
     const login = document.createElement("button");
     login.type = "button";
     login.textContent = "Log in to Register";
-    login.addEventListener("click", () => document.querySelector("[data-customer-login-form] input[name='username']")?.focus());
+    login.addEventListener("click", openCommunityLoginForm);
     const register = document.createElement("button");
     register.type = "button";
     register.textContent = "Create Account";
@@ -5682,7 +5682,7 @@ function getCustomerLoginForm() {
 
 function addStaySignedInControls() {
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
-    if (form.elements.staySignedIn) {
+    if (!form.elements?.username || form.elements.staySignedIn) {
       return;
     }
 
@@ -6574,7 +6574,7 @@ function bindCustomerAccountUi() {
   addStaySignedInControls();
   ensureAccountRecoveryUi();
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
-    if (form.dataset.customerLoginBound === "true") {
+    if (!form.elements?.username || form.dataset.customerLoginBound === "true") {
       return;
     }
     form.dataset.customerLoginBound = "true";
@@ -6632,7 +6632,9 @@ function bindCustomerAccountUi() {
     }
   }
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
-  document.querySelector("[data-mobile-header-login]")?.addEventListener("click", openCommunityLoginForm);
+  document.querySelectorAll("[data-desktop-header-login], [data-mobile-header-login]").forEach((button) => {
+    button.addEventListener("click", openCommunityLoginForm);
+  });
   document.querySelectorAll("[data-community-prompt-close]").forEach((button) => {
     if (button.dataset.authCloseBound === "true") {
       return;

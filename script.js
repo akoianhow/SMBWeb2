@@ -1488,12 +1488,6 @@ function ensureStandardMobileHeaderActions() {
   actions.className = "mobile-header-actions";
   actions.setAttribute("aria-label", "Mobile quick actions");
   actions.innerHTML = `
-    <button class="mobile-header-search" type="button" data-product-search-open aria-label="Search products" title="Search">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="11" cy="11" r="6"></circle>
-        <path d="m16 16 4 4"></path>
-      </svg>
-    </button>
     <button class="mobile-header-account" type="button" data-mobile-header-login aria-label="Log in or create an account" title="Account">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="8" r="4"></circle>
@@ -1512,6 +1506,64 @@ function ensureStandardMobileHeaderActions() {
       </div>
     </div>
   `;
+}
+
+function removeLegacyHeaderTools() {
+  document.querySelectorAll(".header-main > .search-form, .header-main > .cart-box, .header-main > .lock-box").forEach((element) => element.remove());
+}
+
+function ensureStandardCustomerHeaderActions() {
+  const options = document.querySelector(".topbar-options");
+  if (!options) {
+    return;
+  }
+
+  let guestActions = options.querySelector("[data-customer-login-form]");
+  if (!guestActions) {
+    guestActions = document.createElement("div");
+    guestActions.className = "customer-login";
+    guestActions.dataset.customerLoginForm = "";
+    guestActions.setAttribute("aria-label", "Customer account");
+    options.append(guestActions);
+  }
+
+  if (!guestActions.querySelector("[data-desktop-header-login]")) {
+    guestActions.replaceChildren();
+    const login = document.createElement("button");
+    login.type = "button";
+    login.dataset.desktopHeaderLogin = "";
+    login.textContent = "Login";
+    const register = document.createElement("button");
+    register.type = "button";
+    register.dataset.openRegister = "";
+    register.textContent = "Register";
+    guestActions.append(login, register);
+  }
+
+  if (!options.querySelector("[data-customer-session]")) {
+    const session = document.createElement("div");
+    session.className = "customer-session";
+    session.dataset.customerSession = "";
+    session.hidden = true;
+    session.innerHTML = `
+      <button class="account-avatar-button" type="button" data-account-menu-toggle aria-label="Open account menu" aria-expanded="false">
+        <span data-account-avatar>SMB</span>
+      </button>
+      <div class="account-menu" data-account-menu hidden>
+        <div class="account-menu-header">
+          <span data-account-menu-avatar>SMB</span>
+          <div>
+            <strong data-customer-greeting>Account</strong>
+            <p data-account-email></p>
+          </div>
+        </div>
+        <div class="account-menu-actions">
+          <button type="button" data-edit-profile>Edit Profile</button>
+          <button type="button" data-logout>Logout</button>
+        </div>
+      </div>`;
+    options.append(session);
+  }
 }
 
 function isPublicProduct(item) {
@@ -6985,17 +7037,22 @@ function renderProductMiniCard(item) {
 }
 
 async function copyCurrentProductLink(button) {
+  const originalLabel = button.dataset.defaultTooltip || "Copy link";
+  const showResult = (label) => {
+    button.dataset.tooltip = label;
+    button.title = label;
+    button.setAttribute("aria-label", label);
+    window.setTimeout(() => {
+      button.dataset.tooltip = originalLabel;
+      button.title = originalLabel;
+      button.setAttribute("aria-label", originalLabel);
+    }, 1600);
+  };
   try {
     await navigator.clipboard.writeText(window.location.href);
-    button.textContent = "Link copied";
-    window.setTimeout(() => {
-      button.textContent = "Copy link";
-    }, 1600);
+    showResult("Link copied");
   } catch {
-    button.textContent = "Copy failed";
-    window.setTimeout(() => {
-      button.textContent = "Copy link";
-    }, 1600);
+    showResult("Copy failed");
   }
 }
 
@@ -7163,57 +7220,397 @@ function bindProductStickyInquiry(sticky, actions) {
   window.addEventListener("resize", updateSticky);
 }
 
+const cartState = {
+  storageKey: "smb-web-cart-v1",
+  items: []
+};
+
+function loadCart() {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(cartState.storageKey) || "[]");
+    cartState.items = Array.isArray(value) ? value.filter((item) => item?.productId && item.quantity > 0) : [];
+  } catch {
+    cartState.items = [];
+  }
+}
+
+function saveCart() {
+  window.localStorage.setItem(cartState.storageKey, JSON.stringify(cartState.items));
+  updateCartBadge();
+}
+
+function getCartItemCount() {
+  return cartState.items.reduce((total, item) => total + Number(item.quantity || 0), 0);
+}
+
+function getCartTotal() {
+  return cartState.items.reduce((total, item) => total + Number(item.unitPrice || 0) * Number(item.quantity || 0), 0);
+}
+
+function updateCartBadge() {
+  const count = getCartItemCount();
+  document.querySelectorAll("[data-cart-count]").forEach((badge) => {
+    badge.textContent = String(count);
+    badge.hidden = count === 0;
+  });
+}
+
+function ensureCartButton() {
+  const createButton = (className) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `site-cart-button ${className}`;
+    button.dataset.cartOpen = "";
+    button.setAttribute("aria-label", "Open shopping cart");
+    button.innerHTML = '<span aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1M9 20a1.25 1.25 0 1 0 0-2.5A1.25 1.25 0 0 0 9 20Zm8 0a1.25 1.25 0 1 0 0-2.5A1.25 1.25 0 0 0 17 20Z"/></svg></span><strong>Cart</strong><em data-cart-count hidden>0</em>';
+    return button;
+  };
+
+  const desktopActions = document.querySelector(".topbar-options");
+  if (desktopActions && !desktopActions.querySelector(".site-cart-button-desktop")) {
+    const button = createButton("site-cart-button-desktop");
+    const guestActions = desktopActions.querySelector("[data-customer-login-form]");
+    if (guestActions) {
+      guestActions.insertAdjacentElement("afterend", button);
+    } else {
+      desktopActions.append(button);
+    }
+  }
+
+  const mobileActions = document.querySelector(".mobile-header-actions");
+  if (!mobileActions || mobileActions.querySelector(".site-cart-button-mobile")) return;
+  const mobileCart = createButton("site-cart-button-mobile");
+  const accountAction = mobileActions.querySelector("[data-mobile-header-login], [data-mobile-header-session]");
+  mobileActions.insertBefore(mobileCart, accountAction || null);
+}
+
+function ensureCartUi() {
+  if (document.querySelector("[data-cart-modal]")) return;
+  const modal = document.createElement("div");
+  modal.className = "web-cart-modal";
+  modal.dataset.cartModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="web-cart-title">
+      <header>
+        <div><p>Cash on Delivery</p><h2 id="web-cart-title">Your Cart</h2></div>
+        <button type="button" data-cart-close aria-label="Close cart">Close</button>
+      </header>
+      <section data-cart-view></section>
+      <section data-checkout-view hidden></section>
+    </div>`;
+  document.body.append(modal);
+  modal.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeCart();
+  });
+}
+
+function openCart() {
+  ensureCartUi();
+  renderCartView();
+  const modal = document.querySelector("[data-cart-modal]");
+  modal.hidden = false;
+  document.body.classList.add("has-web-cart");
+}
+
+function closeCart() {
+  const modal = document.querySelector("[data-cart-modal]");
+  if (modal) modal.hidden = true;
+  document.body.classList.remove("has-web-cart");
+}
+
+function addProductToCart(item) {
+  const selected = getSelectedProductVariant(item);
+  if (selected && !selected.isAvailable) return;
+  const productId = selected?.productId || item.productId;
+  const existing = cartState.items.find((line) => String(line.productId) === String(productId));
+  if (existing) {
+    existing.quantity += 1;
+  } else {
+    const variantLabel = [selected?.size, selected?.color].filter(Boolean).join(" / ");
+    cartState.items.push({
+      productId,
+      name: getItemName(item),
+      sku: selected?.sku || item.sku || "",
+      variantLabel,
+      unitPrice: Number(item.isOnSale ? item.discountedPrice : (selected?.retailPrice ?? item.retailPrice) ?? 0),
+      quantity: 1,
+      imageUrl: normalizeApiUrl(getProductImageUrls(item)[0] || ""),
+      location: getSelectedPublicLocationSlug()
+    });
+  }
+  saveCart();
+  openCart();
+}
+
+function createCartLine(item) {
+  const row = document.createElement("article");
+  row.className = "web-cart-line";
+  const image = document.createElement("div");
+  image.className = "web-cart-line-image";
+  if (item.imageUrl) {
+    const img = document.createElement("img");
+    img.src = item.imageUrl;
+    img.alt = item.name;
+    image.append(img);
+  }
+  const copy = document.createElement("div");
+  copy.className = "web-cart-line-copy";
+  copy.append(
+    createTextElement("strong", item.name),
+    createTextElement("span", item.variantLabel ? `Option: ${item.variantLabel}` : `SKU: ${item.sku}`),
+    createTextElement("span", item.variantLabel ? `SKU: ${item.sku}` : ""),
+    createTextElement("b", pesoFormatter.format(item.unitPrice))
+  );
+  const controls = document.createElement("div");
+  controls.className = "web-cart-line-controls";
+  const minus = document.createElement("button");
+  minus.type = "button"; minus.textContent = "−"; minus.setAttribute("aria-label", `Decrease ${item.name} quantity`);
+  const quantity = createTextElement("span", String(item.quantity));
+  const plus = document.createElement("button");
+  plus.type = "button"; plus.textContent = "+"; plus.setAttribute("aria-label", `Increase ${item.name} quantity`);
+  const remove = document.createElement("button");
+  remove.type = "button"; remove.className = "web-cart-remove"; remove.textContent = "Remove";
+  minus.addEventListener("click", () => updateCartQuantity(item.productId, item.quantity - 1));
+  plus.addEventListener("click", () => updateCartQuantity(item.productId, item.quantity + 1));
+  remove.addEventListener("click", () => updateCartQuantity(item.productId, 0));
+  controls.append(minus, quantity, plus, remove);
+  row.append(image, copy, controls);
+  return row;
+}
+
+function updateCartQuantity(productId, quantity) {
+  if (quantity <= 0) {
+    cartState.items = cartState.items.filter((item) => String(item.productId) !== String(productId));
+  } else {
+    const item = cartState.items.find((line) => String(line.productId) === String(productId));
+    if (item) item.quantity = Math.min(99, quantity);
+  }
+  saveCart();
+  renderCartView();
+}
+
+function renderCartView() {
+  const cartView = document.querySelector("[data-cart-view]");
+  const checkoutView = document.querySelector("[data-checkout-view]");
+  if (!cartView || !checkoutView) return;
+  checkoutView.hidden = true;
+  cartView.hidden = false;
+  cartView.replaceChildren();
+  if (cartState.items.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "web-cart-empty";
+    empty.append(createTextElement("h3", "Your cart is empty"), createTextElement("p", "Choose an available product option to start an order."));
+    const shop = document.createElement("button");
+    shop.type = "button"; shop.textContent = "Continue Shopping"; shop.addEventListener("click", closeCart);
+    empty.append(shop); cartView.append(empty); return;
+  }
+  const list = document.createElement("div");
+  list.className = "web-cart-lines";
+  cartState.items.forEach((item) => list.append(createCartLine(item)));
+  const summary = document.createElement("div");
+  summary.className = "web-cart-summary";
+  summary.innerHTML = `<div><span>Total items</span><strong>${getCartItemCount()}</strong></div><div><span>Subtotal</span><strong>${pesoFormatter.format(getCartTotal())}</strong></div>`;
+  const checkout = document.createElement("button");
+  checkout.type = "button"; checkout.className = "web-cart-primary"; checkout.textContent = "Proceed to Checkout";
+  checkout.addEventListener("click", renderCheckoutView);
+  const continueShopping = document.createElement("button");
+  continueShopping.type = "button"; continueShopping.className = "web-cart-secondary"; continueShopping.textContent = "Continue Shopping";
+  continueShopping.addEventListener("click", closeCart);
+  cartView.append(list, summary, checkout, continueShopping);
+}
+
+function renderCheckoutView() {
+  const cartView = document.querySelector("[data-cart-view]");
+  const checkoutView = document.querySelector("[data-checkout-view]");
+  if (!cartView || !checkoutView || cartState.items.length === 0) return;
+  cartView.hidden = true;
+  checkoutView.hidden = false;
+  checkoutView.innerHTML = `
+    <button type="button" class="web-checkout-back" data-checkout-back>← Back to cart</button>
+    <div class="web-checkout-summary">
+      <div><span>Total items</span><strong>${getCartItemCount()}</strong></div>
+      <div><span>Total amount</span><strong>${pesoFormatter.format(getCartTotal())}</strong></div>
+    </div>
+    <form class="web-checkout-form" data-checkout-form>
+      <fieldset>
+        <legend>Fulfillment</legend>
+        <div class="web-fulfillment-options">
+          <label>
+            <input type="radio" name="fulfillmentType" value="delivery" checked>
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6h11v10H3z"></path>
+                <path d="M14 9h4l3 3v4h-7z"></path>
+                <circle cx="7" cy="18" r="2"></circle>
+                <circle cx="18" cy="18" r="2"></circle>
+              </svg>
+              COD
+            </span>
+          </label>
+          <label>
+            <input type="radio" name="fulfillmentType" value="pickup">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 3h8l2 4-6 3-6-3z"></path>
+                <path d="M12 10v5"></path>
+                <path d="M3 14h5l2 2h6.5a2 2 0 0 1 0 4H9l-6-3z"></path>
+              </svg>
+              Pickup at Shop
+            </span>
+          </label>
+        </div>
+      </fieldset>
+      <label>Full name<input name="customerName" maxlength="160" required autocomplete="name"></label>
+      <label>Mobile number<input name="mobileNumber" maxlength="40" required inputmode="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+      <label>Email address<input name="email" maxlength="240" required type="email" autocomplete="email"></label>
+      <label data-shipping-address>Shipping address<textarea name="shippingAddress" maxlength="600" required autocomplete="street-address"></textarea></label>
+      <p data-pickup-note hidden>Pickup at SarapMagBike ${getSelectedPublicLocationName()}: ${getSelectedPublicLocation().address}</p>
+      <input class="website-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <p class="web-checkout-note" data-checkout-note>Pay cash when your order is delivered. SarapMagBike will confirm availability and the shipping fee before dispatch.</p>
+      <p data-checkout-message role="status"></p>
+      <button class="web-cart-primary" type="submit" data-checkout-submit>Place COD Order</button>
+    </form>`;
+  checkoutView.querySelector("[data-checkout-back]")?.addEventListener("click", renderCartView);
+  const form = checkoutView.querySelector("[data-checkout-form]");
+  form.elements.customerName.value = customerState.profile?.displayName || customerState.account?.username || "";
+  form.elements.mobileNumber.value = customerState.account?.mobileNumber || "";
+  form.elements.email.value = customerState.account?.email || "";
+  form.addEventListener("change", updateFulfillmentFields);
+  form.addEventListener("submit", submitWebOrder);
+}
+
+function updateFulfillmentFields(event) {
+  const form = event.currentTarget.closest?.("[data-checkout-form]") || event.currentTarget;
+  if (!form?.elements?.fulfillmentType) return;
+  const delivery = form.elements.fulfillmentType.value === "delivery";
+  const address = form.querySelector("[data-shipping-address]");
+  const pickup = form.querySelector("[data-pickup-note]");
+  const note = form.querySelector("[data-checkout-note]");
+  const submit = form.querySelector("[data-checkout-submit]");
+  address.hidden = !delivery;
+  address.querySelector("textarea").required = delivery;
+  pickup.hidden = delivery;
+  if (note) {
+    note.textContent = delivery
+      ? "Pay cash when your order is delivered. SarapMagBike will confirm availability and the shipping fee before dispatch."
+      : "Pay at the shop when your order is ready for pickup. SarapMagBike will confirm availability before preparing it.";
+  }
+  if (submit) submit.textContent = delivery ? "Place COD Order" : "Place Pickup Order";
+}
+
+async function submitWebOrder(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = form.querySelector("[data-checkout-message]");
+  const submit = form.querySelector("button[type='submit']");
+  submit.disabled = true;
+  setMessage(message, "Submitting your order...");
+  try {
+    const result = await apiRequest(withPublicLocation("/api/public/web-orders"), {
+      method: "POST",
+      body: JSON.stringify({
+        customerName: form.elements.customerName.value.trim(),
+        mobileNumber: form.elements.mobileNumber.value.trim(),
+        email: form.elements.email.value.trim(),
+        fulfillmentType: form.elements.fulfillmentType.value,
+        shippingAddress: form.elements.shippingAddress.value.trim(),
+        website: form.elements.website.value,
+        items: cartState.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
+      })
+    });
+    cartState.items = [];
+    saveCart();
+    showOrderConfirmation(result);
+  } catch (error) {
+    setMessage(message, error.message || "Order could not be submitted. Please review your details and try again.", "error");
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+function showOrderConfirmation(order) {
+  closeCart();
+  const modal = document.createElement("div");
+  modal.className = "web-order-confirmation";
+  modal.innerHTML = `
+    <div role="dialog" aria-modal="true" aria-labelledby="order-confirmation-title">
+      <span aria-hidden="true">✓</span>
+      <h2 id="order-confirmation-title">Order Received</h2>
+      <p>${order.message || "Thank you! We received your order. We’ll confirm availability and delivery details before dispatch."}</p>
+      <strong>Order No. ${order.orderNumber}</strong>
+      <button type="button">Continue Shopping</button>
+    </div>`;
+  modal.querySelector("button").addEventListener("click", () => modal.remove());
+  document.body.append(modal);
+}
+
+function initializeCartUi() {
+  loadCart();
+  ensureCartButton();
+  ensureCartUi();
+  document.querySelectorAll("[data-cart-open]").forEach((button) => button.addEventListener("click", openCart));
+  updateCartBadge();
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeCart();
+  });
+}
+
 function getSelectedProductVariant(item) {
   if (!item.hasVariants || !Array.isArray(item.variants) || item.variants.length === 0) {
     return null;
   }
 
   return item.variants.find((variant) => String(variant.productId) === String(item._selectedVariantId))
-    || item.variants.find((variant) => variant.isDefault)
+    || item.variants.find((variant) => variant.isDefault && variant.isAvailable)
     || item.variants.find((variant) => variant.isAvailable)
+    || item.variants.find((variant) => variant.isDefault)
     || item.variants[0];
 }
 
 function renderProductVariantPicker(item, selectedVariant) {
   const picker = document.createElement("section");
   picker.className = "product-variant-picker";
-  picker.append(createTextElement("h2", "Choose an option"));
 
   const controls = document.createElement("div");
   controls.className = "product-variant-controls";
   const mode = item.variantMode || "size";
-  const dimensions = [
-    ...(mode !== "color" ? [{ key: "size", label: "Size" }] : []),
-    ...(mode !== "size" ? [{ key: "color", label: "Color" }] : [])
-  ];
+  const optionLabel = mode === "color" ? "Color" : mode === "size" ? "Size" : "Size / Color";
+  const field = document.createElement("div");
+  field.className = "product-variant-field";
+  field.append(createTextElement("span", optionLabel, "product-variant-label"));
 
-  dimensions.forEach(({ key, label }) => {
-    const field = document.createElement("label");
-    field.append(createTextElement("span", label));
-    const select = document.createElement("select");
-    const values = [...new Set(item.variants.map((variant) => variant[key]).filter(Boolean))];
-    values.forEach((value) => {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = value;
-      option.selected = selectedVariant?.[key] === value;
-      select.append(option);
+  const swatches = document.createElement("div");
+  swatches.className = "product-variant-swatches";
+  swatches.setAttribute("role", "group");
+  swatches.setAttribute("aria-label", `Choose ${optionLabel.toLowerCase()}`);
+
+  item.variants.forEach((variant) => {
+    const values = [
+      ...(mode !== "color" && variant.size ? [variant.size] : []),
+      ...(mode !== "size" && variant.color ? [variant.color] : [])
+    ];
+    const valueLabel = values.join(" / ") || variant.sku || "Option";
+    const isSelected = String(variant.productId) === String(selectedVariant?.productId);
+    const swatch = document.createElement("button");
+    swatch.type = "button";
+    swatch.className = "product-variant-swatch";
+    swatch.textContent = valueLabel;
+    swatch.disabled = !variant.isAvailable;
+    swatch.classList.toggle("is-selected", isSelected);
+    swatch.classList.toggle("is-unavailable", !variant.isAvailable);
+    swatch.setAttribute("aria-pressed", String(isSelected));
+    swatch.setAttribute("aria-label", `${valueLabel}: ${variant.stockStatus || (variant.isAvailable ? "Available" : "Out of stock")}`);
+    swatch.title = variant.stockStatus || (variant.isAvailable ? "Available" : "Out of stock");
+    swatch.addEventListener("click", () => {
+      renderProductDetail({ ...item, _selectedVariantId: variant.productId });
     });
-    select.addEventListener("change", () => {
-      const requested = Object.fromEntries(
-        [...controls.querySelectorAll("select")].map((control) => [control.dataset.variantKey, control.value])
-      );
-      const nextVariant = item.variants.find((variant) =>
-        dimensions.every((dimension) => variant[dimension.key] === requested[dimension.key])
-      ) || item.variants.find((variant) => variant[key] === select.value);
-      if (nextVariant) {
-        renderProductDetail({ ...item, _selectedVariantId: nextVariant.productId });
-      }
-    });
-    select.dataset.variantKey = key;
-    field.append(select);
-    controls.append(field);
+    swatches.append(swatch);
   });
+
+  field.append(swatches);
+  controls.append(field);
 
   picker.append(controls);
   if (selectedVariant) {
@@ -7276,29 +7673,42 @@ function renderProductDetail(item) {
 
   const actions = document.createElement("div");
   actions.className = "product-detail-actions";
+  const setIconAction = (control, label, icon) => {
+    control.setAttribute("aria-label", label);
+    control.title = label;
+    control.dataset.tooltip = label;
+    control.dataset.defaultTooltip = label;
+    control.innerHTML = `<span aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false">${icon}</svg></span>`;
+  };
   const messenger = document.createElement("a");
   messenger.href = "https://www.facebook.com/sarapmagbikeshop";
   messenger.target = "_blank";
   messenger.rel = "noreferrer";
-  messenger.textContent = "Messenger";
+  messenger.className = "product-messenger";
+  setIconAction(messenger, "Message on Messenger", '<path d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v7a3.5 3.5 0 0 1-3.5 3.5H10l-4.5 4v-4.7A3.5 3.5 0 0 1 4 12.5Z"/><path d="m8 11 3-3 2.4 2 2.6-2.5"/>');
   const callBranch = document.createElement("a");
   callBranch.href = `tel:${normalizePhoneLink(getSelectedPublicLocation().phone)}`;
-  callBranch.textContent = `Call ${getSelectedPublicLocationName()}`;
+  setIconAction(callBranch, `Call ${getSelectedPublicLocationName()}`, '<path d="M8.2 3H5.4A2.4 2.4 0 0 0 3 5.4C3 14 10 21 18.6 21a2.4 2.4 0 0 0 2.4-2.4v-2.8l-4.2-1-1.4 2.3a13.2 13.2 0 0 1-8.5-8.5l2.3-1.4Z"/>');
   const copyLink = document.createElement("button");
   copyLink.type = "button";
-  copyLink.textContent = "Copy link";
+  setIconAction(copyLink, "Copy product link", '<path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/>');
   copyLink.addEventListener("click", () => copyCurrentProductLink(copyLink));
-  actions.append(messenger, callBranch, copyLink);
+  const addToCart = document.createElement("button");
+  addToCart.type = "button";
+  addToCart.className = "product-add-to-cart";
+  setIconAction(addToCart, "Add to cart", '<path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1"/><path d="M14 10h4M16 8v4"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>');
+  addToCart.disabled = Boolean(selectedVariant) && !selectedVariant.isAvailable;
+  addToCart.addEventListener("click", () => addProductToCart(item));
+  actions.append(messenger, addToCart, callBranch, copyLink);
 
   summary.append(
     badges,
     createTextElement("p", getFieldValue(item, ["brand", "brandName"]) || "SarapMagBike Catalog", "product-detail-eyebrow"),
     createTextElement("h1", productName),
     price,
-    detail,
+    ...(description ? [detail] : []),
     ...(selectedVariant ? [renderProductVariantPicker(item, selectedVariant)] : []),
-    actions,
-    createTextElement("p", `Showing ${getSelectedPublicLocationName()} inventory. Message the branch before visiting so staff can confirm current availability.`, "product-detail-note")
+    actions
   );
 
   detailShell.append(renderProductDetailGallery(item), summary);
@@ -7369,9 +7779,12 @@ async function startCatalog() {
   bindScrambleLabels();
   renderCategoryNav();
   setupMobileNavigationBelt();
+  removeLegacyHeaderTools();
+  ensureStandardCustomerHeaderActions();
   ensureStandardMobileHeaderActions();
   ensureCustomerLoginPrompt();
   initializeNotifications();
+  initializeCartUi();
   bindCustomerAccountUi();
   bindCatalogUi();
   bindProductSearchUi();
@@ -7416,3 +7829,51 @@ if (document.readyState === "loading") {
 } else {
   startCatalog();
 }
+
+// ============================================================================
+// PROGRESSIVE WEB APP (PWA) REGISTRATION AND CUSTOM INSTALLER
+// ============================================================================
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => {
+        console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
+      })
+      .catch((err) => {
+        console.error('SMBWeb2 Service Worker registration failed:', err);
+      });
+  });
+}
+
+let deferredPrompt;
+const installButtons = document.querySelectorAll('[data-install-pwa-btn]');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  installButtons.forEach(btn => {
+    btn.removeAttribute('hidden');
+    btn.style.display = 'inline-flex';
+  });
+});
+
+installButtons.forEach(btn => {
+  btn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`PWA installation outcome: ${outcome}`);
+    deferredPrompt = null;
+    installButtons.forEach(b => {
+      b.setAttribute('hidden', '');
+      b.style.display = 'none';
+    });
+  });
+});
+
+window.addEventListener('appinstalled', (evt) => {
+  console.log('SarapMagBike PWA was successfully installed.');
+});
+

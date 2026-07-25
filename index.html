@@ -9,7 +9,12 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260723-desktop-login-modal">
+    <link rel="stylesheet" href="styles.css?v=20260723-fulfillment-icons">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#df2027">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
   </head>
   <body class="smb-home-page">
     <div class="page-bg"></div>
@@ -24,6 +29,7 @@
         <div class="topbar-options">
           <span>English</span>
           <span>Prices in PHP</span>
+          <button type="button" data-install-pwa-btn hidden style="display: none; align-items: center; gap: 4px; background: var(--red); color: var(--white); border: none; border-radius: 4px; padding: 2px 8px; font-size: 12px; cursor: pointer; font-weight: bold; margin-left: 10px;">Install App</button>
           <div class="customer-login" data-customer-login-form aria-label="Customer account">
             <button type="button" data-desktop-header-login>Login</button>
             <button type="button" data-open-register>Register</button>
@@ -67,6 +73,19 @@
         <span class="logo-tag">QUEZON CITY</span>
       </a>
       <div class="mobile-header-actions" aria-label="Mobile quick actions">
+        <button
+          class="mobile-header-install"
+          type="button"
+          data-install-pwa-btn
+          aria-label="Install App"
+          title="Install App"
+          hidden
+          style="display: none; background: none; border: none; padding: 8px; color: var(--white); cursor: pointer;"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display: block;">
+            <path d="M12 2v12m0 0l-4-4m4 4l4-4M4 17v3a2 2 0 002 2h12a2 2 0 002-2v-3"></path>
+          </svg>
+        </button>
         <button
           class="mobile-header-search"
           type="button"
@@ -608,6 +627,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260723-desktop-login-modal"></script>
+    <script src="script.js?v=20260723-fulfillment-icons"></script>
   </body>
 </html>

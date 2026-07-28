@@ -1502,6 +1502,7 @@ function ensureStandardMobileHeaderActions() {
         <strong data-mobile-header-name>Customer</strong>
         <span data-mobile-header-email></span>
         <a class="mobile-header-profile-link" href="profile.html">View profile</a>
+        <a class="mobile-header-orders-link" href="orders.html">My Orders</a>
         <button type="button" data-mobile-header-logout>Logout</button>
       </div>
     </div>
@@ -5848,6 +5849,61 @@ function setMessage(element, message, type = "") {
   element.classList.toggle("is-success", type === "success");
 }
 
+function closeCustomerWelcomeModal() {
+  const modal = document.querySelector("[data-customer-welcome-modal]");
+  if (!modal) {
+    return;
+  }
+  modal.hidden = true;
+  document.body.classList.remove("has-customer-welcome");
+}
+
+function ensureCustomerWelcomeModal() {
+  let modal = document.querySelector("[data-customer-welcome-modal]");
+  if (modal) {
+    return modal;
+  }
+
+  modal = document.createElement("div");
+  modal.className = "customer-welcome-modal";
+  modal.dataset.customerWelcomeModal = "";
+  modal.hidden = true;
+  modal.innerHTML = `
+    <section role="dialog" aria-modal="true" aria-labelledby="customer-welcome-title">
+      <span class="customer-welcome-icon" aria-hidden="true">✓</span>
+      <p>Account created</p>
+      <h2 id="customer-welcome-title" data-customer-welcome-title>Welcome!</h2>
+      <p>Your SarapMagBike account is ready. You are now logged in and can explore the shop.</p>
+      <button type="button" data-customer-welcome-close>Continue to Home</button>
+    </section>
+  `;
+  modal.querySelector("[data-customer-welcome-close]")?.addEventListener("click", closeCustomerWelcomeModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) {
+      closeCustomerWelcomeModal();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !modal.hidden) {
+      closeCustomerWelcomeModal();
+    }
+  });
+  document.body.append(modal);
+  return modal;
+}
+
+function showCustomerWelcomeModal(username) {
+  const modal = ensureCustomerWelcomeModal();
+  const displayName = String(username || "Rider").trim() || "Rider";
+  const title = modal.querySelector("[data-customer-welcome-title]");
+  if (title) {
+    title.textContent = `Welcome, ${displayName}!`;
+  }
+  modal.hidden = false;
+  document.body.classList.add("has-customer-welcome");
+  window.setTimeout(() => modal.querySelector("[data-customer-welcome-close]")?.focus(), 0);
+}
+
 function showProfileMode(show) {
   document.body.classList.toggle("is-profile-mode", show);
   if (show) {
@@ -5874,21 +5930,6 @@ function hasProfileSurface() {
 function routeToProfileSurface(mode = "register") {
   const target = mode === "edit" ? "profile-edit" : "profile-register";
   window.location.href = `index.html#${target}`;
-}
-
-function getSafeCustomerReturnUrl() {
-  const requested = new URLSearchParams(window.location.search).get("returnTo");
-  if (!requested) {
-    return "";
-  }
-  try {
-    const target = new URL(requested, window.location.origin);
-    return target.origin === window.location.origin
-      ? `${target.pathname}${target.search}${target.hash}`
-      : "";
-  } catch {
-    return "";
-  }
 }
 
 function handleProfileDeepLink() {
@@ -6027,8 +6068,12 @@ function setPasswordFieldsVisible(visible) {
     passwordFields.hidden = !visible;
   }
   if (profileForm) {
-    profileForm.elements.password.required = visible;
-    profileForm.elements.confirmPassword.required = visible;
+    if (profileForm.elements.password) {
+      profileForm.elements.password.required = visible;
+    }
+    if (profileForm.elements.confirmPassword) {
+      profileForm.elements.confirmPassword.required = visible;
+    }
   }
 }
 
@@ -6056,15 +6101,15 @@ function fillProfileForm(profile) {
     return;
   }
 
-  form.elements.username.value = profile?.username || "";
-  form.elements.email.value = profile?.email || "";
-  form.elements.hometown.value = profile?.hometown || "";
-  form.elements.mobileNumber.value = profile?.mobileNumber || "";
-  form.elements.facebookAccount.value = profile?.facebookAccount || "";
-  form.elements.birthday.value = profile?.birthday || "";
-  form.elements.password.value = "";
-  form.elements.confirmPassword.value = "";
-  form.elements.marketingConsent.checked = false;
+  if (form.elements.username) form.elements.username.value = profile?.username || "";
+  if (form.elements.email) form.elements.email.value = profile?.email || "";
+  if (form.elements.hometown) form.elements.hometown.value = profile?.hometown || "";
+  if (form.elements.mobileNumber) form.elements.mobileNumber.value = profile?.mobileNumber || "";
+  if (form.elements.facebookAccount) form.elements.facebookAccount.value = profile?.facebookAccount || "";
+  if (form.elements.birthday) form.elements.birthday.value = profile?.birthday || "";
+  if (form.elements.password) form.elements.password.value = "";
+  if (form.elements.confirmPassword) form.elements.confirmPassword.value = "";
+  if (form.elements.marketingConsent) form.elements.marketingConsent.checked = false;
   form.querySelectorAll("input[name='riderTypes']").forEach((input) => {
     input.checked = (profile?.riderTypes || []).includes(input.value);
   });
@@ -6102,7 +6147,9 @@ function openRegisterForm() {
   }
   if (form) {
     form.reset();
-    form.elements.username.disabled = false;
+    if (form.elements.username) {
+      form.elements.username.disabled = false;
+    }
   }
   setPasswordFieldsVisible(true);
   renderProfilePhoto(null);
@@ -6138,7 +6185,9 @@ async function openEditProfileForm() {
     changeButton.hidden = false;
   }
   if (form) {
-    form.elements.username.disabled = true;
+    if (form.elements.username) {
+      form.elements.username.disabled = true;
+    }
   }
   setPasswordFieldsVisible(false);
   setMessage(document.querySelector("[data-profile-message]"), "Loading profile...");
@@ -6194,19 +6243,19 @@ async function submitProfile(event) {
   try {
     const image = customerState.profileImage;
     const payload = {
-      username: form.elements.username.value.trim(),
-      password: form.elements.password.value,
-      confirmPassword: form.elements.confirmPassword.value,
-      email: form.elements.email.value.trim(),
-      hometown: form.elements.hometown.value.trim(),
-      mobileNumber: form.elements.mobileNumber.value.trim(),
-      facebookAccount: form.elements.facebookAccount.value.trim(),
-      birthday: form.elements.birthday.value || null,
+      username: form.elements.username ? form.elements.username.value.trim() : "",
+      password: form.elements.password ? form.elements.password.value : "",
+      confirmPassword: form.elements.confirmPassword ? form.elements.confirmPassword.value : "",
+      email: form.elements.email ? form.elements.email.value.trim() : "",
+      hometown: form.elements.hometown ? form.elements.hometown.value.trim() : "",
+      mobileNumber: form.elements.mobileNumber ? form.elements.mobileNumber.value.trim() : "",
+      facebookAccount: form.elements.facebookAccount ? form.elements.facebookAccount.value.trim() : "",
+      birthday: (form.elements.birthday && form.elements.birthday.value) || null,
       riderTypes: getSelectedRiderTypes(form),
       profileImageBase64: image?.base64 || null,
       profileImageContentType: image?.contentType || null,
-      marketingConsent: form.elements.marketingConsent.checked,
-      website: form.elements.website.value
+      marketingConsent: form.elements.marketingConsent ? form.elements.marketingConsent.checked : false,
+      website: form.elements.website ? form.elements.website.value : ""
     };
 
     if (!payload.email || !form.elements.email.checkValidity()) {
@@ -6224,15 +6273,13 @@ async function submitProfile(event) {
         method: "POST",
         body: JSON.stringify(payload)
       });
+      const createdUsername = customerState.account?.username || payload.username;
       updateCustomerHeader();
       window.dispatchEvent(new CustomEvent("customer-session-changed"));
-      setMessage(message, "Profile created. You are now logged in.", "success");
-      const returnUrl = getSafeCustomerReturnUrl();
-      if (returnUrl) {
-        window.location.href = returnUrl;
-        return;
-      }
-      await openEditProfileForm();
+      form.reset();
+      hideCommunityAuthPrompt();
+      returnToHome({ updatePath: true });
+      showCustomerWelcomeModal(createdUsername);
       return;
     }
 
@@ -6625,6 +6672,7 @@ async function submitPasswordReset(event) {
 function bindCustomerAccountUi() {
   addStaySignedInControls();
   ensureAccountRecoveryUi();
+  ensureCustomerWelcomeModal();
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
     if (!form.elements?.username || form.dataset.customerLoginBound === "true") {
       return;
@@ -6682,7 +6730,25 @@ function bindCustomerAccountUi() {
       identity.appendChild(profileLink);
       profileLink.addEventListener("click", () => setAccountMenuOpen(false));
     }
+    if (identity && !identity.querySelector(".account-menu-orders-link")) {
+      const ordersLink = document.createElement("a");
+      ordersLink.className = "account-menu-orders-link";
+      ordersLink.href = "orders.html";
+      ordersLink.textContent = "My Orders";
+      identity.appendChild(ordersLink);
+      ordersLink.addEventListener("click", () => setAccountMenuOpen(false));
+    }
   }
+  document.querySelectorAll(".mobile-header-menu").forEach((menu) => {
+    if (menu.querySelector(".mobile-header-orders-link")) return;
+    const profileLink = menu.querySelector(".mobile-header-profile-link");
+    if (!profileLink) return;
+    const ordersLink = document.createElement("a");
+    ordersLink.className = "mobile-header-orders-link";
+    ordersLink.href = "orders.html";
+    ordersLink.textContent = "My Orders";
+    profileLink.insertAdjacentElement("afterend", ordersLink);
+  });
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelectorAll("[data-desktop-header-login], [data-mobile-header-login]").forEach((button) => {
     button.addEventListener("click", openCommunityLoginForm);
@@ -7425,6 +7491,11 @@ function renderCheckoutView() {
   const cartView = document.querySelector("[data-cart-view]");
   const checkoutView = document.querySelector("[data-checkout-view]");
   if (!cartView || !checkoutView || cartState.items.length === 0) return;
+  if (!customerState.account) {
+    closeCart();
+    showCommunityAuthPrompt();
+    return;
+  }
   cartView.hidden = true;
   checkoutView.hidden = false;
   checkoutView.innerHTML = `
@@ -7540,7 +7611,10 @@ function showOrderConfirmation(order) {
       <h2 id="order-confirmation-title">Order Received</h2>
       <p>${order.message || "Thank you! We received your order. We’ll confirm availability and delivery details before dispatch."}</p>
       <strong>Order No. ${order.orderNumber}</strong>
-      <button type="button">Continue Shopping</button>
+      <div class="web-order-confirmation-actions">
+        <a href="orders.html">Track My Order</a>
+        <button type="button">Continue Shopping</button>
+      </div>
     </div>`;
   modal.querySelector("button").addEventListener("click", () => modal.remove());
   document.body.append(modal);
@@ -7673,22 +7747,26 @@ function renderProductDetail(item) {
 
   const actions = document.createElement("div");
   actions.className = "product-detail-actions";
-  const setIconAction = (control, label, icon) => {
+  const setIconAction = (control, label, icon, visibleLabel = "") => {
     control.setAttribute("aria-label", label);
     control.title = label;
     control.dataset.tooltip = label;
     control.dataset.defaultTooltip = label;
-    control.innerHTML = `<span aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false">${icon}</svg></span>`;
+    control.innerHTML = `<span class="product-action-icon" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false">${icon}</svg></span>`;
+    if (visibleLabel) {
+      control.classList.add("product-action-labeled");
+      control.append(createTextElement("small", visibleLabel, "product-action-label"));
+    }
   };
   const messenger = document.createElement("a");
   messenger.href = "https://www.facebook.com/sarapmagbikeshop";
   messenger.target = "_blank";
   messenger.rel = "noreferrer";
   messenger.className = "product-messenger";
-  setIconAction(messenger, "Message on Messenger", '<path d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v7a3.5 3.5 0 0 1-3.5 3.5H10l-4.5 4v-4.7A3.5 3.5 0 0 1 4 12.5Z"/><path d="m8 11 3-3 2.4 2 2.6-2.5"/>');
+  setIconAction(messenger, "Message on Messenger", '<path d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v7a3.5 3.5 0 0 1-3.5 3.5H10l-4.5 4v-4.7A3.5 3.5 0 0 1 4 12.5Z"/><path d="m8 11 3-3 2.4 2 2.6-2.5"/>', "Message Us");
   const callBranch = document.createElement("a");
   callBranch.href = `tel:${normalizePhoneLink(getSelectedPublicLocation().phone)}`;
-  setIconAction(callBranch, `Call ${getSelectedPublicLocationName()}`, '<path d="M8.2 3H5.4A2.4 2.4 0 0 0 3 5.4C3 14 10 21 18.6 21a2.4 2.4 0 0 0 2.4-2.4v-2.8l-4.2-1-1.4 2.3a13.2 13.2 0 0 1-8.5-8.5l2.3-1.4Z"/>');
+  setIconAction(callBranch, `Call ${getSelectedPublicLocationName()}`, '<path d="M8.2 3H5.4A2.4 2.4 0 0 0 3 5.4C3 14 10 21 18.6 21a2.4 2.4 0 0 0 2.4-2.4v-2.8l-4.2-1-1.4 2.3a13.2 13.2 0 0 1-8.5-8.5l2.3-1.4Z"/>', "Call Us");
   const copyLink = document.createElement("button");
   copyLink.type = "button";
   setIconAction(copyLink, "Copy product link", '<path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/>');
@@ -7696,7 +7774,7 @@ function renderProductDetail(item) {
   const addToCart = document.createElement("button");
   addToCart.type = "button";
   addToCart.className = "product-add-to-cart";
-  setIconAction(addToCart, "Add to cart", '<path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1"/><path d="M14 10h4M16 8v4"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>');
+  setIconAction(addToCart, "Add to cart", '<path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1"/><path d="M14 10h4M16 8v4"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>', "Add to Cart");
   addToCart.disabled = Boolean(selectedVariant) && !selectedVariant.isAvailable;
   addToCart.addEventListener("click", () => addProductToCart(item));
   actions.append(messenger, addToCart, callBranch, copyLink);
@@ -7876,4 +7954,3 @@ installButtons.forEach(btn => {
 window.addEventListener('appinstalled', (evt) => {
   console.log('SarapMagBike PWA was successfully installed.');
 });
-

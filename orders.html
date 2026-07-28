@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Track, manage, and confirm your SarapMagBike website orders.">
+    <title>My Orders | SarapMagBike</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260727-orders-page">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#df2027">
+  </head>
+  <body class="is-orders-page">
+    <div class="page-bg"></div>
+    <header class="rider-profile-site-header">
+      <div class="wrap rider-profile-site-header-inner">
+        <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+          <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+          <span class="logo-tag">QUEZON CITY</span>
+        </a>
+        <nav aria-label="Order navigation">
+          <a href="index.html#products">Products</a>
+          <a href="profile.html">My Profile</a>
+          <button type="button" data-profile-header-login>Log in</button>
+          <button type="button" data-profile-header-logout hidden>Log out</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap customer-orders-page">
+      <section class="customer-orders-page-heading">
+        <div><p>Purchases</p><h1>My Orders</h1><span>Track website checkouts, delivery progress, and completed purchases.</span></div>
+        <button type="button" data-my-orders-refresh>Refresh</button>
+      </section>
+      <section class="customer-orders-panel customer-orders-page-panel" data-my-orders aria-live="polite">
+        <div class="customer-orders-list" data-my-orders-list>
+          <article class="customer-order-empty"><h3>Loading orders</h3><p>Checking your latest fulfillment status.</p></article>
+        </div>
+      </section>
+    </main>
+
+    <div class="community-auth-prompt" data-community-auth-prompt hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="orders-auth-title">
+        <h2 id="orders-auth-title">Log in to view your orders</h2>
+        <p>Use the SarapMagBike account you used when checking out.</p>
+        <form class="community-login-form" data-community-login-form hidden>
+          <label>Username<input name="username" autocomplete="username" required></label>
+          <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+          <input class="website-field" name="website" tabindex="-1" aria-hidden="true">
+          <button type="submit">Log in</button>
+          <p data-community-login-message role="status"></p>
+        </form>
+        <div class="community-auth-actions"><button type="button" data-community-prompt-login>Log in</button><button type="button" data-community-prompt-register>Create account</button><button type="button" data-community-prompt-close>Close</button></div>
+      </div>
+    </div>
+
+    <script src="script.js?v=20260727-orders-link"></script>
+    <script src="orders.js?v=20260727-orders-page"></script>
+  </body>
+</html>

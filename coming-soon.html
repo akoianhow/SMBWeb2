@@ -1,6 +1,15 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-KTXP35XH14"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-KTXP35XH14');
+    </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta
@@ -1343,6 +1352,14 @@
               <label>
                 Hometown
                 <input type="text" name="hometown" autocomplete="address-level2">
+              </label>
+              <label>
+                Mobile number <small>(optional)</small>
+                <input type="tel" name="mobileNumber" autocomplete="tel" inputmode="tel" placeholder="0917 123 4567">
+              </label>
+              <label>
+                Facebook account <small>(optional)</small>
+                <input type="text" name="facebookAccount" autocomplete="url" placeholder="Profile URL, username, or Messenger name">
               </label>
               <label>
                 Birthday

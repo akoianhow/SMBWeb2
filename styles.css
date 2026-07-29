@@ -1560,6 +1560,38 @@ body.is-catalog-mode .content {
   background-position: center bottom;
 }
 
+@media (min-width: 981px) {
+  .feature-tile-group {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .feature-card {
+    min-height: 248px;
+    padding: 94px 10px 12px;
+    background-size: auto, 260% 260%;
+  }
+
+  .feature-card h2 {
+    font-size: 22px;
+    line-height: 0.9;
+  }
+
+  .feature-card h2 span {
+    font-size: 17px;
+  }
+
+  .feature-card p {
+    min-height: 0;
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .feature-card a {
+    display: none;
+  }
+}
+
 @keyframes feature-tile-belt {
   to {
     transform: translateX(-50%);

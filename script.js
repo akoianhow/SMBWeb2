@@ -1502,7 +1502,10 @@ function ensureStandardMobileHeaderActions() {
         <strong data-mobile-header-name>Customer</strong>
         <span data-mobile-header-email></span>
         <a class="mobile-header-profile-link" href="profile.html">View profile</a>
-        <a class="mobile-header-badge-link" href="badge.html">My SarapMagBadge</a>
+        <a class="mobile-header-badge-link" data-customer-level-badge href="badge.html" aria-label="Open My SarapMagBadge">
+          <img src="assets/sarapmagbadge-noob.png" alt="Noob SarapMagBadge">
+          <span class="customer-level-badge-label">Open My SarapMagBadge</span>
+        </a>
         <a class="mobile-header-orders-link" href="orders.html">My Orders</a>
         <button type="button" data-mobile-header-logout>Logout</button>
       </div>
@@ -5513,6 +5516,50 @@ const customerState = {
   mode: "register",
   profileImage: null
 };
+const customerLevelBadgeAssets = {
+  noob: "assets/sarapmagbadge-noob.png",
+  saks: "assets/sarapmagbadge-saks.png",
+  mamaw: "assets/sarapmagbadge-mamaw.png",
+  master: "assets/sarapmagbadge-master.png",
+  budolero: "assets/sarapmagbadge-budolero.png"
+};
+let customerLevelBadgeLoadVersion = 0;
+
+function renderCustomerLevelBadge(summary = null) {
+  const levelName = String(summary?.level?.name || "Noob").trim() || "Noob";
+  const levelCode = String(summary?.level?.code || levelName).trim().toLowerCase();
+  const badgeAsset = customerLevelBadgeAssets[levelCode] || customerLevelBadgeAssets.noob;
+  document.querySelectorAll("[data-customer-level-badge]").forEach((link) => {
+    const image = document.createElement("img");
+    image.src = badgeAsset;
+    image.alt = `${levelName} SarapMagBadge`;
+    const label = document.createElement("span");
+    label.className = "customer-level-badge-label";
+    label.textContent = `Open ${levelName} SarapMagBadge`;
+    link.replaceChildren(image, label);
+    link.setAttribute("aria-label", `Open your ${levelName} SarapMagBadge`);
+    link.removeAttribute("aria-busy");
+  });
+}
+
+async function loadCustomerLevelBadge() {
+  const loadVersion = ++customerLevelBadgeLoadVersion;
+  if (!customerState.account) {
+    renderCustomerLevelBadge();
+    return;
+  }
+  document.querySelectorAll("[data-customer-level-badge]").forEach((link) => link.setAttribute("aria-busy", "true"));
+  try {
+    const summary = await apiRequest("/api/public/loyalty/badge");
+    if (loadVersion === customerLevelBadgeLoadVersion && customerState.account) {
+      renderCustomerLevelBadge(summary);
+    }
+  } catch {
+    if (loadVersion === customerLevelBadgeLoadVersion) {
+      renderCustomerLevelBadge();
+    }
+  }
+}
 
 function updateNotificationBadges(count = 0) {
   notificationState.unreadCount = Math.max(0, Number(count) || 0);
@@ -6783,8 +6830,10 @@ function bindCustomerAccountUi() {
     if (identity && !identity.querySelector(".account-menu-orders-link")) {
       const badgeLink = document.createElement("a");
       badgeLink.className = "account-menu-badge-link";
+      badgeLink.dataset.customerLevelBadge = "";
       badgeLink.href = "badge.html";
-      badgeLink.textContent = "My SarapMagBadge";
+      badgeLink.setAttribute("aria-label", "Open My SarapMagBadge");
+      badgeLink.innerHTML = '<img src="assets/sarapmagbadge-noob.png" alt="Noob SarapMagBadge"><span class="customer-level-badge-label">Open My SarapMagBadge</span>';
       identity.appendChild(badgeLink);
       badgeLink.addEventListener("click", () => setAccountMenuOpen(false));
       const ordersLink = document.createElement("a");
@@ -6799,8 +6848,10 @@ function bindCustomerAccountUi() {
     if (!menu.querySelector(".mobile-header-badge-link")) {
       const badgeLink = document.createElement("a");
       badgeLink.className = "mobile-header-badge-link";
+      badgeLink.dataset.customerLevelBadge = "";
       badgeLink.href = "badge.html";
-      badgeLink.textContent = "My SarapMagBadge";
+      badgeLink.setAttribute("aria-label", "Open My SarapMagBadge");
+      badgeLink.innerHTML = '<img src="assets/sarapmagbadge-noob.png" alt="Noob SarapMagBadge"><span class="customer-level-badge-label">Open My SarapMagBadge</span>';
       const profileLink = menu.querySelector(".mobile-header-profile-link");
       profileLink?.insertAdjacentElement("afterend", badgeLink);
     }
@@ -6813,6 +6864,7 @@ function bindCustomerAccountUi() {
     ordersLink.textContent = "My Orders";
     profileLink.insertAdjacentElement("afterend", ordersLink);
   });
+  window.addEventListener("customer-session-changed", () => void loadCustomerLevelBadge());
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
   document.querySelectorAll("[data-desktop-header-login], [data-mobile-header-login]").forEach((button) => {
     button.addEventListener("click", openCommunityLoginForm);

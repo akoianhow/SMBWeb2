@@ -382,6 +382,58 @@ p {
   outline-offset: 4px;
 }
 
+.account-menu-badge-link,
+.mobile-header-actions .mobile-header-badge-link {
+  display: inline-grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  min-height: 0;
+  margin: 6px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: inherit;
+  background: transparent;
+  text-decoration: none;
+}
+
+.account-menu-badge-link img,
+.mobile-header-actions .mobile-header-badge-link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 6px rgba(0, 0, 0, 0.2));
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.account-menu-badge-link:hover img,
+.account-menu-badge-link:focus-visible img,
+.mobile-header-actions .mobile-header-badge-link:hover img,
+.mobile-header-actions .mobile-header-badge-link:focus-visible img {
+  filter: drop-shadow(0 6px 8px rgba(229, 31, 43, 0.34));
+  transform: translateY(-2px) scale(1.03);
+}
+
+.account-menu-badge-link:focus-visible,
+.mobile-header-actions .mobile-header-badge-link:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+.customer-level-badge-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .account-menu-orders-link,
 .mobile-header-orders-link {
   color: var(--red);
@@ -7813,6 +7865,17 @@ body.is-catalog-mode .product-section {
     line-height: 1.3;
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  .mobile-header-actions .mobile-header-badge-link {
+    display: inline-grid;
+    width: 88px;
+    height: 88px;
+    min-height: 0;
+    margin-top: 4px;
+    padding: 0;
+    background: transparent;
+    border-radius: 0;
   }
 
   .mobile-header-actions .mobile-header-profile-link:hover,

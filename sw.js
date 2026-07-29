@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smbweb2-cache-v4-level-badges';
+const CACHE_NAME = 'smbweb2-cache-v5-home-badge-copy';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -378,10 +378,14 @@ async function submitRiderEdit(event) {
 
 function updateProfileHeaderAuth() {
   const loggedIn = Boolean(customerState.account);
-  document.querySelector("[data-profile-header-login]").hidden = loggedIn;
-  document.querySelector("[data-profile-header-register]").hidden = loggedIn;
-  document.querySelector("[data-profile-header-account]").hidden = !loggedIn;
-  document.querySelector("[data-profile-header-logout]").hidden = !loggedIn;
+  const headerLogin = document.querySelector("[data-profile-header-login]");
+  const headerRegister = document.querySelector("[data-profile-header-register]");
+  const headerAccount = document.querySelector("[data-profile-header-account]");
+  const headerLogout = document.querySelector("[data-profile-header-logout]");
+  if (headerLogin) headerLogin.hidden = loggedIn;
+  if (headerRegister) headerRegister.hidden = loggedIn;
+  if (headerAccount) headerAccount.hidden = !loggedIn;
+  if (headerLogout) headerLogout.hidden = !loggedIn;
 }
 
 function bindRiderProfilePage() {

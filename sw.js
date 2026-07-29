@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smbweb2-cache-v2-badge';
+const CACHE_NAME = 'smbweb2-cache-v3-consistent-header';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -1510,6 +1510,44 @@ function ensureStandardMobileHeaderActions() {
   `;
 }
 
+function ensureConsistentSiteHeader() {
+  const legacyHeader = document.querySelector(".rider-profile-site-header");
+  if (!legacyHeader) {
+    return;
+  }
+
+  const topbar = document.createElement("header");
+  topbar.className = "topbar";
+  topbar.innerHTML = `
+    <div class="wrap topbar-inner">
+      <nav aria-label="Utility navigation">
+        <a href="index.html#contact">Contact Us</a>
+        <a href="services.html">Book Service</a>
+      </nav>
+      <div class="topbar-options">
+        <span>English</span>
+        <span>Prices in PHP</span>
+      </div>
+    </div>`;
+
+  const headerMain = document.createElement("div");
+  headerMain.className = "wrap header-main";
+  headerMain.innerHTML = `
+    <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+      <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+      <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+      <span class="logo-tag">QUEZON CITY</span>
+    </a>`;
+
+  const navigation = document.createElement("nav");
+  navigation.className = "wrap main-nav";
+  navigation.setAttribute("aria-label", "Website navigation");
+  navigation.dataset.categoryNavList = "";
+
+  legacyHeader.replaceWith(topbar, headerMain, navigation);
+  updatePublicLocationUi();
+}
+
 function removeLegacyHeaderTools() {
   document.querySelectorAll(".header-main > .search-form, .header-main > .cart-box, .header-main > .lock-box").forEach((element) => element.remove());
 }
@@ -1821,7 +1859,8 @@ function renderCategoryNav() {
   const isAppointmentsPage = window.location.pathname.endsWith("/appointments.html");
   const isEventsPage = window.location.pathname.endsWith("/events.html");
   const isStoriesPage = window.location.pathname.endsWith("/stories.html") || window.location.pathname.endsWith("/story.html");
-  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage;
+  const isAccountPage = ["/orders.html", "/profile.html", "/badge.html"].some((path) => window.location.pathname.endsWith(path));
+  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage || isAccountPage;
   const goToHomeTarget = (targetId) => {
     if (isStandalonePage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
@@ -1849,8 +1888,7 @@ function renderCategoryNav() {
     { label: "Events", href: "events.html", action: () => window.location.href = "events.html", active: isEventsPage },
     { label: "Stories", href: "stories.html", action: () => window.location.href = "stories.html", active: isStoriesPage },
     { label: "Community", href: isStandalonePage ? "index.html#community" : "#community", action: () => isStandalonePage ? window.location.href = "index.html#community" : openCommunityPage(true), community: !isStandalonePage },
-    { label: "Survey", href: "survey.html", action: () => window.location.href = "survey.html" },
-    { label: "Contact", href: "#contact", action: () => isStandalonePage ? document.getElementById("contact")?.scrollIntoView({ behavior: "smooth", block: "start" }) : goToHomeTarget("contact") }
+    { label: "Contact", href: isStandalonePage ? "index.html#contact" : "#contact", action: () => isStandalonePage ? window.location.href = "index.html#contact" : goToHomeTarget("contact") }
   ].forEach((item) => {
     const link = document.createElement("a");
     link.href = item.href;
@@ -7881,6 +7919,7 @@ async function startCatalog() {
   }
 
   bindScrambleLabels();
+  ensureConsistentSiteHeader();
   renderCategoryNav();
   setupMobileNavigationBelt();
   removeLegacyHeaderTools();

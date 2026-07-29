@@ -12,7 +12,8 @@
 .badge-member { margin: 34px auto 0; position: relative; text-align: center; width: max-content; z-index: 1; }
 .badge-avatar { align-items: center; background: #292c30; border: 10px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #d5dae0, 0 16px 35px rgba(0,0,0,.16); color: white; display: flex; font-size: 54px; font-weight: 800; height: 175px; justify-content: center; overflow: hidden; width: 175px; }
 .badge-avatar img { height: 100%; object-fit: cover; width: 100%; }
-.badge-level-seal { align-items: center; background: var(--badge-red); border: 5px solid white; border-radius: 50%; bottom: 58px; box-shadow: 0 0 0 4px var(--badge-red); color: white; display: flex; font-size: 13px; font-weight: 900; height: 88px; justify-content: center; position: absolute; right: -42px; width: 88px; }
+.badge-level-seal { bottom: 35px; height: 118px; position: absolute; right: -76px; width: 118px; }
+.badge-level-seal img { filter: drop-shadow(0 8px 10px rgba(0,0,0,.24)); height: 100%; object-fit: contain; width: 100%; }
 .badge-member h1 { font-size: 32px; margin: 28px 0 5px; }
 .badge-member > strong { color: var(--badge-red); letter-spacing: .08em; }
 .badge-balances { border-bottom: 1px solid #d8dde2; border-top: 1px solid #d8dde2; display: grid; grid-template-columns: 1fr 1fr; margin-top: 34px; position: relative; z-index: 1; }
@@ -34,12 +35,11 @@
 .badge-section-heading h2, .badge-section-heading p { margin: 0; }.badge-section-heading p { color: var(--badge-muted); margin-top: 5px; }
 .badge-section-heading > strong { color: var(--badge-red); max-width: 120px; text-align: right; }
 .badge-level-track { display: grid; gap: 10px; grid-template-columns: repeat(5, 1fr); margin-top: 28px; position: relative; }
-.badge-level-track::before { background: #d8dde2; content: ""; height: 4px; left: 10%; position: absolute; right: 10%; top: 26px; }
+.badge-level-track::before { background: #d8dde2; content: ""; height: 4px; left: 10%; position: absolute; right: 10%; top: 50%; transform: translateY(-50%); }
 .badge-level-node { position: relative; text-align: center; z-index: 1; }
-.badge-level-dot { background: #d4d7dc; border: 7px solid #f5f6f7; border-radius: 50%; box-shadow: 0 0 0 2px #d4d7dc; height: 52px; margin: 0 auto 12px; width: 52px; }
-.badge-level-node.reached .badge-level-dot { background: #cf354b; box-shadow: 0 0 0 2px var(--badge-red); }
-.badge-level-node.current .badge-level-dot { background: var(--badge-red); box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--badge-red); }
-.badge-level-node strong, .badge-level-node small { display: block; }.badge-level-node small { color: var(--badge-muted); margin-top: 2px; }
+.badge-level-emblem { display: block; filter: grayscale(1); height: auto; margin: 0 auto; max-width: 116px; opacity: .32; transition: filter .2s ease, opacity .2s ease, transform .2s ease; width: 100%; }
+.badge-level-node.reached .badge-level-emblem { filter: none; opacity: 1; }
+.badge-level-node.current .badge-level-emblem { filter: drop-shadow(0 0 7px rgba(229,31,43,.55)); transform: scale(1.06); }
 .badge-rewards-section { margin-top: 34px; }
 .badge-reward-grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
 .badge-reward { background: linear-gradient(145deg, #fff, #fff4f5); border: 1px solid #efbfc3; border-radius: 18px; display: flex; flex-direction: column; min-height: 230px; padding: 22px; }
@@ -64,15 +64,14 @@
   .badge-page { padding: 14px 14px 74px; }
   .badge-card { min-height: 0; padding: 24px 20px 18px; }
   .badge-card-brand img { height: 48px; width: 58px; }.badge-card-brand strong { font-size: 21px; }.badge-card-brand span { font-size: 9px; }
-  .badge-avatar { font-size: 36px; height: 112px; width: 112px; }.badge-level-seal { bottom: 50px; font-size: 9px; height: 58px; right: -30px; width: 58px; }
+  .badge-avatar { font-size: 36px; height: 112px; width: 112px; }.badge-level-seal { bottom: 38px; height: 76px; right: -48px; width: 76px; }
   .badge-member { margin-top: 24px; }.badge-member h1 { font-size: 26px; margin-top: 20px; }
   .badge-balances { margin-top: 24px; }.badge-balances > div { padding: 18px 6px; }.badge-balances strong { font-size: 38px; }.badge-balances span { font-size: 9px; }
   .badge-meta { gap: 8px; }.badge-cycle { padding: 18px; }.badge-cycle-date { height: 62px; width: 62px; }
   .badge-actions { gap: 8px; }.badge-actions button, .badge-actions a { min-height: 112px; padding: 10px 5px; }.badge-actions span { height: 42px; width: 42px; }.badge-actions strong { font-size: 12px; }.badge-actions small { display: none; }
   .badge-level-journey { padding: 20px 12px; }.badge-level-journey .badge-section-heading { align-items: start; }.badge-level-journey .badge-section-heading p { font-size: 12px; }.badge-level-journey .badge-section-heading > strong { font-size: 12px; min-width: 74px; }
-  .badge-level-track { gap: 2px; margin-top: 22px; }.badge-level-track::before { height: 3px; left: 8%; right: 8%; top: 15px; }
-  .badge-level-dot { border-width: 4px; height: 30px; margin-bottom: 8px; width: 30px; }.badge-level-node.current .badge-level-dot { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--badge-red); }
-  .badge-level-node strong { font-size: 10px; }.badge-level-node small { font-size: 8px; }
+  .badge-level-track { gap: 2px; margin-top: 18px; }.badge-level-track::before { height: 3px; left: 8%; right: 8%; }
+  .badge-level-emblem { max-width: 64px; }
   .badge-reward-grid, .badge-earn-grid { grid-template-columns: 1fr; }.badge-reward { min-height: 190px; }
   .badge-section-heading h2 { font-size: 24px; }.badge-cycle h2 { font-size: 18px; }
 }

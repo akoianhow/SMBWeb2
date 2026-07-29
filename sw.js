@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smbweb2-cache-v3-consistent-header';
+const CACHE_NAME = 'smbweb2-cache-v4-level-badges';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -17,6 +17,11 @@ const ASSETS_TO_CACHE = [
   './badge.js',
   './manifest.json',
   './assets/sarapmagbike-logo.png',
+  './assets/sarapmagbadge-noob.png',
+  './assets/sarapmagbadge-saks.png',
+  './assets/sarapmagbadge-mamaw.png',
+  './assets/sarapmagbadge-master.png',
+  './assets/sarapmagbadge-budolero.png',
   './assets/icon-192.png',
   './assets/icon-512.png'
 ];

@@ -14,6 +14,13 @@
   const one = (selector) => root.querySelector(selector);
   const fmt = (value) => Number(value || 0).toLocaleString("en-PH");
   const date = (value) => value ? new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(new Date(value)) : "—";
+  const levelBadgeAssets = [
+    "assets/sarapmagbadge-noob.png",
+    "assets/sarapmagbadge-saks.png",
+    "assets/sarapmagbadge-mamaw.png",
+    "assets/sarapmagbadge-master.png",
+    "assets/sarapmagbadge-budolero.png"
+  ];
   let badge = null;
   let timer = null;
   let loadVersion = 0;
@@ -22,7 +29,9 @@
     badge = data;
     const initials = (data.member.displayName || data.member.username).split(/\s+/).map((item) => item[0]).join("").slice(0, 2).toUpperCase();
     one("[data-badge-avatar]").innerHTML = data.member.profilePictureUrl ? `<img alt="" src="${data.member.profilePictureUrl}">` : initials;
-    one("[data-badge-level]").textContent = data.level.name.toUpperCase();
+    const currentLevelIndex = Math.max(0, data.levels.findIndex((level) => level.code === data.level.code));
+    const levelSeal = one("[data-badge-level]");
+    levelSeal.innerHTML = `<img src="${levelBadgeAssets[currentLevelIndex]}" alt="${data.level.name} level badge">`;
     one("[data-badge-name]").textContent = data.member.displayName;
     one("[data-badge-member-level]").textContent = `${data.level.name.toUpperCase()} MEMBER`;
     one("[data-badge-lifetime]").textContent = fmt(data.balances.lifetimePoints);
@@ -38,10 +47,11 @@
       : "";
     one("[data-badge-cycle-copy]").textContent = expiration ? `${warning}Unused Redeemable Points expire ${date(expiration)}. Level Points never expire.` : "Your rolling 12-month redemption cycle starts when you first earn points.";
     one("[data-badge-level-progress]").textContent = data.level.nextLevelPoints ? `${fmt(data.balances.lifetimePoints)} / ${fmt(data.level.nextLevelPoints)} LEVEL PTS` : `${fmt(data.balances.lifetimePoints)} LEVEL PTS`;
-    one("[data-badge-levels]").innerHTML = data.levels.map((level) => {
+    one("[data-badge-levels]").innerHTML = data.levels.map((level, index) => {
       const reached = data.balances.lifetimePoints >= level.minimum;
       const current = level.code === data.level.code;
-      return `<div class="badge-level-node ${reached ? "reached" : ""} ${current ? "current" : ""}"><div class="badge-level-dot"></div><strong>${level.name}</strong><small>${level.maximum ? `${fmt(level.minimum)}–${fmt(level.maximum)}` : `${fmt(level.minimum)}+`}</small></div>`;
+      const range = level.maximum ? `${fmt(level.minimum)}–${fmt(level.maximum)}` : `${fmt(level.minimum)}+`;
+      return `<div class="badge-level-node ${reached ? "reached" : ""} ${current ? "current" : ""}" aria-label="${level.name}, ${range} points${reached ? ", achieved" : ", not yet achieved"}"><img class="badge-level-emblem" src="${levelBadgeAssets[index]}" alt="" aria-hidden="true"></div>`;
     }).join("");
     one("[data-badge-rewards]").innerHTML = data.rewards.length ? data.rewards.map((reward) => `
       <article class="badge-reward ${reward.eligible ? "" : "locked"}">

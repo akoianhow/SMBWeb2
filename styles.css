@@ -1536,6 +1536,10 @@ body.is-catalog-mode .content {
   background: var(--red-dark);
 }
 
+.feature-card a {
+  display: none;
+}
+
 .feature-bike {
   background-position: right top;
 }

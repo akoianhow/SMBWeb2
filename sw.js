@@ -1,10 +1,11 @@
-const CACHE_NAME = 'smbweb2-cache-v1';
+const CACHE_NAME = 'smbweb2-cache-v2-badge';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './services.html',
   './appointments.html',
   './profile.html',
+  './badge.html',
   './search.html',
   './product.html',
   './styles.css',
@@ -12,6 +13,8 @@ const ASSETS_TO_CACHE = [
   './script.js',
   './appointments.js',
   './profile.js',
+  './badge.css',
+  './badge.js',
   './manifest.json',
   './assets/sarapmagbike-logo.png',
   './assets/icon-192.png',

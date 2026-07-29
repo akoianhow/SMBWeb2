@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="View your SarapMagBadge loyalty level, redeemable points, rewards, and activity.">
+    <title>My SarapMagBadge | SarapMagBike</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260729-badge">
+    <link rel="stylesheet" href="badge.css?v=20260729-badge-2">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#df2027">
+  </head>
+  <body class="is-badge-page">
+    <div class="page-bg"></div>
+    <header class="rider-profile-site-header">
+      <div class="wrap rider-profile-site-header-inner">
+        <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+          <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+          <span class="logo-tag">QUEZON CITY</span>
+        </a>
+        <nav aria-label="Badge navigation">
+          <a href="index.html#products">Shop</a>
+          <a href="orders.html">My Orders</a>
+          <a href="profile.html">My Profile</a>
+          <button type="button" data-profile-header-login>Log in</button>
+          <button type="button" data-profile-header-logout hidden>Log out</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap badge-page" data-badge-root>
+      <section class="badge-loading panel" data-badge-state>
+        <h1>Loading your SarapMagBadge</h1>
+        <p>Checking your points, level, and rewards.</p>
+      </section>
+
+      <div data-badge-content hidden>
+        <section class="badge-card">
+          <div class="badge-card-brand"><img src="assets/sarapmagbike-logo.png" alt=""><div><strong>SARAPMAGBADGE</strong><span>VERIFIED DIGITAL LOYALTY CARD</span></div></div>
+          <div class="badge-member">
+            <div class="badge-avatar" data-badge-avatar>SMB</div>
+            <div class="badge-level-seal" data-badge-level>MAMAW</div>
+            <h1 data-badge-name>Member</h1>
+            <strong data-badge-member-level>MEMBER</strong>
+          </div>
+          <div class="badge-balances">
+            <div><span>TOTAL KAPOTPOINTS</span><strong data-badge-lifetime>0</strong><small>LIFETIME</small></div>
+            <div><span>REDEEMABLE POINTS BALANCE</span><strong data-badge-redeemable>0</strong><small>POINTS</small></div>
+          </div>
+          <div class="badge-meta"><span data-badge-number>SMB-00000000</span><span data-badge-member-since>Member since —</span></div>
+        </section>
+
+        <section class="badge-cycle panel">
+          <div class="badge-cycle-date"><strong data-badge-cycle-day>—</strong><span>annual cycle</span></div>
+          <div><h2 data-badge-cycle-title>Annual points cycle</h2><p data-badge-cycle-copy>Level Points never expire.</p></div>
+        </section>
+
+        <section class="badge-actions" aria-label="Badge actions">
+          <button type="button" data-badge-code="counter"><span>123</span><strong>Generate manual code</strong><small>For staff validation</small></button>
+          <a href="#ways-to-earn"><span>+</span><strong>Ways to earn</strong><small>See all point rules</small></a>
+          <a href="#points-history"><span>↻</span><strong>Points history</strong><small>Review your ledger</small></a>
+        </section>
+
+        <section class="badge-level-journey panel">
+          <div class="badge-section-heading"><div><h2>Your level journey</h2><p>Lifetime points are permanent except when the original earning is reversed.</p></div><strong data-badge-level-progress>0 LEVEL PTS</strong></div>
+          <div class="badge-level-track" data-badge-levels></div>
+        </section>
+
+        <section class="badge-rewards-section">
+          <div class="badge-section-heading"><div><h2>Rewards &amp; perks</h2><p>Eligible rewards are active and in color. Locked rewards are disabled and grayed out.</p></div></div>
+          <div class="badge-reward-grid" data-badge-rewards></div>
+        </section>
+
+        <section class="badge-vouchers panel" data-badge-vouchers-section hidden>
+          <div class="badge-section-heading"><div><h2>Active reward vouchers</h2><p>Show the voucher to staff before its expiration date.</p></div></div>
+          <div data-badge-vouchers></div>
+        </section>
+
+        <section class="badge-earn panel" id="ways-to-earn">
+          <div class="badge-section-heading"><div><h2>Ways to earn</h2><p>Purchase points use the net amount after discounts; delivery and miscellaneous fees are excluded.</p></div></div>
+          <div class="badge-earn-grid">
+            <div><strong>+5</strong><span>Authenticated website visit</span><small>Once per day</small></div>
+            <div><strong>+5</strong><span>Published community post</span><small>First post/day; reversible within 7 days</small></div>
+            <div><strong>+5</strong><span>Every full ₱50 web purchase</span><small>After completed transaction</small></div>
+            <div><strong>+10</strong><span>Verified physical visit</span><small>Once per day; can stack with purchase</small></div>
+            <div><strong>+10</strong><span>Every full ₱50 onsite purchase</span><small>After completed POS sale</small></div>
+            <div><strong>+25</strong><span>Confirmed event attendance</span><small>Once per event</small></div>
+          </div>
+        </section>
+
+        <section class="badge-history panel" id="points-history">
+          <div class="badge-section-heading"><div><h2>Points history</h2><p>Every earning, redemption, expiration, adjustment, and reversal is traceable.</p></div></div>
+          <div class="badge-history-list" data-badge-history></div>
+        </section>
+      </div>
+    </main>
+
+    <div class="badge-code-modal" data-badge-code-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="badge-code-title">
+        <button class="badge-code-close" type="button" data-badge-code-close aria-label="Close">×</button>
+        <p>SarapMagBadge manual code</p>
+        <h2 id="badge-code-title" data-badge-code-title>Show this code to staff</h2>
+        <strong data-badge-manual-code>000 000</strong>
+        <span data-badge-code-countdown>Valid for 5:00</span>
+        <small>This rotating code works once. A screenshot or an expired code cannot be used.</small>
+      </div>
+    </div>
+
+    <div class="community-auth-prompt" data-community-auth-prompt hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="badge-auth-title">
+        <h2 id="badge-auth-title">Log in to view your badge</h2>
+        <p>Use your verified SarapMagBike customer account.</p>
+        <form class="community-login-form" data-community-login-form hidden>
+          <label>Username<input name="username" autocomplete="username" required></label>
+          <label>Password<input type="password" name="password" autocomplete="current-password" required></label>
+          <input class="website-field" name="website" tabindex="-1" aria-hidden="true">
+          <button type="submit">Log in</button>
+          <p data-community-login-message role="status"></p>
+        </form>
+        <div class="community-auth-actions"><button type="button" data-community-prompt-login>Log in</button><button type="button" data-community-prompt-register>Create account</button><button type="button" data-community-prompt-close>Close</button></div>
+      </div>
+    </div>
+
+    <script src="script.js?v=20260729-badge"></script>
+    <script src="badge.js?v=20260729-badge-2"></script>
+  </body>
+</html>

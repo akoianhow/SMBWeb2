@@ -1,0 +1,78 @@
+:root { --badge-red: #e51f2b; --badge-ink: #202328; --badge-muted: #69717b; }
+.badge-page { max-width: none; padding-bottom: 80px; padding-top: 34px; width: min(1040px, calc(100vw - 32px)); }
+.badge-loading { margin: 40px auto; max-width: 700px; text-align: center; }
+.badge-page [hidden] { display: none !important; }
+.badge-card { background: radial-gradient(circle at 92% 10%, #fff0f1 0 21%, transparent 22%), linear-gradient(145deg, #fff 0%, #fffafa 100%); border: 1px solid #d9dde1; border-radius: 28px; border-top: 12px solid var(--badge-red); box-shadow: 0 22px 48px rgba(22, 27, 32, .12); min-height: 600px; overflow: hidden; padding: 42px 54px 24px; position: relative; }
+.badge-card::after { border: 45px solid rgba(229,31,43,.035); border-radius: 50%; content: ""; height: 460px; position: absolute; right: -180px; top: -110px; width: 460px; }
+.badge-card-brand { align-items: center; display: flex; justify-content: center; position: relative; z-index: 1; }
+.badge-card-brand img { height: 72px; object-fit: contain; width: 86px; }
+.badge-card-brand div { display: grid; gap: 4px; }
+.badge-card-brand strong { font-size: 32px; letter-spacing: .02em; }
+.badge-card-brand span { color: var(--badge-muted); font-size: 14px; font-weight: 800; letter-spacing: .14em; }
+.badge-member { margin: 34px auto 0; position: relative; text-align: center; width: max-content; z-index: 1; }
+.badge-avatar { align-items: center; background: #292c30; border: 10px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #d5dae0, 0 16px 35px rgba(0,0,0,.16); color: white; display: flex; font-size: 54px; font-weight: 800; height: 175px; justify-content: center; overflow: hidden; width: 175px; }
+.badge-avatar img { height: 100%; object-fit: cover; width: 100%; }
+.badge-level-seal { align-items: center; background: var(--badge-red); border: 5px solid white; border-radius: 50%; bottom: 58px; box-shadow: 0 0 0 4px var(--badge-red); color: white; display: flex; font-size: 13px; font-weight: 900; height: 88px; justify-content: center; position: absolute; right: -42px; width: 88px; }
+.badge-member h1 { font-size: 32px; margin: 28px 0 5px; }
+.badge-member > strong { color: var(--badge-red); letter-spacing: .08em; }
+.badge-balances { border-bottom: 1px solid #d8dde2; border-top: 1px solid #d8dde2; display: grid; grid-template-columns: 1fr 1fr; margin-top: 34px; position: relative; z-index: 1; }
+.badge-balances > div { padding: 26px; text-align: center; }
+.badge-balances > div + div { border-left: 1px solid #d8dde2; }
+.badge-balances span, .badge-balances small { color: var(--badge-muted); display: block; font-size: 12px; font-weight: 800; letter-spacing: .08em; }
+.badge-balances strong { font-size: 52px; line-height: 1.05; }
+.badge-meta { color: var(--badge-muted); display: flex; font-size: 12px; justify-content: space-between; padding-top: 18px; position: relative; z-index: 1; }
+.badge-cycle { align-items: center; display: grid; gap: 18px; grid-template-columns: auto 1fr; margin-top: 22px; padding: 24px; }
+.badge-cycle-date { align-items: center; background: var(--badge-red); border-radius: 50%; color: #fff; display: flex; flex-direction: column; height: 74px; justify-content: center; width: 74px; }
+.badge-cycle-date strong { font-size: 22px; }.badge-cycle-date span { font-size: 9px; text-transform: uppercase; }
+.badge-cycle h2, .badge-cycle p { margin: 0; }.badge-cycle p { color: var(--badge-muted); margin-top: 5px; }
+.badge-actions { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin: 22px 0; }
+.badge-actions button, .badge-actions a { align-items: center; background: #fff; border: 1px solid #d9dde1; border-radius: 18px; color: var(--badge-ink); display: flex; flex-direction: column; gap: 6px; justify-content: center; min-height: 138px; padding: 18px; text-align: center; text-decoration: none; }
+.badge-actions span { align-items: center; background: #fff0f1; border-radius: 50%; color: #9d1b24; display: flex; font-size: 22px; font-weight: 800; height: 52px; justify-content: center; width: 52px; }
+.badge-actions small { color: var(--badge-muted); }
+.badge-level-journey, .badge-earn, .badge-history, .badge-vouchers { padding: 28px; }
+.badge-section-heading { align-items: end; display: flex; justify-content: space-between; }
+.badge-section-heading h2, .badge-section-heading p { margin: 0; }.badge-section-heading p { color: var(--badge-muted); margin-top: 5px; }
+.badge-section-heading > strong { color: var(--badge-red); max-width: 120px; text-align: right; }
+.badge-level-track { display: grid; gap: 10px; grid-template-columns: repeat(5, 1fr); margin-top: 28px; position: relative; }
+.badge-level-track::before { background: #d8dde2; content: ""; height: 4px; left: 10%; position: absolute; right: 10%; top: 26px; }
+.badge-level-node { position: relative; text-align: center; z-index: 1; }
+.badge-level-dot { background: #d4d7dc; border: 7px solid #f5f6f7; border-radius: 50%; box-shadow: 0 0 0 2px #d4d7dc; height: 52px; margin: 0 auto 12px; width: 52px; }
+.badge-level-node.reached .badge-level-dot { background: #cf354b; box-shadow: 0 0 0 2px var(--badge-red); }
+.badge-level-node.current .badge-level-dot { background: var(--badge-red); box-shadow: 0 0 0 4px #fff, 0 0 0 7px var(--badge-red); }
+.badge-level-node strong, .badge-level-node small { display: block; }.badge-level-node small { color: var(--badge-muted); margin-top: 2px; }
+.badge-rewards-section { margin-top: 34px; }
+.badge-reward-grid { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); margin-top: 18px; }
+.badge-reward { background: linear-gradient(145deg, #fff, #fff4f5); border: 1px solid #efbfc3; border-radius: 18px; display: flex; flex-direction: column; min-height: 230px; padding: 22px; }
+.badge-reward.locked { background: #eee; border-color: #d7d7d7; color: #909090; filter: grayscale(1); }
+.badge-reward h3 { font-size: 22px; margin: 8px 0; }.badge-reward p { color: var(--badge-muted); flex: 1; margin: 0 0 12px; }
+.badge-reward.locked p { color: #929292; }.badge-reward strong { color: var(--badge-red); }.badge-reward.locked strong { color: #898989; }
+.badge-reward button { background: var(--badge-red); border: 0; border-radius: 10px; color: #fff; font-weight: 800; margin-top: 14px; padding: 12px; }
+.badge-reward button:disabled { background: #c8c8c8; cursor: not-allowed; }
+.badge-vouchers { margin-top: 24px; }.badge-voucher { border-top: 1px solid #e0e3e7; display: flex; justify-content: space-between; padding: 16px 0; }
+.badge-voucher strong, .badge-voucher span { display: block; }.badge-voucher code { font-size: 18px; font-weight: 800; }
+.badge-earn, .badge-history { margin-top: 24px; }
+.badge-earn-grid { display: grid; gap: 12px; grid-template-columns: repeat(3, 1fr); margin-top: 20px; }
+.badge-earn-grid > div { background: #f7f8fa; border-radius: 12px; display: grid; gap: 2px; padding: 16px; }.badge-earn-grid strong { color: var(--badge-red); font-size: 22px; }.badge-earn-grid small { color: var(--badge-muted); }
+.badge-history-list { margin-top: 18px; }.badge-history-row { align-items: center; border-top: 1px solid #e1e4e7; display: grid; gap: 10px; grid-template-columns: 1fr auto; padding: 14px 0; }
+.badge-history-row span, .badge-history-row small { display: block; }.badge-history-row small { color: var(--badge-muted); }.badge-history-row strong { font-size: 18px; }.badge-history-row strong.positive { color: #15803d; }.badge-history-row strong.negative { color: var(--badge-red); }
+.badge-code-modal { align-items: center; background: rgba(18,20,24,.72); display: flex; inset: 0; justify-content: center; padding: 20px; position: fixed; z-index: 1000; }
+.badge-code-modal > div { background: #fff; border-radius: 24px; max-width: 440px; padding: 38px; position: relative; text-align: center; width: 100%; }
+.badge-code-close { background: none; border: 0; font-size: 28px; position: absolute; right: 14px; top: 10px; }.badge-code-modal p { color: var(--badge-red); font-weight: 800; text-transform: uppercase; }
+.badge-code-modal strong { display: block; font-size: 54px; letter-spacing: .12em; margin: 22px 0; }.badge-code-modal span, .badge-code-modal small { color: var(--badge-muted); display: block; }.badge-code-modal small { margin-top: 18px; }
+
+@media (max-width: 720px) {
+  .badge-page { padding: 14px 14px 74px; }
+  .badge-card { min-height: 0; padding: 24px 20px 18px; }
+  .badge-card-brand img { height: 48px; width: 58px; }.badge-card-brand strong { font-size: 21px; }.badge-card-brand span { font-size: 9px; }
+  .badge-avatar { font-size: 36px; height: 112px; width: 112px; }.badge-level-seal { bottom: 50px; font-size: 9px; height: 58px; right: -30px; width: 58px; }
+  .badge-member { margin-top: 24px; }.badge-member h1 { font-size: 26px; margin-top: 20px; }
+  .badge-balances { margin-top: 24px; }.badge-balances > div { padding: 18px 6px; }.badge-balances strong { font-size: 38px; }.badge-balances span { font-size: 9px; }
+  .badge-meta { gap: 8px; }.badge-cycle { padding: 18px; }.badge-cycle-date { height: 62px; width: 62px; }
+  .badge-actions { gap: 8px; }.badge-actions button, .badge-actions a { min-height: 112px; padding: 10px 5px; }.badge-actions span { height: 42px; width: 42px; }.badge-actions strong { font-size: 12px; }.badge-actions small { display: none; }
+  .badge-level-journey { padding: 20px 12px; }.badge-level-journey .badge-section-heading { align-items: start; }.badge-level-journey .badge-section-heading p { font-size: 12px; }.badge-level-journey .badge-section-heading > strong { font-size: 12px; min-width: 74px; }
+  .badge-level-track { gap: 2px; margin-top: 22px; }.badge-level-track::before { height: 3px; left: 8%; right: 8%; top: 15px; }
+  .badge-level-dot { border-width: 4px; height: 30px; margin-bottom: 8px; width: 30px; }.badge-level-node.current .badge-level-dot { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--badge-red); }
+  .badge-level-node strong { font-size: 10px; }.badge-level-node small { font-size: 8px; }
+  .badge-reward-grid, .badge-earn-grid { grid-template-columns: 1fr; }.badge-reward { min-height: 190px; }
+  .badge-section-heading h2 { font-size: 24px; }.badge-cycle h2 { font-size: 18px; }
+}

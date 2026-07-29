@@ -1502,6 +1502,7 @@ function ensureStandardMobileHeaderActions() {
         <strong data-mobile-header-name>Customer</strong>
         <span data-mobile-header-email></span>
         <a class="mobile-header-profile-link" href="profile.html">View profile</a>
+        <a class="mobile-header-badge-link" href="badge.html">My SarapMagBadge</a>
         <a class="mobile-header-orders-link" href="orders.html">My Orders</a>
         <button type="button" data-mobile-header-logout>Logout</button>
       </div>
@@ -6336,6 +6337,7 @@ async function loginCustomer(event) {
     });
     form.reset();
     updateCustomerHeader();
+    await recordDailyLoyaltyVisit();
     window.dispatchEvent(new CustomEvent("customer-session-changed"));
     setMessage(message, "Logged in.", "success");
     hideCommunityAuthPrompt();
@@ -6459,11 +6461,21 @@ async function toggleMobileHeaderMenu(event) {
 async function restoreCustomerSession() {
   try {
     customerState.account = await apiRequest("/api/public/customer-account/session");
+    await recordDailyLoyaltyVisit();
   } catch (error) {
     customerState.account = null;
   }
   updateCustomerHeader();
   window.dispatchEvent(new CustomEvent("customer-session-changed"));
+}
+
+async function recordDailyLoyaltyVisit() {
+  if (!customerState.account) return;
+  try {
+    await apiRequest("/api/public/loyalty/daily-visit", { method: "POST", body: "{}" });
+  } catch {
+    // Authentication remains usable if loyalty is temporarily unavailable or not enabled.
+  }
 }
 
 async function submitChangePassword(event) {
@@ -6731,6 +6743,12 @@ function bindCustomerAccountUi() {
       profileLink.addEventListener("click", () => setAccountMenuOpen(false));
     }
     if (identity && !identity.querySelector(".account-menu-orders-link")) {
+      const badgeLink = document.createElement("a");
+      badgeLink.className = "account-menu-badge-link";
+      badgeLink.href = "badge.html";
+      badgeLink.textContent = "My SarapMagBadge";
+      identity.appendChild(badgeLink);
+      badgeLink.addEventListener("click", () => setAccountMenuOpen(false));
       const ordersLink = document.createElement("a");
       ordersLink.className = "account-menu-orders-link";
       ordersLink.href = "orders.html";
@@ -6740,6 +6758,14 @@ function bindCustomerAccountUi() {
     }
   }
   document.querySelectorAll(".mobile-header-menu").forEach((menu) => {
+    if (!menu.querySelector(".mobile-header-badge-link")) {
+      const badgeLink = document.createElement("a");
+      badgeLink.className = "mobile-header-badge-link";
+      badgeLink.href = "badge.html";
+      badgeLink.textContent = "My SarapMagBadge";
+      const profileLink = menu.querySelector(".mobile-header-profile-link");
+      profileLink?.insertAdjacentElement("afterend", badgeLink);
+    }
     if (menu.querySelector(".mobile-header-orders-link")) return;
     const profileLink = menu.querySelector(".mobile-header-profile-link");
     if (!profileLink) return;

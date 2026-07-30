@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260730-tile-buttons-hidden">
+    <link rel="stylesheet" href="styles.css?v=20260730-account-links-v6">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -54,16 +54,6 @@
                   <p data-account-email></p>
                 </div>
               </div>
-              <dl>
-                <div>
-                  <dt>Hometown</dt>
-                  <dd data-account-hometown>Not set</dd>
-                </div>
-                <div>
-                  <dt>Rider type</dt>
-                  <dd data-account-rider-types>Not set</dd>
-                </div>
-              </dl>
               <div class="account-menu-actions">
                 <button type="button" data-edit-profile>Edit Profile</button>
                 <button type="button" data-logout>Logout</button>
@@ -125,7 +115,7 @@
           <div class="mobile-header-menu" data-mobile-header-menu hidden>
             <strong data-mobile-header-name>Customer</strong>
             <span data-mobile-header-email></span>
-            <a class="mobile-header-profile-link" href="profile.html">View profile</a>
+            <a class="mobile-header-profile-link" href="profile.html">View Profile</a>
             <button type="button" data-mobile-header-logout>Logout</button>
           </div>
         </div>
@@ -150,13 +140,17 @@
           <div class="profile-heading">
             <div>
               <p data-profile-eyebrow>Customer account</p>
-              <h1 data-profile-title>Create your SarapMagBike profile</h1>
+              <h1 data-profile-title>Create your SarapMagBike account</h1>
             </div>
             <button type="button" data-close-profile>Back to Website</button>
           </div>
 
           <form class="profile-form" data-profile-form>
-            <div class="profile-photo-field">
+            <p class="profile-registration-note" data-registration-note>
+              Create your account now. You can add your photo, contact details, and rider profile later.
+            </p>
+
+            <div class="profile-photo-field" data-registration-optional>
               <div class="profile-photo-preview" data-profile-photo-preview>SMB</div>
               <label>
                 Profile picture
@@ -174,19 +168,19 @@
                 Email
                 <input type="email" name="email" autocomplete="email" required>
               </label>
-              <label>
+              <label data-registration-optional>
                 Hometown
                 <input type="text" name="hometown" autocomplete="address-level2">
               </label>
-              <label>
+              <label data-registration-optional>
                 Mobile number <small>(optional)</small>
                 <input type="tel" name="mobileNumber" autocomplete="tel" inputmode="tel" placeholder="0917 123 4567">
               </label>
-              <label>
+              <label data-registration-optional>
                 Facebook account <small>(optional)</small>
                 <input type="text" name="facebookAccount" autocomplete="url" placeholder="Profile URL, username, or Messenger name">
               </label>
-              <label>
+              <label data-registration-optional>
                 Birthday
                 <input type="date" name="birthday">
               </label>
@@ -196,20 +190,20 @@
               <label>
                 Password
                 <span class="password-control">
-                  <input type="password" name="password" autocomplete="new-password" required>
+                  <input type="password" name="password" autocomplete="new-password" minlength="8" required>
                   <button type="button" data-toggle-password="password">Show</button>
                 </span>
               </label>
               <label>
                 Confirm password
                 <span class="password-control">
-                  <input type="password" name="confirmPassword" autocomplete="new-password" required>
+                  <input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" required>
                   <button type="button" data-toggle-password="confirmPassword">Show</button>
                 </span>
               </label>
             </div>
 
-            <fieldset class="rider-types">
+            <fieldset class="rider-types" data-registration-optional>
               <legend>Types of bike you ride</legend>
               <label><input type="checkbox" name="riderTypes" value="MTB"> MTB</label>
               <label><input type="checkbox" name="riderTypes" value="Road bike"> Road bike</label>
@@ -219,7 +213,7 @@
               <label><input type="checkbox" name="riderTypes" value="Others"> Others</label>
             </fieldset>
 
-            <label class="consent-line">
+            <label class="consent-line" data-registration-optional>
               <input type="checkbox" name="marketingConsent">
               I agree to receive account and service messages from SarapMagBike.
             </label>
@@ -227,7 +221,7 @@
             <input class="website-field" type="text" name="website" autocomplete="off" tabindex="-1" aria-hidden="true">
 
             <div class="profile-actions">
-              <button type="submit" data-profile-submit>Create Profile</button>
+              <button type="submit" data-profile-submit>Create Account</button>
               <button type="button" data-open-change-password hidden>Change Password</button>
             </div>
             <p class="profile-message" data-profile-message role="status"></p>
@@ -270,8 +264,8 @@
       <section class="hero-slider" aria-label="Featured shop image" data-home-section>
         <div class="slide-image" data-hero-media>
           <video class="hero-video active" autoplay muted loop playsinline preload="metadata" poster="assets/hero-shop-intro-poster.jpg" aria-hidden="true">
-            <source src="assets/hero-shop-intro.mp4" type="video/mp4">
-            <source src="assets/hero-shop-intro.webm" type="video/webm">
+            <source src="assets/hero-shop-intro.mp4?v=20260730-optimized" type="video/mp4">
+            <source src="assets/hero-shop-intro.webm?v=20260730-optimized" type="video/webm">
           </video>
         </div>
         <div class="hero-message">
@@ -635,6 +629,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260730-account-level-badge"></script>
+    <script src="script.js?v=20260730-account-links-v6"></script>
   </body>
 </html>

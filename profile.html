@@ -15,7 +15,7 @@
     <meta name="description" content="View a SarapMagBike community rider profile, posts, and cycling interests.">
     <title>Rider Profile | SarapMagBike</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260730-tile-buttons-hidden">
+    <link rel="stylesheet" href="styles.css?v=20260730-account-links-v6">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -48,9 +48,23 @@
       </section>
 
       <section class="rider-profile-shell" data-rider-profile hidden>
-        <div class="rider-profile-cover" data-rider-cover></div>
+        <div class="rider-profile-cover" data-rider-cover>
+          <div class="rider-profile-cover-media" data-rider-cover-media></div>
+          <a class="rider-profile-level-badge" href="badge.html" data-rider-level-badge hidden aria-label="Open your SarapMagBadge"></a>
+          <button class="rider-profile-photo-action rider-profile-cover-action" type="button" data-rider-photo-edit="cover" hidden aria-label="Change banner picture" title="Change banner picture">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 7.6 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.6L15 4H9Zm3 4.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm0 2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6Z"/></svg>
+          </button>
+          <p class="rider-profile-photo-message" data-rider-photo-message role="status" hidden></p>
+          <input class="rider-profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp" data-rider-photo-input="cover" tabindex="-1">
+        </div>
         <div class="rider-profile-summary">
-          <div class="rider-profile-avatar" data-rider-avatar>SMB</div>
+          <div class="rider-profile-avatar" data-rider-avatar>
+            <span class="rider-profile-avatar-media" data-rider-avatar-media>SMB</span>
+            <button class="rider-profile-photo-action rider-profile-avatar-action" type="button" data-rider-photo-edit="profile" hidden aria-label="Change display picture" title="Change display picture">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 7.6 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.6L15 4H9Zm3 4.2a4.8 4.8 0 1 1 0 9.6 4.8 4.8 0 0 1 0-9.6Zm0 2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 0 0 0-5.6Z"/></svg>
+            </button>
+            <input class="rider-profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp" data-rider-photo-input="profile" tabindex="-1">
+          </div>
           <div class="rider-profile-identity">
             <h1 data-rider-name>Rider</h1>
             <p class="rider-profile-username" data-rider-username>@rider</p>
@@ -67,41 +81,18 @@
 
         <div class="rider-profile-content">
           <aside class="rider-profile-sidebar">
-            <details class="rider-profile-panel" data-rider-panel="about">
-              <summary>About Me</summary>
-              <div class="rider-profile-panel-body">
-                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="about" hidden>Edit</button></div>
-                <dl>
-                  <div><dt>Member since</dt><dd data-rider-member-since>—</dd></div>
-                  <div><dt>Occupation</dt><dd data-rider-occupation>Not set</dd></div>
-                  <div><dt>Birthday</dt><dd data-rider-birthday>Private</dd></div>
-                  <div><dt>Location</dt><dd data-rider-hometown>Not shared</dd></div>
-                </dl>
-              </div>
-            </details>
-
-            <details class="rider-profile-panel" data-rider-panel="cycling">
-              <summary>Cycling Preferences</summary>
-              <div class="rider-profile-panel-body">
-                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="cycling" hidden>Edit</button></div>
-                <dl>
-                  <div><dt>Bike types</dt><dd data-rider-types>Not set</dd></div>
-                  <div><dt>Discipline</dt><dd data-rider-discipline>Not set</dd></div>
-                  <div><dt>Pace</dt><dd data-rider-pace>Not set</dd></div>
-                  <div><dt>Distance</dt><dd data-rider-distance>Not set</dd></div>
-                  <div><dt>Ride style</dt><dd data-rider-style>Not set</dd></div>
-                  <div><dt>Schedule</dt><dd data-rider-schedule>Not set</dd></div>
-                </dl>
-              </div>
-            </details>
-
-            <details class="rider-profile-panel" data-rider-panel="social">
-              <summary>Social Links</summary>
-              <div class="rider-profile-panel-body">
-                <div class="rider-profile-panel-body-actions"><button type="button" data-rider-edit="social" hidden>Edit</button></div>
-                <div class="rider-profile-social" data-rider-social aria-label="Rider social links"></div>
-              </div>
-            </details>
+            <article class="rider-profile-panel rider-profile-about-panel" data-rider-panel="about">
+              <header>
+                <h2>About Me</h2>
+                <button type="button" data-rider-edit="about" hidden>Edit</button>
+              </header>
+              <dl>
+                <div><dt>Member since</dt><dd data-rider-member-since>—</dd></div>
+                <div><dt>Occupation</dt><dd data-rider-occupation>Not set</dd></div>
+                <div><dt>Birthday</dt><dd data-rider-birthday>Private</dd></div>
+                <div><dt>Location</dt><dd data-rider-hometown>Not shared</dd></div>
+              </dl>
+            </article>
 
             <article id="testimonials" class="rider-profile-panel rider-testimonials-panel" data-rider-panel="testimonials">
               <header><h2>Testimonials</h2><button type="button" data-testimonial-open hidden>Add</button></header>
@@ -178,7 +169,7 @@
     <div class="community-photo-modal" data-community-photo-modal hidden><div role="dialog" aria-modal="true"><div class="community-photo-stage"><button class="community-photo-close" type="button" data-community-photo-close>Back</button><button class="community-photo-nav community-photo-prev" type="button" data-community-photo-prev>‹</button><figure><img data-community-photo-viewer-image alt="Post photo"><figcaption data-community-photo-counter></figcaption></figure><button class="community-photo-nav community-photo-next" type="button" data-community-photo-next>›</button></div><aside class="community-photo-panel" data-community-photo-panel></aside></div></div>
     <div class="community-edit-modal" data-community-edit-modal hidden><div role="dialog" aria-modal="true" aria-labelledby="community-edit-title"><div class="community-thread-header"><div><p>Edit post</p><h2 id="community-edit-title">Update your discussion</h2></div><button type="button" data-community-edit-close>Close</button></div><form class="community-edit-form" data-community-edit-form><div class="community-edit-author" data-community-edit-author></div><div class="community-edit-media" data-community-edit-media></div><textarea name="body" maxlength="2000" required></textarea><div class="community-edit-actions"><button type="submit" data-community-edit-save disabled>Save Post</button><button type="button" data-community-edit-cancel>Close</button></div><div class="community-edit-confirm" data-community-edit-confirm hidden><p>You have unsaved changes.</p><div><button type="button" data-community-edit-confirm-save>Save changes</button><button type="button" data-community-edit-confirm-discard>Discard changes</button><button type="button" data-community-edit-confirm-keep>Keep editing</button></div></div><p class="community-message" data-community-edit-message role="status"></p></form></div></div>
 
-    <script src="script.js?v=20260730-account-level-badge"></script>
-    <script src="profile.js?v=20260729-consistent-header"></script>
+    <script src="script.js?v=20260730-account-links-v6"></script>
+    <script src="profile.js?v=20260730-profile-simplified"></script>
   </body>
 </html>

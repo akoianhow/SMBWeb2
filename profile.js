@@ -1,7 +1,16 @@
 const riderProfileState = {
   profile: null,
   panel: null,
-  initialFormValue: ""
+  initialFormValue: "",
+  levelLoadVersion: 0
+};
+
+const riderLevelBadgeAssets = {
+  noob: "assets/sarapmagbadge-noob.png",
+  saks: "assets/sarapmagbadge-saks.png",
+  mamaw: "assets/sarapmagbadge-mamaw.png",
+  master: "assets/sarapmagbadge-master.png",
+  budolero: "assets/sarapmagbadge-budolero.png"
 };
 
 function escapeHtml(value) {
@@ -47,6 +56,41 @@ function renderRiderProfileImage(container, url, name, className) {
     container.append(image);
   } else if (className === "profile picture") {
     container.textContent = getCommunityInitials(name);
+  }
+}
+
+function setRiderPhotoMessage(message = "", type = "") {
+  const element = document.querySelector("[data-rider-photo-message]");
+  if (!element) return;
+  element.textContent = message;
+  element.hidden = !message;
+  element.dataset.type = type;
+}
+
+async function loadRiderLevelBadge(profile) {
+  const link = document.querySelector("[data-rider-level-badge]");
+  if (!link) return;
+  const loadVersion = ++riderProfileState.levelLoadVersion;
+  link.hidden = true;
+  link.replaceChildren();
+  if (!profile?.isOwner || !customerState.account) return;
+  link.setAttribute("aria-busy", "true");
+  try {
+    const summary = await apiRequest("/api/public/loyalty/badge");
+    if (loadVersion !== riderProfileState.levelLoadVersion || riderProfileState.profile?.id !== profile.id) return;
+    const levelName = String(summary?.level?.name || "Noob").trim() || "Noob";
+    const levelCode = String(summary?.level?.code || levelName).trim().toLowerCase();
+    const image = document.createElement("img");
+    image.src = riderLevelBadgeAssets[levelCode] || riderLevelBadgeAssets.noob;
+    image.alt = `${levelName} SarapMagBadge`;
+    link.replaceChildren(image);
+    link.setAttribute("aria-label", `Open your ${levelName} SarapMagBadge`);
+    link.title = `${levelName} SarapMagBadge`;
+    link.hidden = false;
+  } catch {
+    link.hidden = true;
+  } finally {
+    link.removeAttribute("aria-busy");
   }
 }
 
@@ -141,12 +185,14 @@ function renderRiderProfile(profile) {
     location.hidden = !profile.hometown;
     location.textContent = profile.hometown ? `● ${profile.hometown}` : "";
   }
-  renderRiderProfileImage(document.querySelector("[data-rider-avatar]"), profile.profilePictureUrl, profile.displayName || profile.username, "profile picture");
-  renderRiderProfileImage(document.querySelector("[data-rider-cover]"), profile.coverPictureUrl, profile.displayName || profile.username, "cover picture");
+  renderRiderProfileImage(document.querySelector("[data-rider-avatar-media]"), profile.profilePictureUrl, profile.displayName || profile.username, "profile picture");
+  renderRiderProfileImage(document.querySelector("[data-rider-cover-media]"), profile.coverPictureUrl, profile.displayName || profile.username, "cover picture");
   renderRiderSocial(profile);
   renderRiderTestimonials(profile);
 
   document.querySelectorAll("[data-rider-edit]").forEach((button) => { button.hidden = !profile.isOwner; });
+  document.querySelectorAll("[data-rider-photo-edit]").forEach((button) => { button.hidden = !profile.isOwner; });
+  void loadRiderLevelBadge(profile);
   const createPost = document.querySelector("[data-community-composer-launcher]");
   if (createPost) createPost.hidden = !profile.isOwner;
   if (window.location.hash === "#testimonials") {
@@ -195,8 +241,9 @@ function getProfileEditFields(panel, profile) {
     return `
       <label>Display name<input name="displayName" maxlength="120" value="${escapeHtml(profile.displayName || "")}"></label>
       <label>Short bio<textarea name="bio" maxlength="300" rows="4">${escapeHtml(profile.bio || "")}</textarea></label>
-      <label>Profile picture<input type="file" name="profilePicture" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG, or WebP. Maximum 1 MB.</small></label>
-      <label>Cover picture<input type="file" name="coverPicture" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG, or WebP. Maximum 1.5 MB.</small></label>`;
+      <label>Mobile number<input type="tel" name="mobileNumber" maxlength="20" inputmode="tel" autocomplete="tel" value="${escapeHtml(profile.mobileNumber || "")}" placeholder="0917 123 4567"><small>Optional. Used only for order, appointment, and account contact.</small></label>
+      <label>Hometown<input name="hometown" maxlength="120" value="${escapeHtml(profile.hometown || "")}"></label>
+      <label>Birthday<input type="date" name="birthday" value="${escapeHtml(profile.birthday || "")}"></label>`;
   }
   if (panel === "about") {
     return `
@@ -205,16 +252,6 @@ function getProfileEditFields(panel, profile) {
       <label>Birthday<input type="date" name="birthday" value="${escapeHtml(profile.birthday || "")}"></label>
       <label class="rider-profile-check"><input type="checkbox" name="showHometown" ${profile.showHometown ? "checked" : ""}> Show hometown publicly</label>
       <label class="rider-profile-check"><input type="checkbox" name="showBirthday" ${profile.showBirthday ? "checked" : ""}> Show birthday month and day publicly</label>`;
-  }
-  if (panel === "cycling") {
-    const choices = ["MTB", "Road bike", "Gravel Bike", "Folding", "Hybrid", "Others"];
-    return `
-      <fieldset><legend>Types of bike you ride</legend><div class="rider-profile-bike-types">${choices.map((choice) => `<label><input type="checkbox" name="riderTypes" value="${choice}" ${profile.riderTypes?.includes(choice) ? "checked" : ""}> ${choice}</label>`).join("")}</div></fieldset>
-      <label>Discipline<input name="discipline" maxlength="80" value="${escapeHtml(profile.discipline || "")}" placeholder="Road cycling, MTB, gravel"></label>
-      <label>Usual pace<input name="pace" maxlength="80" value="${escapeHtml(profile.pace || "")}" placeholder="Chill, moderate, fast"></label>
-      <label>Preferred distance<input name="preferredDistance" maxlength="80" value="${escapeHtml(profile.preferredDistance || "")}" placeholder="50–100 km"></label>
-      <label>Ride style<input name="rideStyle" maxlength="160" value="${escapeHtml(profile.rideStyle || "")}" placeholder="Group rides, endurance"></label>
-      <label>Preferred schedule<input name="preferredSchedule" maxlength="120" value="${escapeHtml(profile.preferredSchedule || "")}" placeholder="Saturday mornings"></label>`;
   }
   return `
     <label>Strava URL<input type="url" name="stravaUrl" value="${escapeHtml(profile.stravaUrl || "")}" placeholder="https://www.strava.com/athletes/..."></label>
@@ -233,7 +270,7 @@ function serializeRiderEditForm(form) {
 function openRiderEditModal(panel) {
   const profile = riderProfileState.profile;
   if (!profile?.isOwner) return;
-  const titles = { identity: "Profile header", about: "About me", cycling: "Cycling preferences", social: "Social links" };
+  const titles = { identity: "Profile header", about: "About me", social: "Social links" };
   riderProfileState.panel = panel;
   setRiderText("[data-rider-edit-title]", titles[panel] || "Profile");
   const fields = document.querySelector("[data-rider-edit-fields]");
@@ -343,6 +380,60 @@ async function readRiderImage(file, maxBytes, label) {
   return { base64: dataUrl.split(",")[1] || null, contentType: file.type };
 }
 
+function createRiderProfilePayload(profile, overrides = {}) {
+  return {
+    displayName: profile.displayName || "",
+    bio: profile.bio || "",
+    occupation: profile.occupation || "",
+    mobileNumber: profile.mobileNumber || "",
+    hometown: profile.hometown || "",
+    birthday: profile.birthday || null,
+    riderTypes: profile.riderTypes || [],
+    discipline: profile.discipline || "",
+    pace: profile.pace || "",
+    preferredDistance: profile.preferredDistance || "",
+    rideStyle: profile.rideStyle || "",
+    preferredSchedule: profile.preferredSchedule || "",
+    stravaUrl: profile.stravaUrl || "",
+    instagramUrl: profile.instagramUrl || "",
+    facebookUrl: profile.facebookUrl || "",
+    otherUrl: profile.otherUrl || "",
+    showHometown: Boolean(profile.showHometown),
+    showBirthday: Boolean(profile.showBirthday),
+    profileImageBase64: null,
+    profileImageContentType: null,
+    coverImageBase64: null,
+    coverImageContentType: null,
+    ...overrides
+  };
+}
+
+async function updateRiderPhoto(kind, file) {
+  const profile = riderProfileState.profile;
+  if (!profile?.isOwner || !file) return;
+  const isProfile = kind === "profile";
+  const button = document.querySelector(`[data-rider-photo-edit="${kind}"]`);
+  if (button) button.disabled = true;
+  setRiderPhotoMessage(isProfile ? "Updating display picture..." : "Updating banner picture...");
+  try {
+    const image = await readRiderImage(file, isProfile ? 1_000_000 : 1_500_000, isProfile ? "Display picture" : "Banner picture");
+    const overrides = isProfile
+      ? { profileImageBase64: image.base64, profileImageContentType: image.contentType }
+      : { coverImageBase64: image.base64, coverImageContentType: image.contentType };
+    const updated = await apiRequest("/api/public/customer-account/profile-details", {
+      method: "PATCH",
+      body: JSON.stringify(createRiderProfilePayload(profile, overrides))
+    });
+    renderRiderProfile(updated);
+    setRiderPhotoMessage(isProfile ? "Display picture updated." : "Banner picture updated.", "success");
+    window.setTimeout(() => setRiderPhotoMessage(), 2400);
+  } catch (error) {
+    setRiderPhotoMessage(error.message || "Unable to update this picture.", "error");
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
 async function submitRiderEdit(event) {
   event.preventDefault();
   const form = event.currentTarget;
@@ -355,8 +446,13 @@ async function submitRiderEdit(event) {
     const profileImage = await readRiderImage(form.elements.profilePicture?.files?.[0], 1_000_000, "Profile picture");
     const coverImage = await readRiderImage(form.elements.coverPicture?.files?.[0], 1_500_000, "Cover picture");
     const value = (name, fallback) => form.elements[name] ? form.elements[name].value.trim() : (fallback || "");
+    const mobileNumber = value("mobileNumber", profile.mobileNumber);
+    if (mobileNumber && !/^(?:\+639|09)\d{9}$/.test(mobileNumber.replace(/[\s()-]/g, ""))) {
+      throw new Error("Enter a valid Philippine mobile number, such as 09171234567 or +639171234567.");
+    }
     const payload = {
       displayName: value("displayName", profile.displayName), bio: value("bio", profile.bio), occupation: value("occupation", profile.occupation),
+      mobileNumber,
       hometown: value("hometown", profile.hometown), birthday: form.elements.birthday ? form.elements.birthday.value || null : profile.birthday,
       riderTypes: form.elements.riderTypes ? Array.from(form.querySelectorAll("[name='riderTypes']:checked")).map((input) => input.value) : profile.riderTypes || [],
       discipline: value("discipline", profile.discipline), pace: value("pace", profile.pace), preferredDistance: value("preferredDistance", profile.preferredDistance),
@@ -390,6 +486,14 @@ function updateProfileHeaderAuth() {
 
 function bindRiderProfilePage() {
   document.querySelectorAll("[data-rider-edit]").forEach((button) => button.addEventListener("click", () => openRiderEditModal(button.dataset.riderEdit)));
+  document.querySelectorAll("[data-rider-photo-edit]").forEach((button) => button.addEventListener("click", () => {
+    document.querySelector(`[data-rider-photo-input="${button.dataset.riderPhotoEdit}"]`)?.click();
+  }));
+  document.querySelectorAll("[data-rider-photo-input]").forEach((input) => input.addEventListener("change", async () => {
+    const file = input.files?.[0];
+    input.value = "";
+    if (file) await updateRiderPhoto(input.dataset.riderPhotoInput, file);
+  }));
   document.querySelector("[data-rider-edit-form]")?.addEventListener("submit", submitRiderEdit);
   document.querySelector("[data-rider-edit-form]")?.addEventListener("input", () => { document.querySelector("[data-rider-edit-save]").disabled = !riderEditIsDirty(); });
   document.querySelector("[data-rider-edit-form]")?.addEventListener("change", () => { document.querySelector("[data-rider-edit-save]").disabled = !riderEditIsDirty(); });

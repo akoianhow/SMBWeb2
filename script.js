@@ -1472,7 +1472,6 @@ function bindProductSearchUi() {
     }
   });
 }
-
 function ensureStandardMobileHeaderActions() {
   const header = document.querySelector(".header-main, .rider-profile-site-header-inner");
   const logo = header?.querySelector(".logo");
@@ -1501,7 +1500,7 @@ function ensureStandardMobileHeaderActions() {
       <div class="mobile-header-menu" data-mobile-header-menu hidden>
         <strong data-mobile-header-name>Customer</strong>
         <span data-mobile-header-email></span>
-        <a class="mobile-header-profile-link" href="profile.html">View profile</a>
+        <a class="mobile-header-profile-link" href="profile.html">View Profile</a>
         <a class="mobile-header-badge-link" data-customer-level-badge href="badge.html" aria-label="Open My SarapMagBadge">
           <img src="assets/sarapmagbadge-noob.png" alt="Noob SarapMagBadge">
           <span class="customer-level-badge-label">Open My SarapMagBadge</span>
@@ -1619,6 +1618,16 @@ function getItemWebCategory(item) {
 
 function getItemCategoryGroup(item) {
   return item.categoryGroupName || item.categoryGroup || item.publicCategoryGroup || item.webCategoryGroup;
+}
+
+function isBikeProduct(item) {
+  const categoryGroup = normalizeText(getItemCategoryGroup(item));
+  if (!["bike and frames", "bikes and frames"].includes(categoryGroup)) {
+    return false;
+  }
+
+  const category = normalizeText(getItemWebCategory(item));
+  return !/\bframes?\b/.test(category);
 }
 
 function sortByName(a, b) {
@@ -2574,7 +2583,6 @@ function showCommunityMode(show, updatePath = false) {
   }
   updateActiveCategoryNav();
 }
-
 function openCommunityPage(updatePath = true) {
   showCommunityMode(true, updatePath);
 }
@@ -4914,27 +4922,7 @@ function createEventDetailState(title, detail) {
 }
 
 function sanitizeEventHtml(value) {
-  const container = document.createElement("div");
-  container.innerHTML = String(value || "");
-  container.querySelectorAll("script").forEach((node) => node.remove());
-  container.querySelectorAll("[href], [src]").forEach((node) => {
-    ["href", "src"].forEach((attribute) => {
-      if (/^\s*javascript:/i.test(node.getAttribute(attribute) || "")) {
-        node.removeAttribute(attribute);
-      }
-    });
-  });
-  container.querySelectorAll("p, div").forEach((node) => {
-    const content = (node.textContent || "").replace(/\u00a0/g, " ").trim();
-    if (!content && !node.querySelector("img, video, iframe")) {
-      node.remove();
-    }
-  });
-  container.querySelectorAll("br + br").forEach((node) => node.remove());
-  while (container.firstChild?.nodeName === "BR") {
-    container.firstChild.remove();
-  }
-  return container.innerHTML;
+  return sanitizeRichText(value);
 }
 
 function renderEventDetail(eventItem) {
@@ -6038,8 +6026,6 @@ function updateCustomerHeader() {
   const sessionPanel = getCustomerSessionPanel();
   const greeting = document.querySelector("[data-customer-greeting]");
   const email = document.querySelector("[data-account-email]");
-  const hometown = document.querySelector("[data-account-hometown]");
-  const riderTypes = document.querySelector("[data-account-rider-types]");
   const comingSoonGuest = document.querySelector("[data-coming-soon-account-guest]");
   const comingSoonMember = document.querySelector("[data-coming-soon-account-member]");
   const comingSoonName = document.querySelector("[data-coming-soon-account-name]");
@@ -6129,14 +6115,6 @@ function updateCustomerHeader() {
   if (email) {
     email.textContent = customerState.profile?.email || customerState.account?.email || "Email not set";
   }
-  if (hometown) {
-    hometown.textContent = customerState.profile?.hometown || "Not set";
-  }
-  if (riderTypes) {
-    riderTypes.textContent = customerState.profile?.riderTypes?.length
-      ? customerState.profile.riderTypes.join(", ")
-      : "Not set";
-  }
   updateCommunityAuthState();
   if (communityState.posts.length > 0) {
     renderCommunityPosts();
@@ -6161,6 +6139,18 @@ function setPasswordFieldsVisible(visible) {
       profileForm.elements.confirmPassword.required = visible;
     }
   }
+}
+
+function setRegistrationFieldsVisible(isRegistration) {
+  const form = getProfileForm();
+  document.querySelectorAll("[data-registration-optional]").forEach((element) => {
+    element.hidden = isRegistration;
+  });
+  const note = document.querySelector("[data-registration-note]");
+  if (note) {
+    note.hidden = !isRegistration;
+  }
+  form?.classList.toggle("is-registration-form", isRegistration);
 }
 
 function renderProfilePhoto(url) {
@@ -6220,13 +6210,13 @@ function openRegisterForm() {
   const changeButton = document.querySelector("[data-open-change-password]");
 
   if (title) {
-    title.textContent = "Create your SarapMagBike profile";
+    title.textContent = "Create your SarapMagBike account";
   }
   if (eyebrow) {
     eyebrow.textContent = "Customer registration";
   }
   if (submit) {
-    submit.textContent = "Create Profile";
+    submit.textContent = "Create Account";
   }
   if (changeButton) {
     changeButton.hidden = true;
@@ -6237,6 +6227,7 @@ function openRegisterForm() {
       form.elements.username.disabled = false;
     }
   }
+  setRegistrationFieldsVisible(true);
   setPasswordFieldsVisible(true);
   renderProfilePhoto(null);
   setMessage(document.querySelector("[data-profile-message]"), "");
@@ -6275,6 +6266,7 @@ async function openEditProfileForm() {
       form.elements.username.disabled = true;
     }
   }
+  setRegistrationFieldsVisible(false);
   setPasswordFieldsVisible(false);
   setMessage(document.querySelector("[data-profile-message]"), "Loading profile...");
 
@@ -6843,6 +6835,16 @@ function bindCustomerAccountUi() {
       identity.appendChild(ordersLink);
       ordersLink.addEventListener("click", () => setAccountMenuOpen(false));
     }
+    if (identity && !identity.querySelector(".account-menu-text-badge-link")) {
+      const badgeTextLink = document.createElement("a");
+      badgeTextLink.className = "account-menu-text-badge-link";
+      badgeTextLink.href = "badge.html";
+      badgeTextLink.textContent = "My Badge";
+      const ordersLink = identity.querySelector(".account-menu-orders-link");
+      if (ordersLink) ordersLink.insertAdjacentElement("afterend", badgeTextLink);
+      else identity.appendChild(badgeTextLink);
+      badgeTextLink.addEventListener("click", () => setAccountMenuOpen(false));
+    }
   }
   document.querySelectorAll(".mobile-header-menu").forEach((menu) => {
     if (!menu.querySelector(".mobile-header-badge-link")) {
@@ -6855,14 +6857,23 @@ function bindCustomerAccountUi() {
       const profileLink = menu.querySelector(".mobile-header-profile-link");
       profileLink?.insertAdjacentElement("afterend", badgeLink);
     }
-    if (menu.querySelector(".mobile-header-orders-link")) return;
     const profileLink = menu.querySelector(".mobile-header-profile-link");
     if (!profileLink) return;
-    const ordersLink = document.createElement("a");
-    ordersLink.className = "mobile-header-orders-link";
-    ordersLink.href = "orders.html";
-    ordersLink.textContent = "My Orders";
-    profileLink.insertAdjacentElement("afterend", ordersLink);
+    let ordersLink = menu.querySelector(".mobile-header-orders-link");
+    if (!ordersLink) {
+      ordersLink = document.createElement("a");
+      ordersLink.className = "mobile-header-orders-link";
+      ordersLink.href = "orders.html";
+      ordersLink.textContent = "My Orders";
+      profileLink.insertAdjacentElement("afterend", ordersLink);
+    }
+    if (!menu.querySelector(".mobile-header-text-badge-link")) {
+      const badgeTextLink = document.createElement("a");
+      badgeTextLink.className = "mobile-header-text-badge-link";
+      badgeTextLink.href = "badge.html";
+      badgeTextLink.textContent = "My Badge";
+      ordersLink.insertAdjacentElement("afterend", badgeTextLink);
+    }
   });
   window.addEventListener("customer-session-changed", () => void loadCustomerLevelBadge());
   document.querySelector("[data-coming-soon-header-login]")?.addEventListener("click", openCommunityLoginForm);
@@ -6946,7 +6957,6 @@ function bindCustomerAccountUi() {
     window.setTimeout(() => openAccountRecovery("reset"), 0);
   }
 }
-
 function getProductDetailRoot() {
   return document.querySelector("[data-product-detail]");
 }
@@ -6972,7 +6982,11 @@ function sanitizeRichText(html) {
     template.innerHTML = plainText.innerHTML.replace(/\r\n?|\n/g, "<br>");
   }
 
-  const allowedTags = new Set(["A", "B", "BR", "DIV", "EM", "I", "LI", "OL", "P", "SPAN", "STRONG", "U", "UL"]);
+  const allowedTags = new Set([
+    "A", "B", "BLOCKQUOTE", "BR", "CODE", "DIV", "EM",
+    "H2", "H3", "H4", "H5", "H6", "HR", "I", "LI", "OL",
+    "P", "PRE", "SPAN", "STRONG", "U", "UL"
+  ]);
 
   const cleanNode = (node) => {
     if (node.nodeType === Node.TEXT_NODE) {
@@ -7478,11 +7492,18 @@ function ensureCartUi() {
         <div><p>Cash on Delivery</p><h2 id="web-cart-title">Your Cart</h2></div>
         <button type="button" data-cart-close aria-label="Close cart">Close</button>
       </header>
+      <nav class="web-cart-tabs" aria-label="Cart options">
+        <button type="button" data-cart-tab="cart" aria-selected="true">Your Cart</button>
+        <button type="button" data-cart-tab="tracking" aria-selected="false">Track Order</button>
+      </nav>
       <section data-cart-view></section>
       <section data-checkout-view hidden></section>
+      <section data-order-tracking-view hidden></section>
     </div>`;
   document.body.append(modal);
   modal.querySelector("[data-cart-close]")?.addEventListener("click", closeCart);
+  modal.querySelector("[data-cart-tab='cart']")?.addEventListener("click", renderCartView);
+  modal.querySelector("[data-cart-tab='tracking']")?.addEventListener("click", openCartOrderTracking);
   modal.addEventListener("click", (event) => {
     if (event.target === modal) closeCart();
   });
@@ -7576,8 +7597,11 @@ function updateCartQuantity(productId, quantity) {
 function renderCartView() {
   const cartView = document.querySelector("[data-cart-view]");
   const checkoutView = document.querySelector("[data-checkout-view]");
-  if (!cartView || !checkoutView) return;
+  const trackingView = document.querySelector("[data-order-tracking-view]");
+  if (!cartView || !checkoutView || !trackingView) return;
+  setCartModalTab("cart");
   checkoutView.hidden = true;
+  trackingView.hidden = true;
   cartView.hidden = false;
   cartView.replaceChildren();
   if (cartState.items.length === 0) {
@@ -7603,19 +7627,116 @@ function renderCartView() {
   cartView.append(list, summary, checkout, continueShopping);
 }
 
+function setCartModalTab(activeTab) {
+  document.querySelectorAll("[data-cart-tab]").forEach((button) => {
+    const isActive = button.dataset.cartTab === activeTab;
+    button.setAttribute("aria-selected", String(isActive));
+  });
+}
+
+function extractGuestTrackingCode(value) {
+  const cleaned = String(value || "").trim();
+  if (!cleaned) return "";
+  try {
+    const url = new URL(cleaned, window.location.href);
+    return url.searchParams.get("token") || cleaned;
+  } catch {
+    return cleaned;
+  }
+}
+
+async function openCartOrderTracking() {
+  if (!customerState.account) {
+    try {
+      customerState.account = await apiRequest("/api/public/customer-account/session");
+      updateCustomerHeader();
+    } catch {
+      customerState.account = null;
+    }
+  }
+  if (customerState.account) {
+    window.location.href = "orders.html";
+    return;
+  }
+  renderOrderTrackingView();
+}
+
+function renderOrderTrackingView() {
+  if (customerState.account) {
+    window.location.href = "orders.html";
+    return;
+  }
+  const cartView = document.querySelector("[data-cart-view]");
+  const checkoutView = document.querySelector("[data-checkout-view]");
+  const trackingView = document.querySelector("[data-order-tracking-view]");
+  if (!cartView || !checkoutView || !trackingView) return;
+  setCartModalTab("tracking");
+  cartView.hidden = true;
+  checkoutView.hidden = true;
+  trackingView.hidden = false;
+  trackingView.innerHTML = `
+    <div class="web-order-tracking-intro">
+      <p>Order tracking</p>
+      <h3>Track your order</h3>
+      <span>Enter the order number and private tracking code provided after guest checkout. No OTP is required.</span>
+    </div>
+    <form class="web-order-tracking-form" data-order-tracking-form>
+      <label>Order number
+        <input name="orderNumber" maxlength="40" required autocomplete="off" placeholder="SMB-YYYYMMDD-ABC123">
+      </label>
+      <label>Private tracking code or link
+        <input name="trackingCode" maxlength="500" required autocomplete="off" placeholder="Paste your code or complete tracking link">
+      </label>
+      <p>Your mobile number is never used as the tracking password.</p>
+      <p data-order-tracking-message role="status"></p>
+      <button class="web-cart-primary" type="submit">Track Order</button>
+    </form>
+    <div class="web-order-tracking-help">
+      <strong>Lost your tracking details?</strong>
+      <span>Contact SarapMagBike and provide your order number. Staff will verify the order before sharing an update.</span>
+      <a href="index.html#contact" data-order-tracking-contact>Contact the shop</a>
+    </div>`;
+  trackingView.querySelector("[data-order-tracking-form]")?.addEventListener("submit", submitGuestOrderTracking);
+  trackingView.querySelector("[data-order-tracking-contact]")?.addEventListener("click", closeCart);
+}
+
+async function submitGuestOrderTracking(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const message = form.querySelector("[data-order-tracking-message]");
+  const submit = form.querySelector("button[type='submit']");
+  const orderNumber = form.elements.orderNumber.value.trim().toUpperCase();
+  const trackingCode = extractGuestTrackingCode(form.elements.trackingCode.value);
+  submit.disabled = true;
+  setMessage(message, "Opening your order...");
+  try {
+    const result = await apiRequest("/api/public/web-orders/guest/track", {
+      method: "POST",
+      body: JSON.stringify({ orderNumber, trackingCode })
+    });
+    window.location.href = `guest-order.html?id=${encodeURIComponent(result.id)}&token=${encodeURIComponent(trackingCode)}`;
+  } catch {
+    setMessage(message, "Order could not be opened. Check your tracking details and try again.", "error");
+    submit.disabled = false;
+  }
+}
+
 function renderCheckoutView() {
   const cartView = document.querySelector("[data-cart-view]");
   const checkoutView = document.querySelector("[data-checkout-view]");
-  if (!cartView || !checkoutView || cartState.items.length === 0) return;
-  if (!customerState.account) {
-    closeCart();
-    showCommunityAuthPrompt();
-    return;
-  }
+  const trackingView = document.querySelector("[data-order-tracking-view]");
+  if (!cartView || !checkoutView || !trackingView || cartState.items.length === 0) return;
+  setCartModalTab("cart");
+  const isGuest = !customerState.account;
   cartView.hidden = true;
+  trackingView.hidden = true;
   checkoutView.hidden = false;
   checkoutView.innerHTML = `
     <button type="button" class="web-checkout-back" data-checkout-back>← Back to cart</button>
+    <div class="web-checkout-mode">
+      <strong>${isGuest ? "Guest checkout" : "Signed-in checkout"}</strong>
+      <span>${isGuest ? "No account or OTP required. Your order will not earn loyalty points unless it is securely linked later." : "This order will appear in My Orders and eligible points will be awarded after completion."}</span>
+    </div>
     <div class="web-checkout-summary">
       <div><span>Total items</span><strong>${getCartItemCount()}</strong></div>
       <div><span>Total amount</span><strong>${pesoFormatter.format(getCartTotal())}</strong></div>
@@ -7633,7 +7754,7 @@ function renderCheckoutView() {
                 <circle cx="7" cy="18" r="2"></circle>
                 <circle cx="18" cy="18" r="2"></circle>
               </svg>
-              COD
+              Shipping
             </span>
           </label>
           <label>
@@ -7650,22 +7771,49 @@ function renderCheckoutView() {
         </div>
       </fieldset>
       <label>Full name<input name="customerName" maxlength="160" required autocomplete="name"></label>
-      <label>Mobile number<input name="mobileNumber" maxlength="40" required inputmode="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
-      <label>Email address<input name="email" maxlength="240" required type="email" autocomplete="email"></label>
-      <label data-shipping-address>Shipping address<textarea name="shippingAddress" maxlength="600" required autocomplete="street-address"></textarea></label>
+      <div class="web-checkout-field-grid">
+        <label>Mobile number<input name="mobileNumber" maxlength="20" required inputmode="tel" autocomplete="tel" placeholder="09XXXXXXXXX"></label>
+        <label>Confirm mobile number<input name="mobileNumberConfirmation" maxlength="20" required inputmode="tel" autocomplete="tel" placeholder="Re-enter mobile number"></label>
+      </div>
+      <label>Email address <small>Optional — for receipt and updates</small><input name="email" maxlength="240" type="email" autocomplete="email"></label>
+      <fieldset class="web-shipping-fields" data-shipping-address>
+        <legend>Delivery address</legend>
+        <label>Street, house/building and subdivision<input name="streetAddress" maxlength="220" required autocomplete="address-line1" placeholder="House no., street, subdivision"></label>
+        <div class="web-checkout-field-grid">
+          <label>Barangay<input name="barangay" maxlength="120" required autocomplete="address-level3"></label>
+          <label>City / Municipality<input name="cityMunicipality" maxlength="120" required autocomplete="address-level2"></label>
+          <label>Province<input name="province" maxlength="120" required autocomplete="address-level1"></label>
+          <label>Region<input name="region" maxlength="120" required></label>
+          <label>Postal code<input name="postalCode" maxlength="4" pattern="[0-9]{4}" required inputmode="numeric" autocomplete="postal-code" placeholder="4 digits"></label>
+          <label>Landmark <small>Optional</small><input name="landmark" maxlength="160" autocomplete="address-line2"></label>
+        </div>
+      </fieldset>
       <p data-pickup-note hidden>Pickup at SarapMagBike ${getSelectedPublicLocationName()}: ${getSelectedPublicLocation().address}</p>
       <input class="website-field" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       <p class="web-checkout-note" data-checkout-note>Pay cash when your order is delivered. SarapMagBike will confirm availability and the shipping fee before dispatch.</p>
+      <section class="web-checkout-review" data-checkout-review hidden>
+        <div><span>Customer</span><strong data-review-customer></strong></div>
+        <div><span>Contact</span><strong data-review-contact></strong></div>
+        <div><span>Fulfillment</span><strong data-review-fulfillment></strong></div>
+        <div><span>Items</span><strong>${getCartItemCount()} · ${pesoFormatter.format(getCartTotal())}</strong></div>
+        <label><input type="checkbox" name="detailsConfirmed"> I reviewed my contact, delivery, and order information and confirm they are correct.</label>
+        <p>SarapMagBike staff or the courier may call or message this number to confirm the order.</p>
+      </section>
       <p data-checkout-message role="status"></p>
-      <button class="web-cart-primary" type="submit" data-checkout-submit>Place COD Order</button>
+      <button class="web-cart-primary" type="submit" data-checkout-submit>Review Shipping Order</button>
     </form>`;
   checkoutView.querySelector("[data-checkout-back]")?.addEventListener("click", renderCartView);
   const form = checkoutView.querySelector("[data-checkout-form]");
+  form.dataset.clientRequestId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}-checkout`;
   form.elements.customerName.value = customerState.profile?.displayName || customerState.account?.username || "";
   form.elements.mobileNumber.value = customerState.account?.mobileNumber || "";
+  form.elements.mobileNumberConfirmation.value = customerState.account?.mobileNumber || "";
   form.elements.email.value = customerState.account?.email || "";
-  form.addEventListener("change", updateFulfillmentFields);
-  form.addEventListener("submit", submitWebOrder);
+  form.addEventListener("change", (event) => {
+    if (event.target?.name === "fulfillmentType") updateFulfillmentFields(event);
+  });
+  form.addEventListener("input", resetCheckoutReview);
+  form.addEventListener("submit", reviewOrSubmitWebOrder);
 }
 
 function updateFulfillmentFields(event) {
@@ -7677,21 +7825,86 @@ function updateFulfillmentFields(event) {
   const note = form.querySelector("[data-checkout-note]");
   const submit = form.querySelector("[data-checkout-submit]");
   address.hidden = !delivery;
-  address.querySelector("textarea").required = delivery;
+  address.querySelectorAll("input").forEach((input) => {
+    if (!["landmark"].includes(input.name)) input.required = delivery;
+  });
   pickup.hidden = delivery;
   if (note) {
     note.textContent = delivery
       ? "Pay cash when your order is delivered. SarapMagBike will confirm availability and the shipping fee before dispatch."
       : "Pay at the shop when your order is ready for pickup. SarapMagBike will confirm availability before preparing it.";
   }
-  if (submit) submit.textContent = delivery ? "Place COD Order" : "Place Pickup Order";
+  if (submit) submit.textContent = delivery ? "Review Shipping Order" : "Review Pickup Order";
+  resetCheckoutReview({ currentTarget: form });
 }
 
-async function submitWebOrder(event) {
+function normalizeCheckoutMobile(value) {
+  const compact = String(value || "").replace(/[\s\-().]/g, "");
+  if (/^09\d{9}$/.test(compact)) return `+63${compact.slice(1)}`;
+  if (/^639\d{9}$/.test(compact)) return `+${compact}`;
+  return compact;
+}
+
+function formatCheckoutAddress(form) {
+  return [
+    form.elements.streetAddress.value.trim(),
+    `Brgy. ${form.elements.barangay.value.trim()}`,
+    form.elements.cityMunicipality.value.trim(),
+    form.elements.province.value.trim(),
+    form.elements.region.value.trim(),
+    form.elements.postalCode.value.trim(),
+    form.elements.landmark.value.trim() ? `Landmark: ${form.elements.landmark.value.trim()}` : ""
+  ].filter(Boolean).join(", ");
+}
+
+function resetCheckoutReview(event) {
+  const form = event.currentTarget;
+  if (!form || event.target?.name === "detailsConfirmed") return;
+  form.dataset.reviewReady = "";
+  const review = form.querySelector("[data-checkout-review]");
+  if (review) review.hidden = true;
+  if (form.elements.detailsConfirmed) form.elements.detailsConfirmed.checked = false;
+  const delivery = form.elements.fulfillmentType.value === "delivery";
+  const submit = form.querySelector("[data-checkout-submit]");
+  if (submit) submit.textContent = delivery ? "Review Shipping Order" : "Review Pickup Order";
+}
+
+async function reviewOrSubmitWebOrder(event) {
   event.preventDefault();
   const form = event.currentTarget;
   const message = form.querySelector("[data-checkout-message]");
   const submit = form.querySelector("button[type='submit']");
+  const mobile = normalizeCheckoutMobile(form.elements.mobileNumber.value);
+  const mobileConfirmation = normalizeCheckoutMobile(form.elements.mobileNumberConfirmation.value);
+  if (!/^\+639\d{9}$/.test(mobile)) {
+    setMessage(message, "Enter a valid Philippine mobile number, such as 09XXXXXXXXX.", "error");
+    form.elements.mobileNumber.focus();
+    return;
+  }
+  if (mobile !== mobileConfirmation) {
+    setMessage(message, "The mobile numbers do not match.", "error");
+    form.elements.mobileNumberConfirmation.focus();
+    return;
+  }
+  if (form.dataset.reviewReady !== "true") {
+    const delivery = form.elements.fulfillmentType.value === "delivery";
+    form.querySelector("[data-review-customer]").textContent = form.elements.customerName.value.trim();
+    form.querySelector("[data-review-contact]").textContent = `${mobile}${form.elements.email.value.trim() ? ` · ${form.elements.email.value.trim()}` : ""}`;
+    form.querySelector("[data-review-fulfillment]").textContent = delivery
+      ? `Shipping · Cash on Delivery · ${formatCheckoutAddress(form)}`
+      : `Pickup · SarapMagBike ${getSelectedPublicLocationName()}`;
+    form.querySelector("[data-checkout-review]").hidden = false;
+    form.dataset.reviewReady = "true";
+    submit.textContent = delivery ? "Place Shipping Order" : "Place Pickup Order";
+    setMessage(message, "Review the summary and confirm your details before placing the order.");
+    form.querySelector("[data-checkout-review]").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+  if (!form.elements.detailsConfirmed.checked) {
+    setMessage(message, "Confirm that you reviewed your order and contact details.", "error");
+    form.elements.detailsConfirmed.focus();
+    return;
+  }
   submit.disabled = true;
   setMessage(message, "Submitting your order...");
   try {
@@ -7699,10 +7912,19 @@ async function submitWebOrder(event) {
       method: "POST",
       body: JSON.stringify({
         customerName: form.elements.customerName.value.trim(),
-        mobileNumber: form.elements.mobileNumber.value.trim(),
+        mobileNumber: mobile,
+        mobileNumberConfirmation: mobileConfirmation,
         email: form.elements.email.value.trim(),
         fulfillmentType: form.elements.fulfillmentType.value,
-        shippingAddress: form.elements.shippingAddress.value.trim(),
+        streetAddress: form.elements.streetAddress.value.trim(),
+        barangay: form.elements.barangay.value.trim(),
+        cityMunicipality: form.elements.cityMunicipality.value.trim(),
+        province: form.elements.province.value.trim(),
+        region: form.elements.region.value.trim(),
+        postalCode: form.elements.postalCode.value.trim(),
+        landmark: form.elements.landmark.value.trim(),
+        clientRequestId: form.dataset.clientRequestId,
+        detailsConfirmed: true,
         website: form.elements.website.value,
         items: cartState.items.map((item) => ({ productId: item.productId, quantity: item.quantity }))
       })
@@ -7721,19 +7943,71 @@ function showOrderConfirmation(order) {
   closeCart();
   const modal = document.createElement("div");
   modal.className = "web-order-confirmation";
-  modal.innerHTML = `
-    <div role="dialog" aria-modal="true" aria-labelledby="order-confirmation-title">
-      <span aria-hidden="true">✓</span>
-      <h2 id="order-confirmation-title">Order Received</h2>
-      <p>${order.message || "Thank you! We received your order. We’ll confirm availability and delivery details before dispatch."}</p>
-      <strong>Order No. ${order.orderNumber}</strong>
-      <div class="web-order-confirmation-actions">
-        <a href="orders.html">Track My Order</a>
-        <button type="button">Continue Shopping</button>
-      </div>
-    </div>`;
-  modal.querySelector("button").addEventListener("click", () => modal.remove());
+  const isGuestOrder = Boolean(order.isGuestOrder && order.guestAccessToken);
+  const trackingPath = isGuestOrder
+    ? `guest-order.html?id=${encodeURIComponent(order.id)}&token=${encodeURIComponent(order.guestAccessToken)}`
+    : "orders.html";
+  const trackingUrl = new URL(trackingPath, window.location.href).href;
+  const dialog = document.createElement("div");
+  dialog.setAttribute("role", "dialog");
+  dialog.setAttribute("aria-modal", "true");
+  dialog.setAttribute("aria-labelledby", "order-confirmation-title");
+
+  const checkmark = createTextElement("span", "✓");
+  checkmark.setAttribute("aria-hidden", "true");
+  const title = createTextElement("h2", "Order Received");
+  title.id = "order-confirmation-title";
+  dialog.append(
+    checkmark,
+    title,
+    createTextElement("p", order.message || "Thank you! We received your order. We’ll confirm availability and delivery details before dispatch."),
+    createTextElement("strong", `Order No. ${order.orderNumber || ""}`)
+  );
+
+  let copyMessage = null;
+  if (isGuestOrder) {
+    const tracking = document.createElement("div");
+    tracking.className = "web-order-tracking-save";
+    const trackingButtons = document.createElement("div");
+    const copyCode = createTextElement("button", "Copy Tracking Code");
+    const copyLink = createTextElement("button", "Copy Tracking Link");
+    copyCode.type = "button";
+    copyLink.type = "button";
+    copyMessage = document.createElement("small");
+    copyMessage.setAttribute("role", "status");
+    copyCode.addEventListener("click", () => copyGuestTrackingValue(order.guestAccessToken, "Tracking code copied.", copyMessage));
+    copyLink.addEventListener("click", () => copyGuestTrackingValue(trackingUrl, "Private tracking link copied.", copyMessage));
+    trackingButtons.append(copyCode, copyLink);
+    tracking.append(
+      createTextElement("span", "Private tracking code"),
+      createTextElement("code", order.guestAccessToken),
+      createTextElement("p", "Save this code or private link. It replaces OTP for guest order tracking."),
+      trackingButtons,
+      copyMessage
+    );
+    dialog.append(tracking);
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "web-order-confirmation-actions";
+  const trackingLink = createTextElement("a", "Track My Order");
+  trackingLink.href = trackingPath;
+  const close = createTextElement("button", "Continue Shopping");
+  close.type = "button";
+  close.addEventListener("click", () => modal.remove());
+  actions.append(trackingLink, close);
+  dialog.append(actions);
+  modal.append(dialog);
   document.body.append(modal);
+}
+
+async function copyGuestTrackingValue(value, successMessage, messageElement) {
+  try {
+    await navigator.clipboard.writeText(value);
+    setMessage(messageElement, successMessage);
+  } catch {
+    setMessage(messageElement, "Copy was blocked. Select and copy the tracking code manually.", "error");
+  }
 }
 
 function initializeCartUi() {
@@ -7890,7 +8164,12 @@ function renderProductDetail(item) {
   const addToCart = document.createElement("button");
   addToCart.type = "button";
   addToCart.className = "product-add-to-cart";
-  setIconAction(addToCart, "Add to cart", '<path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1"/><path d="M14 10h4M16 8v4"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>', "Add to Cart");
+  setIconAction(
+    addToCart,
+    "Add to cart",
+    '<path d="M3 3h2l2.4 10.2a2 2 0 0 0 1.95 1.55h7.9a2 2 0 0 0 1.9-1.38L21 7H6.1"/><path d="M14 10h4M16 8v4"/><circle cx="9" cy="19" r="1.2"/><circle cx="17" cy="19" r="1.2"/>',
+    "Add to Cart"
+  );
   addToCart.disabled = Boolean(selectedVariant) && !selectedVariant.isAvailable;
   addToCart.addEventListener("click", () => addProductToCart(item));
   actions.append(messenger, addToCart, callBranch, copyLink);
@@ -7963,7 +8242,6 @@ async function loadProductDetailPage() {
     setProductDetailState("Product Unavailable", "SMBSystem public catalog is not reachable. Try again after the API is running.");
   }
 }
-
 async function startCatalog() {
   await initializePublicLocations();
   if (await enforcePublicWebsiteMode()) {
@@ -8031,7 +8309,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
+    navigator.serviceWorker.register('./sw.js?v=20260730-profile-quick-images-v4')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

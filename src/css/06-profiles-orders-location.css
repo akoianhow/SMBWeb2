@@ -1,0 +1,1192 @@
+/* Public rider profiles */
+.is-rider-profile-page {
+  background: #f1f2f3;
+}
+
+.rider-profile-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid #d9d9d9;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.rider-profile-site-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 82px;
+  gap: 24px;
+}
+
+.rider-profile-site-header .logo {
+  min-width: 290px;
+}
+
+.rider-profile-site-header nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rider-profile-site-header nav a,
+.rider-profile-site-header nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 7px;
+  color: #262626;
+  background: #eeeeee;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rider-profile-site-header nav button:first-of-type,
+.rider-profile-site-header nav a[data-profile-header-account] {
+  color: #ffffff;
+  background: var(--red);
+}
+
+.rider-profile-page {
+  padding-top: 22px;
+  padding-bottom: 52px;
+}
+
+.rider-profile-state {
+  min-height: 340px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+}
+
+.rider-profile-state h1,
+.rider-profile-state p {
+  margin: 0;
+}
+
+.rider-profile-state p {
+  margin-top: 8px;
+  color: #666666;
+}
+
+.rider-profile-shell {
+  overflow: hidden;
+  border: 1px solid #d7d7d7;
+  border-radius: 12px;
+  background: #f7f7f7;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.1);
+}
+
+.rider-profile-cover {
+  position: relative;
+  height: 245px;
+  overflow: hidden;
+  background:
+    linear-gradient(125deg, rgba(0, 0, 0, 0.3), rgba(230, 28, 36, 0.15)),
+    url("assets/hero-cinematic-poster.jpg") center 58% / cover;
+}
+
+.rider-profile-cover-media {
+  width: 100%;
+  height: 100%;
+}
+
+.rider-profile-cover-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rider-profile-summary {
+  position: relative;
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 20px;
+  min-height: 170px;
+  padding: 24px 30px 24px;
+  background: #ffffff;
+  border-bottom: 1px solid #dddddd;
+}
+
+.rider-profile-avatar {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 176px;
+  height: 176px;
+  margin-top: -104px;
+  border: 6px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #222222;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  font-size: 34px;
+  font-weight: 900;
+}
+
+.rider-profile-avatar-media {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+}
+
+.rider-profile-avatar-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rider-profile-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.rider-profile-photo-action {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #df2027;
+  box-shadow: 0 4px 13px rgba(0, 0, 0, 0.32);
+  cursor: pointer;
+}
+
+.rider-profile-photo-action[hidden],
+.rider-profile-level-badge[hidden] {
+  display: none;
+}
+
+.rider-profile-photo-action:hover,
+.rider-profile-photo-action:focus-visible {
+  background: #b9141b;
+  transform: translateY(-1px);
+}
+
+.rider-profile-photo-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.rider-profile-photo-action svg {
+  width: 21px;
+  height: 21px;
+  fill: currentColor;
+}
+
+.rider-profile-avatar-action {
+  right: -7px;
+  bottom: 8px;
+}
+
+.rider-profile-cover-action {
+  right: 18px;
+  bottom: 18px;
+}
+
+.rider-profile-level-badge {
+  position: absolute;
+  z-index: 2;
+  top: 16px;
+  right: 16px;
+  display: block;
+  width: 112px;
+  line-height: 0;
+  filter: drop-shadow(0 5px 9px rgba(0, 0, 0, 0.4));
+  transition: transform 150ms ease;
+}
+
+.rider-profile-level-badge:hover,
+.rider-profile-level-badge:focus-visible {
+  transform: scale(1.04);
+}
+
+.rider-profile-level-badge img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rider-profile-photo-message {
+  position: absolute;
+  z-index: 4;
+  right: 72px;
+  bottom: 20px;
+  max-width: min(360px, calc(100% - 110px));
+  margin: 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  color: #ffffff;
+  background: rgba(25, 25, 25, 0.9);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.rider-profile-photo-message[data-type="error"] {
+  background: #a10f15;
+}
+
+.rider-profile-photo-message[data-type="success"] {
+  background: #176a39;
+}
+
+.rider-profile-identity h1 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.05;
+}
+
+.rider-profile-username,
+.rider-profile-location,
+.rider-profile-bio {
+  margin: 5px 0 0;
+}
+
+.rider-profile-username {
+  color: #555555;
+  font-weight: 800;
+}
+
+.rider-profile-location {
+  color: #555555;
+  font-size: 12px;
+}
+
+.rider-profile-bio {
+  max-width: 620px;
+  color: #333333;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.rider-profile-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 13px;
+  color: #666666;
+  font-size: 12px;
+}
+
+.rider-profile-counts strong {
+  color: #202020;
+}
+
+.rider-profile-primary-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rider-profile-primary-actions button,
+.rider-profile-panel header button,
+.rider-profile-panel-body-actions button,
+.rider-profile-activity-header button {
+  min-height: 40px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 7px;
+  color: #ffffff;
+  background: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rider-profile-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  padding: 14px;
+}
+
+.customer-orders-panel {
+  background: #fff;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  margin: 0 20px 20px;
+  overflow: hidden;
+}
+
+.customer-orders-page {
+  display: grid;
+  gap: 14px;
+  padding: 24px 16px 44px;
+}
+
+.customer-orders-page-heading {
+  align-items: end;
+  background: #ffffff;
+  border: 1px solid #dedede;
+  border-radius: 18px;
+  display: flex;
+  justify-content: space-between;
+  padding: 20px 22px;
+}
+
+.customer-orders-page-heading p,
+.customer-orders-page-heading h1,
+.customer-orders-page-heading span {
+  margin: 0;
+}
+
+.customer-orders-page-heading p {
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.customer-orders-page-heading h1 {
+  font-size: 30px;
+}
+
+.customer-orders-page-heading span {
+  color: #666666;
+  font-size: 13px;
+}
+
+.customer-orders-page-heading button,
+.customer-order-empty button {
+  background: #ffffff;
+  border: 1px solid #bdbdbd;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.customer-orders-page-panel {
+  margin: 0;
+}
+
+.customer-orders-panel[hidden] {
+  display: none;
+}
+
+.customer-orders-panel > header {
+  align-items: center;
+  border-bottom: 1px solid #ececec;
+  display: flex;
+  justify-content: space-between;
+  padding: 18px 20px;
+}
+
+.customer-orders-panel > header p,
+.customer-orders-panel > header h2 {
+  margin: 0;
+}
+
+.customer-orders-panel > header p {
+  color: #c81924;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.customer-orders-panel > header h2 {
+  font-size: 24px;
+}
+
+.customer-orders-panel > header button {
+  background: #f5f5f5;
+  border: 1px solid #d6d6d6;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 9px 16px;
+}
+
+.customer-orders-list {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.customer-order-card {
+  border: 1px solid #dedede;
+  border-radius: 14px;
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.customer-order-card > header,
+.customer-order-summary,
+.customer-order-actions {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.customer-order-card h3,
+.customer-order-card p {
+  margin: 0;
+}
+
+.customer-order-card > header small,
+.customer-order-summary span {
+  color: #696969;
+  font-size: 12px;
+}
+
+.customer-order-status {
+  background: #edf4ff;
+  border-radius: 999px;
+  color: #245990;
+  font-size: 12px;
+  font-weight: 800;
+  padding: 7px 11px;
+}
+
+.customer-order-card.status-delivered .customer-order-status,
+.customer-order-card.status-completed .customer-order-status {
+  background: #e5f7ea;
+  color: #237540;
+}
+
+.customer-order-card.status-issue_reported .customer-order-status,
+.customer-order-card.status-cancelled .customer-order-status,
+.customer-order-card.status-rejected .customer-order-status {
+  background: #ffe7e7;
+  color: #9b2929;
+}
+
+.customer-order-progress {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(70px, 1fr));
+  list-style: none;
+  margin: 4px 0;
+  overflow-x: auto;
+  padding: 0;
+}
+
+.customer-order-progress li {
+  color: #888;
+  display: grid;
+  font-size: 10px;
+  gap: 7px;
+  min-width: 78px;
+  position: relative;
+  text-align: center;
+}
+
+.customer-order-progress li::before {
+  background: #dcdcdc;
+  content: "";
+  height: 3px;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 7px;
+}
+
+.customer-order-progress li:first-child::before {
+  left: 50%;
+}
+
+.customer-order-progress li:last-child::before {
+  right: 50%;
+}
+
+.customer-order-progress li > span {
+  background: #fff;
+  border: 3px solid #d2d2d2;
+  border-radius: 50%;
+  height: 16px;
+  justify-self: center;
+  position: relative;
+  width: 16px;
+  z-index: 1;
+}
+
+.customer-order-progress li.done {
+  color: #222;
+  font-weight: 800;
+}
+
+.customer-order-progress li.done::before {
+  background: #c81924;
+}
+
+.customer-order-progress li.done > span {
+  background: #c81924;
+  border-color: #c81924;
+}
+
+.customer-order-auto,
+.customer-order-tracking,
+.customer-order-terminal {
+  border-radius: 10px;
+  font-size: 12px;
+  padding: 10px 12px;
+}
+
+.customer-order-auto {
+  background: #fff6db;
+  color: #6f5200;
+}
+
+.customer-order-tracking {
+  background: #f1f7fb;
+  color: #35596e;
+}
+
+.customer-order-terminal {
+  background: #fff0f0;
+  color: #8f3030;
+}
+
+.customer-order-actions {
+  border-top: 1px solid #ececec;
+  justify-content: flex-end;
+  padding-top: 12px;
+}
+
+.customer-order-actions button,
+.customer-order-empty a {
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  padding: 10px 16px;
+}
+
+.customer-order-primary {
+  background: #c81924;
+  border: 1px solid #c81924;
+  color: #fff;
+}
+
+.customer-order-secondary {
+  background: #fff;
+  border: 1px solid #bdbdbd;
+  color: #252525;
+}
+
+.customer-order-empty {
+  align-items: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  padding: 30px 16px;
+  text-align: center;
+}
+
+.customer-order-empty h3,
+.customer-order-empty p {
+  margin: 0;
+}
+
+.customer-order-empty p {
+  color: #6d6d6d;
+}
+
+.customer-order-empty a {
+  background: #c81924;
+  color: #fff;
+  text-decoration: none;
+}
+
+@media (max-width: 720px) {
+  .customer-orders-page {
+    padding: 12px 10px 30px;
+  }
+
+  .customer-orders-page-heading {
+    align-items: center;
+    border-radius: 14px;
+    padding: 14px;
+  }
+
+  .customer-orders-page-heading h1 {
+    font-size: 24px;
+  }
+
+  .customer-orders-page-heading span {
+    display: none;
+  }
+
+  .customer-orders-panel {
+    border-radius: 14px;
+    margin: 0 10px 14px;
+  }
+
+  .customer-orders-panel > header {
+    padding: 14px;
+  }
+
+  .customer-orders-panel > header h2 {
+    font-size: 20px;
+  }
+
+  .customer-orders-list {
+    padding: 10px;
+  }
+
+  .customer-order-card {
+    padding: 13px;
+  }
+
+  .customer-order-card > header,
+  .customer-order-summary {
+    align-items: flex-start;
+  }
+
+  .customer-order-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customer-order-actions button {
+    width: 100%;
+  }
+}
+
+.rider-profile-sidebar,
+.rider-profile-activity {
+  display: grid;
+  gap: 14px;
+}
+
+.rider-profile-sidebar {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.rider-profile-panel[data-rider-panel="social"],
+.rider-profile-panel[data-rider-panel="about"],
+.rider-profile-panel[data-rider-panel="testimonials"] {
+  grid-column: 1 / -1;
+}
+
+.rider-profile-panel,
+.rider-profile-activity-header {
+  border: 1px solid #dddddd;
+  border-radius: 9px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+}
+
+.rider-profile-panel {
+  padding: 14px;
+}
+
+.rider-profile-panel header,
+.rider-profile-activity-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rider-profile-panel h2,
+.rider-profile-activity-header h2,
+.rider-profile-activity-header p {
+  margin: 0;
+}
+
+.rider-profile-panel h2,
+.rider-profile-activity-header h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
+.rider-profile-panel header button {
+  min-height: 30px;
+  padding: 0 10px;
+  color: var(--red);
+  background: #fff0f1;
+  font-size: 10px;
+}
+
+.rider-profile-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 30px;
+  padding: 0;
+  color: #202020;
+  font-size: 14px;
+  font-weight: 900;
+  text-align: left;
+  text-transform: uppercase;
+  list-style: none;
+  cursor: pointer;
+}
+
+.rider-profile-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.rider-profile-panel summary::after {
+  content: "+";
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 50%;
+  color: var(--red);
+  background: #fff0f1;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rider-profile-panel[open] summary::after {
+  content: "−";
+}
+
+.rider-profile-panel summary:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+
+.rider-profile-panel-body-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rider-profile-panel-body-actions button {
+  min-height: 30px;
+  margin-top: 8px;
+  padding: 0 10px;
+  color: var(--red);
+  border: 0;
+  border-radius: 7px;
+  background: #fff0f1;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rider-profile-panel dl {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+}
+
+.rider-profile-panel dl > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.85fr) minmax(0, 1.15fr);
+  gap: 10px;
+  align-items: baseline;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.rider-profile-panel dl > div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.rider-profile-panel dt,
+.rider-profile-panel dd {
+  margin: 0;
+  font-size: 12px;
+}
+
+.rider-profile-panel dt {
+  color: #777777;
+}
+
+.rider-profile-panel dd {
+  color: #242424;
+  font-weight: 800;
+  text-align: right;
+}
+
+.rider-profile-about-panel dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 22px;
+}
+
+.rider-profile-about-panel dl > div:nth-last-child(-n + 2) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.rider-profile-social {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rider-social-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #333333;
+  text-decoration: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.rider-social-icon[data-platform="strava"] {
+  background: #fc4c02;
+}
+
+.rider-social-icon[data-platform="instagram"] {
+  background: linear-gradient(135deg, #833ab4, #fd1d1d 58%, #fcb045);
+}
+
+.rider-social-icon[data-platform="facebook"] {
+  background: #1877f2;
+}
+
+.rider-social-icon[data-platform="website"] {
+  background: #292929;
+}
+
+.rider-social-icon:not(.is-unset):hover,
+.rider-social-icon:not(.is-unset):focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.rider-social-icon.is-unset {
+  color: #8c8c8c;
+  background: #e4e4e4;
+  box-shadow: none;
+  filter: grayscale(1);
+  cursor: help;
+}
+
+.rider-social-icon svg {
+  width: 23px;
+  height: 23px;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rider-social-icon[data-platform="strava"] svg,
+.rider-social-icon[data-platform="facebook"] svg {
+  fill: currentColor;
+  stroke: none;
+}
+
+.rider-social-icon .social-icon-fill {
+  stroke: none;
+  fill: currentColor;
+}
+
+.rider-testimonial-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.rider-testimonial-list > p {
+  margin: 0;
+  color: #777777;
+  font-size: 12px;
+}
+
+.rider-testimonial {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e4e4;
+}
+
+.rider-testimonial:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.rider-testimonial-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #252525;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.rider-testimonial-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rider-testimonial > div > a {
+  color: #202020;
+  font-size: 12px;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.rider-testimonial > div > a:hover {
+  color: var(--red);
+  text-decoration: underline;
+}
+
+.rider-testimonial p {
+  margin: 4px 0 0;
+  color: #3f3f3f;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.rider-testimonial-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #777777;
+  font-size: 11px;
+}
+
+.rider-testimonial-counter strong {
+  color: #333333;
+}
+
+.rider-testimonial-modal [data-testimonial-remove] {
+  background: #8f1f24;
+}
+
+.rider-profile-activity-header {
+  padding: 14px 16px;
+}
+
+.rider-profile-activity-header p {
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rider-profile-activity .community-posts {
+  display: grid;
+  gap: 12px;
+}
+
+.community-author-name-link {
+  color: #202020;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.community-author-name-link:hover {
+  color: var(--red);
+  text-decoration: underline;
+}
+
+.community-author-avatar-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rider-profile-edit-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.rider-profile-edit-modal[hidden] {
+  display: none;
+}
+
+.rider-profile-edit-modal > div {
+  width: min(620px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.3);
+}
+
+.rider-profile-edit-modal > div > header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  color: #ffffff;
+  background: #252525;
+}
+
+.rider-profile-edit-modal header p,
+.rider-profile-edit-modal header h2 {
+  margin: 0;
+}
+
+.rider-profile-edit-modal header p {
+  color: #cccccc;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rider-profile-edit-modal header h2 {
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.rider-profile-edit-modal header > button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  color: #222222;
+  background: #ffffff;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+.rider-profile-edit-modal form,
+.rider-profile-edit-modal [data-rider-edit-fields] {
+  display: grid;
+  gap: 14px;
+}
+
+.rider-profile-edit-modal form {
+  padding: 18px;
+}
+
+.rider-profile-edit-modal label,
+.rider-profile-edit-modal fieldset {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  color: #333333;
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rider-profile-edit-modal input,
+.rider-profile-edit-modal textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid #cccccc;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.rider-profile-edit-modal textarea {
+  resize: vertical;
+}
+
+.rider-profile-edit-modal small {
+  color: #777777;
+  font-weight: 500;
+  text-transform: none;
+}
+
+.rider-profile-edit-modal .rider-profile-check {
+  display: flex;
+  align-items: center;
+  grid-template-columns: auto 1fr;
+  min-height: 40px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: #f3f3f3;
+  text-transform: none;
+}
+
+.rider-profile-edit-modal .rider-profile-check input,
+.rider-profile-bike-types input {
+  width: auto;
+  min-height: 0;
+}
+
+.rider-profile-bike-types {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.rider-profile-bike-types label {
+  display: flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px;
+  border-radius: 7px;
+  background: #f3f3f3;
+  text-transform: none;
+}
+
+.rider-profile-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rider-profile-modal-actions button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 7px;
+  color: #ffffff;
+  background: var(--red);
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.rider-profile-modal-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.rider-profile-modal-actions button[type="button"] {
+  background: #333333;
+}

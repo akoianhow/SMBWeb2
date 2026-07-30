@@ -6,8 +6,8 @@
     <meta name="description" content="View your SarapMagBadge loyalty level, redeemable points, rewards, and activity.">
     <title>My SarapMagBadge | SarapMagBike</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260730-tile-buttons-hidden">
-    <link rel="stylesheet" href="badge.css?v=20260730-level-badges">
+    <link rel="stylesheet" href="styles.css?v=20260730-account-links-v6">
+    <link rel="stylesheet" href="badge.css?v=20260730-avatar-overlap">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
   </head>
@@ -40,8 +40,10 @@
         <section class="badge-card">
           <div class="badge-card-brand"><img src="assets/sarapmagbike-logo.png" alt=""><div><strong>SARAPMAGBADGE</strong><span>VERIFIED DIGITAL LOYALTY CARD</span></div></div>
           <div class="badge-member">
-            <div class="badge-avatar" data-badge-avatar>SMB</div>
-            <div class="badge-level-seal" data-badge-level></div>
+            <div class="badge-avatar-stack">
+              <div class="badge-avatar" data-badge-avatar>SMB</div>
+              <div class="badge-level-seal" data-badge-level></div>
+            </div>
             <h1 data-badge-name>Member</h1>
             <strong data-badge-member-level>MEMBER</strong>
           </div>
@@ -79,15 +81,8 @@
         </section>
 
         <section class="badge-earn panel" id="ways-to-earn">
-          <div class="badge-section-heading"><div><h2>Ways to earn</h2><p>Purchase points use the net amount after discounts; delivery and miscellaneous fees are excluded.</p></div></div>
-          <div class="badge-earn-grid">
-            <div><strong>+5</strong><span>Authenticated website visit</span><small>Once per day</small></div>
-            <div><strong>+5</strong><span>Published community post</span><small>First post/day; reversible within 7 days</small></div>
-            <div><strong>+5</strong><span>Every full ₱50 web purchase</span><small>After completed transaction</small></div>
-            <div><strong>+10</strong><span>Verified physical visit</span><small>Once per day; can stack with purchase</small></div>
-            <div><strong>+10</strong><span>Every full ₱50 onsite purchase</span><small>After completed POS sale</small></div>
-            <div><strong>+25</strong><span>Confirmed event attendance</span><small>Once per event</small></div>
-          </div>
+          <div class="badge-section-heading"><div><h2>Ways to earn</h2><p data-badge-earning-note>Purchase points use the net amount after discounts; delivery and miscellaneous fees are excluded.</p></div></div>
+          <div class="badge-earn-grid" data-badge-earning-rules></div>
         </section>
 
         <section class="badge-history panel" id="points-history">
@@ -123,7 +118,7 @@
       </div>
     </div>
 
-    <script src="script.js?v=20260730-account-level-badge"></script>
-    <script src="badge.js?v=20260730-level-badges"></script>
+    <script src="script.js?v=20260730-account-links-v6"></script>
+    <script src="badge.js?v=20260730-configurable-earning-rules"></script>
   </body>
 </html>

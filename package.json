@@ -1,0 +1,8 @@
+{
+  "name": "smbweb2",
+  "private": true,
+  "scripts": {
+    "build": "node tools/build-assets.mjs",
+    "check": "node tools/check-javascript.mjs && node tools/build-assets.mjs --check"
+  }
+}

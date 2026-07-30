@@ -9,12 +9,13 @@
 .badge-card-brand div { display: grid; gap: 4px; }
 .badge-card-brand strong { font-size: 32px; letter-spacing: .02em; }
 .badge-card-brand span { color: var(--badge-muted); font-size: 14px; font-weight: 800; letter-spacing: .14em; }
-.badge-member { margin: 34px auto 0; position: relative; text-align: center; width: max-content; z-index: 1; }
+.badge-member { margin: 34px auto 0; text-align: center; width: max-content; z-index: 1; }
+.badge-avatar-stack { margin: 0 auto; position: relative; width: max-content; }
 .badge-avatar { align-items: center; background: #292c30; border: 10px solid #fff; border-radius: 50%; box-shadow: 0 0 0 1px #d5dae0, 0 16px 35px rgba(0,0,0,.16); color: white; display: flex; font-size: 54px; font-weight: 800; height: 175px; justify-content: center; overflow: hidden; width: 175px; }
 .badge-avatar img { height: 100%; object-fit: cover; width: 100%; }
-.badge-level-seal { bottom: 35px; height: 118px; position: absolute; right: -76px; width: 118px; }
+.badge-level-seal { bottom: -30px; height: 118px; position: absolute; right: -52px; width: 118px; z-index: 2; }
 .badge-level-seal img { filter: drop-shadow(0 8px 10px rgba(0,0,0,.24)); height: 100%; object-fit: contain; width: 100%; }
-.badge-member h1 { font-size: 32px; margin: 28px 0 5px; }
+.badge-member h1 { font-size: 32px; margin: 46px 0 5px; }
 .badge-member > strong { color: var(--badge-red); letter-spacing: .08em; }
 .badge-balances { border-bottom: 1px solid #d8dde2; border-top: 1px solid #d8dde2; display: grid; grid-template-columns: 1fr 1fr; margin-top: 34px; position: relative; z-index: 1; }
 .badge-balances > div { padding: 26px; text-align: center; }
@@ -64,8 +65,8 @@
   .badge-page { padding: 14px 14px 74px; }
   .badge-card { min-height: 0; padding: 24px 20px 18px; }
   .badge-card-brand img { height: 48px; width: 58px; }.badge-card-brand strong { font-size: 21px; }.badge-card-brand span { font-size: 9px; }
-  .badge-avatar { font-size: 36px; height: 112px; width: 112px; }.badge-level-seal { bottom: 38px; height: 76px; right: -48px; width: 76px; }
-  .badge-member { margin-top: 24px; }.badge-member h1 { font-size: 26px; margin-top: 20px; }
+  .badge-avatar { font-size: 36px; height: 112px; width: 112px; }.badge-level-seal { bottom: -20px; height: 76px; right: -32px; width: 76px; }
+  .badge-member { margin-top: 24px; }.badge-member h1 { font-size: 26px; margin-top: 34px; }
   .badge-balances { margin-top: 24px; }.badge-balances > div { padding: 18px 6px; }.badge-balances strong { font-size: 38px; }.badge-balances span { font-size: 9px; }
   .badge-meta { gap: 8px; }.badge-cycle { padding: 18px; }.badge-cycle-date { height: 62px; width: 62px; }
   .badge-actions { gap: 8px; }.badge-actions button, .badge-actions a { min-height: 112px; padding: 10px 5px; }.badge-actions span { height: 42px; width: 42px; }.badge-actions strong { font-size: 12px; }.badge-actions small { display: none; }

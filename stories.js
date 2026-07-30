@@ -4,6 +4,11 @@ const wordpressUrl = String(window.SMBWEB_WORDPRESS_URL || "").replace(/\/$/, ""
 const apiRoot = wordpressUrl ? `${wordpressUrl}/wp-json/wp/v2` : "";
 const dateFormatter = new Intl.DateTimeFormat("en-PH", { dateStyle: "long" });
 
+function formatStoryDate(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : dateFormatter.format(date);
+}
+
 function decodeHtml(value = "") {
   const textarea = document.createElement("textarea");
   textarea.innerHTML = value;
@@ -20,6 +25,65 @@ function escapeHtml(value = "") {
   return String(value).replace(/[&<>"']/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
   })[character]);
+}
+
+function safeStoryUrl(value, { allowContact = false } = {}) {
+  if (!value) return "";
+  try {
+    const url = new URL(value, window.location.origin);
+    const allowedProtocols = allowContact ? ["http:", "https:", "mailto:", "tel:"] : ["http:", "https:"];
+    return allowedProtocols.includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function sanitizeStoryHtml(value = "") {
+  const source = document.createElement("template");
+  source.innerHTML = String(value);
+  const allowedTags = new Set([
+    "A", "B", "BLOCKQUOTE", "BR", "CODE", "DIV", "EM", "FIGCAPTION",
+    "FIGURE", "H2", "H3", "H4", "H5", "H6", "HR", "I", "IMG", "LI",
+    "OL", "P", "PRE", "SPAN", "STRONG", "U", "UL"
+  ]);
+
+  const cleanNode = (node) => {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || "");
+    if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+    const children = Array.from(node.childNodes).map(cleanNode).filter(Boolean);
+    if (!allowedTags.has(node.tagName)) {
+      const fragment = document.createDocumentFragment();
+      children.forEach((child) => fragment.append(child));
+      return fragment;
+    }
+
+    const clean = document.createElement(node.tagName.toLowerCase());
+    children.forEach((child) => clean.append(child));
+    if (node.tagName === "A") {
+      const href = safeStoryUrl(node.getAttribute("href"), { allowContact: true });
+      if (href) {
+        clean.href = href;
+        clean.rel = "noopener noreferrer";
+        if (new URL(href, window.location.origin).origin !== window.location.origin) clean.target = "_blank";
+      }
+    } else if (node.tagName === "IMG") {
+      const src = safeStoryUrl(node.getAttribute("src"));
+      if (!src) return null;
+      clean.src = src;
+      clean.alt = node.getAttribute("alt") || "";
+      clean.loading = "lazy";
+      clean.decoding = "async";
+    }
+    return clean;
+  };
+
+  const clean = document.createElement("div");
+  Array.from(source.content.childNodes).forEach((node) => {
+    const sanitized = cleanNode(node);
+    if (sanitized) clean.append(sanitized);
+  });
+  return clean.innerHTML;
 }
 
 function getEmbedded(item, type) {
@@ -47,13 +111,23 @@ async function wpFetch(path, options = {}) {
 }
 
 function showStoriesMessage(title, detail) {
-  storiesRoot.innerHTML = `<section class="stories-status"><p class="section-eyebrow">SarapMagBike Stories</p><h1>${title}</h1><p>${detail}</p></section>`;
+  const section = document.createElement("section");
+  section.className = "stories-status";
+  const eyebrow = document.createElement("p");
+  eyebrow.className = "section-eyebrow";
+  eyebrow.textContent = "SarapMagBike Stories";
+  const heading = document.createElement("h1");
+  heading.textContent = title;
+  const message = document.createElement("p");
+  message.textContent = detail;
+  section.append(eyebrow, heading, message);
+  storiesRoot.replaceChildren(section);
 }
 
 function createCard(post, featured = false) {
   const article = document.createElement("article");
   article.className = featured ? "story-card story-card-featured" : "story-card";
-  const image = getImage(post, featured ? "large" : "medium_large");
+  const image = safeStoryUrl(getImage(post, featured ? "large" : "medium_large"));
   const author = escapeHtml(getEmbedded(post, "author")?.name || "SarapMagBike Team");
   const categories = (post._embedded?.["wp:term"]?.[0] || []).map((term) => term.name).slice(0, 2);
   article.innerHTML = `
@@ -62,7 +136,7 @@ function createCard(post, featured = false) {
       <p class="story-card-category">${categories.map((item) => escapeHtml(decodeHtml(item))).join(" · ") || "Cycling Stories"}</p>
       <h2><a href="${postUrl(post)}">${escapeHtml(decodeHtml(post.title.rendered))}</a></h2>
       <p>${escapeHtml(textFromHtml(post.excerpt.rendered))}</p>
-      <div class="story-card-meta"><span>${author}</span><time datetime="${post.date}">${dateFormatter.format(new Date(post.date))}</time></div>
+      <div class="story-card-meta"><span>${author}</span><time datetime="${escapeHtml(post.date || "")}">${formatStoryDate(post.date)}</time></div>
     </div>`;
   return article;
 }
@@ -162,7 +236,7 @@ async function loadStory() {
     if (!post) throw new Error("not-found");
     const title = decodeHtml(post.title.rendered);
     const excerpt = textFromHtml(post.excerpt.rendered);
-    const image = getImage(post, "full");
+    const image = safeStoryUrl(getImage(post, "full"));
     const author = getEmbedded(post, "author")?.name || "SarapMagBike Team";
     const categories = (post._embedded?.["wp:term"]?.[0] || []).map((term) => decodeHtml(term.name));
     document.title = `${title} | SarapMagBike Stories`;
@@ -174,9 +248,9 @@ async function loadStory() {
     storyRoot.innerHTML = `
       <article class="story-article">
         <a class="story-back" href="stories.html">← All Stories</a>
-        <header><p class="section-eyebrow">${categories.map(escapeHtml).join(" · ") || "SarapMagBike Stories"}</p><h1>${escapeHtml(title)}</h1><p class="story-deck">${escapeHtml(excerpt)}</p><div class="story-byline"><span>By ${escapeHtml(author)}</span><time datetime="${post.date}">${dateFormatter.format(new Date(post.date))}</time></div></header>
+        <header><p class="section-eyebrow">${categories.map(escapeHtml).join(" · ") || "SarapMagBike Stories"}</p><h1>${escapeHtml(title)}</h1><p class="story-deck">${escapeHtml(excerpt)}</p><div class="story-byline"><span>By ${escapeHtml(author)}</span><time datetime="${escapeHtml(post.date || "")}">${formatStoryDate(post.date)}</time></div></header>
         ${image ? `<figure class="story-hero-image"><img src="${image}" alt=""></figure>` : ""}
-        <div class="story-content">${post.content.rendered}</div>
+        <div class="story-content">${sanitizeStoryHtml(post.content.rendered)}</div>
         <footer class="story-cta"><h2>Need help with your bike?</h2><p>Browse our catalog, check our services, or message SarapMagBike before visiting.</p><div><a href="index.html#products">Browse Products</a><a href="services.html">Bike Services</a></div></footer>
       </article>`;
   } catch (error) {

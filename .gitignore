@@ -1,2 +1,4 @@
 .DS_Store
 deploy/wordpress/.env
+/script.js.tmp
+/styles.css.tmp

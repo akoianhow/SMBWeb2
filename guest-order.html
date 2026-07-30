@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Privately track a SarapMagBike guest order.">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Track Guest Order | SarapMagBike</title>
+    <link rel="icon" href="assets/sarapmagbike-logo.png">
+    <link rel="stylesheet" href="styles.css?v=20260730-account-links-v6">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#df2027">
+  </head>
+  <body class="is-guest-order-page">
+    <div class="page-bg"></div>
+    <header class="rider-profile-site-header">
+      <div class="wrap rider-profile-site-header-inner">
+        <a class="logo" href="index.html" aria-label="SarapMagBike Shop home">
+          <img src="assets/sarapmagbike-logo.png" alt="SarapMagBike Shop logo">
+          <span class="logo-word">SARAPMAG<span>BIKE</span></span>
+          <span class="logo-tag">QUEZON CITY</span>
+        </a>
+        <nav aria-label="Order navigation">
+          <a href="index.html#products">Continue Shopping</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="wrap guest-order-page">
+      <section class="guest-order-heading">
+        <div><p>Private guest tracking</p><h1>Your Order</h1><span>This secure link is the key to this order. Do not share it publicly.</span></div>
+        <button type="button" data-guest-order-refresh>Refresh</button>
+      </section>
+      <section class="guest-order-panel" data-guest-order aria-live="polite">
+        <div class="guest-order-loading"><h2>Loading your order</h2><p>Checking the latest fulfillment status.</p></div>
+      </section>
+    </main>
+
+    <script src="config.js?v=20260703-staging-api"></script>
+    <script src="script.js?v=20260730-account-links-v6"></script>
+    <script src="guest-order.js?v=20260730-checkout-account-polish"></script>
+  </body>
+</html>

@@ -456,15 +456,30 @@
   .mobile-header-actions .mobile-header-search {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
-    min-height: 38px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     padding: 0;
+    border-radius: 50%;
+    box-shadow: none;
+  }
+
+  .mobile-header-actions .site-cart-button-mobile {
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .mobile-header-actions .mobile-header-account {
     color: #ffffff;
     background: #202020;
     border: 0;
-    border-radius: 50%;
-    box-shadow: none;
+  }
+
+  .mobile-header-actions .mobile-header-search {
+    color: #181818;
+    background: #ffffff;
+    border: 1px solid #181818;
   }
 
   .mobile-header-account svg,
@@ -482,7 +497,9 @@
   .mobile-header-account:focus-visible,
   .mobile-header-search:hover,
   .mobile-header-search:focus-visible {
+    color: #ffffff;
     background: var(--red);
+    border-color: var(--red);
     outline: 3px solid rgba(237, 28, 36, 0.24);
     outline-offset: 2px;
   }
@@ -494,9 +511,9 @@
   .mobile-header-avatar-button {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
-    min-height: 38px;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
     padding: 0;
     border-radius: 50%;
     overflow: hidden;
@@ -661,7 +678,7 @@
 
   .product-search-modal > section {
     width: 100%;
-    max-height: 92vh;
+    max-height: min(320px, calc(100vh - 24px));
     border-right: 0;
     border-bottom: 0;
     border-left: 0;
@@ -834,8 +851,8 @@
   }
 
   .hero-message a {
-    min-height: 28px;
-    height: 28px;
+    min-height: 34px;
+    height: 34px;
     padding: 0 8px;
     border-radius: 6px;
     font-size: 9px;
@@ -843,6 +860,7 @@
   }
 
   .hero-actions {
+    width: 100%;
     gap: 4px;
   }
 

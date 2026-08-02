@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v16-profile-quick-images';
+const STATIC_CACHE = 'smbweb2-static-v22-uniform-actions';
 const CATALOG_CACHE = 'smbweb2-catalog-v1';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);

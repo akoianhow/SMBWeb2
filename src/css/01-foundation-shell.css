@@ -434,6 +434,49 @@ p {
   border: 0;
 }
 
+.customer-level-progress {
+  width: min(146px, 100%);
+  margin: 3px 0 7px;
+}
+
+.customer-level-progress[hidden] {
+  display: none;
+}
+
+.customer-level-progress-track {
+  width: 100%;
+  height: 7px;
+  overflow: hidden;
+  border: 1px solid #cacaca;
+  border-radius: 999px;
+  background: #e7e7e7;
+}
+
+.customer-level-progress-track > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--red);
+  transition: width 240ms ease;
+}
+
+.customer-level-progress small {
+  display: block;
+  margin-top: 3px;
+  color: #666666;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+
+.mobile-header-actions .customer-level-progress {
+  width: 100%;
+  max-width: 150px;
+}
+
 .account-menu-orders-link,
 .account-menu-text-badge-link,
 .mobile-header-text-badge-link,
@@ -557,6 +600,34 @@ p {
 }
 
 .mobile-bottom-nav [data-notification-badge][hidden] {
+  display: none;
+}
+
+.story-updates-link {
+  position: relative;
+}
+
+[data-story-update-badge] {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  color: #ffffff;
+  background: var(--red);
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.24);
+  font-size: 9px;
+  font-weight: 900;
+  line-height: 1;
+  pointer-events: none;
+}
+
+[data-story-update-badge][hidden] {
   display: none;
 }
 

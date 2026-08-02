@@ -942,8 +942,8 @@
 }
 
 .product-search-modal > section {
-  width: min(820px, 100%);
-  max-height: min(720px, calc(100vh - 36px));
+  width: min(560px, 100%);
+  max-height: calc(100vh - 36px);
   overflow: hidden;
   color: #202020;
   background: #ffffff;
@@ -954,7 +954,7 @@
 
 .product-search-head {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 18px;
@@ -979,7 +979,7 @@
 
 .product-search-head h2,
 .product-stock-modal h2 {
-  margin: 0 0 6px;
+  margin: 0;
   color: #171717;
   font-size: 22px;
   line-height: 1.1;
@@ -1031,6 +1031,18 @@
   color: #202020;
   font: inherit;
   outline: 0;
+}
+
+.product-search-form input[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--red);
+}
+
+.product-search-validation {
+  min-height: 18px;
+  margin: 0;
+  color: var(--red-dark);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .product-search-form button {

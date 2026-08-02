@@ -271,6 +271,11 @@ body.has-notification-drawer {
     right: 9px;
   }
 
+  .mobile-bottom-nav [data-story-update-badge] {
+    top: -2px;
+    right: 9px;
+  }
+
   .notification-drawer {
     align-items: flex-end;
   }

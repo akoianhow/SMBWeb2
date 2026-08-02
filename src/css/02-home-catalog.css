@@ -127,10 +127,16 @@
 }
 
 .hero-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
+  width: min(100%, 320px);
   gap: 6px;
-  flex-wrap: nowrap;
+}
+
+.hero-actions a {
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .hero-message .hero-events-action {
@@ -1197,4 +1203,3 @@ body.is-catalog-mode .product-section {
   background: #ffffff;
   border: 1px solid var(--line);
 }
-

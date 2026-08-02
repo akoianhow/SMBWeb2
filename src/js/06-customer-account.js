@@ -13,6 +13,95 @@ const customerLevelBadgeAssets = {
 };
 let customerLevelBadgeLoadVersion = 0;
 
+function ensureCustomerLevelProgressElements() {
+  document.querySelectorAll("[data-customer-level-badge]").forEach((badgeLink) => {
+    const existing = badgeLink.nextElementSibling;
+    if (existing?.matches("[data-customer-level-progress]")) {
+      return;
+    }
+
+    const progress = document.createElement("div");
+    progress.className = "customer-level-progress";
+    progress.dataset.customerLevelProgress = "";
+    progress.hidden = true;
+    progress.innerHTML = `
+      <div
+        class="customer-level-progress-track"
+        role="progressbar"
+        aria-label="Progress to next SarapMagBadge level"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <span data-customer-level-progress-fill></span>
+      </div>
+      <small data-customer-level-progress-text>0%</small>
+    `;
+    badgeLink.insertAdjacentElement("afterend", progress);
+  });
+}
+
+function getCustomerLevelProgress(summary) {
+  const lifetimePoints = Math.max(0, Number(summary?.balances?.lifetimePoints) || 0);
+  const levelCode = String(summary?.level?.code || "").trim().toLowerCase();
+  const levels = Array.isArray(summary?.levels)
+    ? summary.levels
+      .map((level) => ({
+        ...level,
+        minimum: Math.max(0, Number(level?.minimum) || 0)
+      }))
+      .sort((left, right) => left.minimum - right.minimum)
+    : [];
+  const currentIndex = levels.findIndex((level) => String(level?.code || "").trim().toLowerCase() === levelCode);
+  const currentLevel = currentIndex >= 0
+    ? levels[currentIndex]
+    : [...levels].reverse().find((level) => lifetimePoints >= level.minimum);
+  const resolvedIndex = currentLevel ? levels.indexOf(currentLevel) : -1;
+  const nextLevel = resolvedIndex >= 0 ? levels[resolvedIndex + 1] : null;
+  const nextThreshold = nextLevel?.minimum
+    ?? (Number.isFinite(Number(summary?.level?.nextLevelPoints)) ? Number(summary.level.nextLevelPoints) : null);
+
+  if (!nextThreshold || nextThreshold <= lifetimePoints || !currentLevel) {
+    return {
+      percentage: 100,
+      text: "100% · Maximum level",
+      ariaLabel: "Maximum SarapMagBadge level reached"
+    };
+  }
+
+  const range = Math.max(1, nextThreshold - currentLevel.minimum);
+  const rawPercentage = ((lifetimePoints - currentLevel.minimum) / range) * 100;
+  const percentage = Math.min(99, Math.max(0, Math.round(rawPercentage)));
+  const nextName = String(nextLevel?.name || "next level").trim();
+  return {
+    percentage,
+    text: `${percentage}% to ${nextName}`,
+    ariaLabel: `${percentage}% progress to ${nextName}`
+  };
+}
+
+function renderCustomerLevelProgress(summary = null) {
+  ensureCustomerLevelProgressElements();
+  document.querySelectorAll("[data-customer-level-progress]").forEach((progress) => {
+    if (!summary?.balances || !summary?.level) {
+      progress.hidden = true;
+      return;
+    }
+
+    const state = getCustomerLevelProgress(summary);
+    const track = progress.querySelector(".customer-level-progress-track");
+    const fill = progress.querySelector("[data-customer-level-progress-fill]");
+    const text = progress.querySelector("[data-customer-level-progress-text]");
+    progress.hidden = false;
+    if (fill) fill.style.width = `${state.percentage}%`;
+    if (text) text.textContent = state.text;
+    if (track) {
+      track.setAttribute("aria-valuenow", String(state.percentage));
+      track.setAttribute("aria-label", state.ariaLabel);
+    }
+  });
+}
+
 function renderCustomerLevelBadge(summary = null) {
   const levelName = String(summary?.level?.name || "Noob").trim() || "Noob";
   const levelCode = String(summary?.level?.code || levelName).trim().toLowerCase();
@@ -28,6 +117,7 @@ function renderCustomerLevelBadge(summary = null) {
     link.setAttribute("aria-label", `Open your ${levelName} SarapMagBadge`);
     link.removeAttribute("aria-busy");
   });
+  renderCustomerLevelProgress(summary);
 }
 
 async function loadCustomerLevelBadge() {
@@ -1258,10 +1348,59 @@ async function submitPasswordReset(event) {
   }
 }
 
+function setLoginPasswordToggleState(button, passwordVisible) {
+  button.setAttribute("aria-pressed", String(passwordVisible));
+  button.setAttribute("aria-label", passwordVisible ? "Hide password" : "Show password");
+  button.title = passwordVisible ? "Hide password" : "Show password";
+  button.innerHTML = passwordVisible
+    ? `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 3l18 18"></path>
+        <path d="M10.6 10.7a2 2 0 0 0 2.7 2.7"></path>
+        <path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c5.2 0 9 4.6 9 8a8.8 8.8 0 0 1-1.8 3.8"></path>
+        <path d="M6.6 6.6C4.3 8 3 10.2 3 12c0 3.4 3.8 8 9 8 1.6 0 3-.4 4.3-1.1"></path>
+      </svg>
+    `
+    : `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 12s3.8-8 9-8 9 8 9 8-3.8 8-9 8-9-8-9-8z"></path>
+        <circle cx="12" cy="12" r="2.6"></circle>
+      </svg>
+    `;
+}
+
+function ensureLoginPasswordToggles() {
+  document.querySelectorAll("[data-community-login-form], [data-customer-login-form]").forEach((form) => {
+    const input = form.querySelector('input[type="password"][name="password"]');
+    if (!(input instanceof HTMLInputElement) || input.closest(".login-password-control")) {
+      return;
+    }
+
+    const control = document.createElement("span");
+    control.className = "login-password-control";
+    input.insertAdjacentElement("beforebegin", control);
+    control.append(input);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "login-password-toggle";
+    toggle.dataset.loginPasswordToggle = "";
+    setLoginPasswordToggleState(toggle, false);
+    toggle.addEventListener("click", () => {
+      const passwordVisible = input.type === "password";
+      input.type = passwordVisible ? "text" : "password";
+      setLoginPasswordToggleState(toggle, passwordVisible);
+      input.focus({ preventScroll: true });
+    });
+    control.append(toggle);
+  });
+}
+
 function bindCustomerAccountUi() {
   addStaySignedInControls();
   ensureAccountRecoveryUi();
   ensureCustomerWelcomeModal();
+  ensureLoginPasswordToggles();
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
     if (!form.elements?.username || form.dataset.customerLoginBound === "true") {
       return;

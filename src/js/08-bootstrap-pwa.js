@@ -8,9 +8,11 @@ async function startCatalog() {
   ensureConsistentSiteHeader();
   renderCategoryNav();
   setupMobileNavigationBelt();
+  initializeStoryUpdateBadge();
   removeLegacyHeaderTools();
   ensureStandardCustomerHeaderActions();
   ensureStandardMobileHeaderActions();
+  ensureStandardProductSearchActions();
   ensureCustomerLoginPrompt();
   initializeNotifications();
   initializeCartUi();
@@ -65,7 +67,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260730-profile-quick-images-v4')
+    navigator.serviceWorker.register('./sw.js?v=20260802-uniform-actions-v2')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

@@ -1091,11 +1091,7 @@ function ensureProductSearchModal() {
   modal.innerHTML = `
     <section role="dialog" aria-modal="true" aria-labelledby="product-search-title">
       <header class="product-search-head">
-        <div>
-          <span><span data-public-location-name>${getSelectedPublicLocationName()}</span> inventory</span>
-          <h2 id="product-search-title">Search Products</h2>
-          <p data-product-search-summary>Type a brand, model, SKU, category, or barcode.</p>
-        </div>
+        <h2 id="product-search-title">Search Products</h2>
         <button type="button" data-product-search-close aria-label="Close product search">Close</button>
       </header>
       <div class="product-search-body">
@@ -1103,8 +1099,7 @@ function ensureProductSearchModal() {
           <input type="search" data-product-search-input aria-label="Search inventory products" placeholder="Search bikes, parts, brands, or SKU">
           <button type="submit">Search</button>
         </form>
-        <p class="product-search-note" data-product-search-note></p>
-        <div class="product-search-results" data-product-search-results></div>
+        <p class="product-search-validation" data-product-search-validation aria-live="polite"></p>
       </div>
     </section>
   `;
@@ -1118,30 +1113,55 @@ function ensureProductSearchModal() {
 
   modal.querySelector("[data-product-search-form]")?.addEventListener("submit", (event) => {
     event.preventDefault();
-    runProductSearch(modal.querySelector("[data-product-search-input]")?.value || "");
+    const input = modal.querySelector("[data-product-search-input]");
+    const query = String(input?.value || "").trim();
+    const validation = modal.querySelector("[data-product-search-validation]");
+    if (query.length < 2) {
+      validation.textContent = "Enter at least 2 characters.";
+      input?.setAttribute("aria-invalid", "true");
+      input?.focus();
+      return;
+    }
+    submitProductSearch(query);
   });
 
-  let searchTimer = null;
   modal.querySelector("[data-product-search-input]")?.addEventListener("input", (event) => {
-    window.clearTimeout(searchTimer);
-    searchTimer = window.setTimeout(() => runProductSearch(event.target.value), 220);
+    if (String(event.target.value || "").trim().length >= 2) {
+      event.target.removeAttribute("aria-invalid");
+      modal.querySelector("[data-product-search-validation]").textContent = "";
+    }
+  });
+
+  modal.addEventListener("keydown", (event) => {
+    if (event.key !== "Tab") return;
+    const focusable = Array.from(modal.querySelectorAll("button, input")).filter((element) => !element.disabled);
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   });
 
   return modal;
 }
 
 function getProductSearchPageUrl(query = "") {
-  const params = new URLSearchParams();
   const trimmedQuery = String(query || "").trim();
-  if (trimmedQuery) {
-    params.set("search", trimmedQuery);
-  }
-  return `search.html${params.toString() ? `?${params.toString()}` : ""}`;
+  return trimmedQuery
+    ? `search.html?search=${encodeURIComponent(trimmedQuery)}`
+    : "search.html";
 }
 
 function submitProductSearch(query = "") {
   window.location.href = getProductSearchPageUrl(query);
 }
+
+let lastProductSearchTrigger = null;
 
 function closeProductSearchModal() {
   const modal = document.querySelector("[data-product-search-modal]");
@@ -1150,20 +1170,9 @@ function closeProductSearchModal() {
   }
   modal.hidden = true;
   document.body.classList.remove("has-product-search-modal");
-}
-
-function setProductSearchState(title, detail) {
-  const modal = ensureProductSearchModal();
-  modal.querySelector("[data-product-search-summary]").textContent = title;
-  const results = modal.querySelector("[data-product-search-results]");
-  results.replaceChildren();
-  const stateCard = document.createElement("div");
-  stateCard.className = "product-search-state";
-  stateCard.append(
-    createTextElement("strong", title),
-    createTextElement("p", detail)
-  );
-  results.append(stateCard);
+  if (lastProductSearchTrigger?.isConnected) {
+    lastProductSearchTrigger.focus();
+  }
 }
 
 function renderProductSearchThumbnail(item) {
@@ -1210,32 +1219,6 @@ function renderProductSearchRow(item) {
   row.append(renderProductSearchThumbnail(item), detail, meta);
   row.addEventListener("click", () => handleProductSearchSelection(item));
   return row;
-}
-
-function renderProductSearchResults(items, source, query) {
-  const modal = ensureProductSearchModal();
-  const results = modal.querySelector("[data-product-search-results]");
-  const summary = modal.querySelector("[data-product-search-summary]");
-  const note = modal.querySelector("[data-product-search-note]");
-  results.replaceChildren();
-
-  summary.textContent = `${items.length} ${items.length === 1 ? "match" : "matches"} for "${query || "all products"}".`;
-  note.textContent = source === "inventory"
-    ? "Results come from SMBSystem public-safe inventory search. Exact stock can still change after in-store sales."
-    : "Full inventory search needs SMBSystem API support. Showing published web catalog matches for now.";
-
-  if (items.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "product-search-state";
-    empty.append(
-      createTextElement("strong", "No matching products found"),
-      createTextElement("p", "Try a brand, model, SKU, category, or message the shop for a manual stock check.")
-    );
-    results.append(empty);
-    return;
-  }
-
-  items.slice(0, 30).forEach((item) => results.append(renderProductSearchRow(item)));
 }
 
 function getProductSearchPageRoot() {
@@ -1332,32 +1315,16 @@ function bindProductSearchPageUi() {
   });
 }
 
-async function runProductSearch(query) {
-  const trimmedQuery = String(query || "").trim();
-  if (!trimmedQuery) {
-    setProductSearchState(
-      "Search SarapMagBike inventory",
-      "Enter a bike, part, brand, model, SKU, category, or barcode."
-    );
-    return;
-  }
-  setProductSearchState("Searching Products", `Checking SarapMagBike inventory matches for ${getSelectedPublicLocationName()}.`);
-
-  try {
-    const result = await searchInventoryProducts(trimmedQuery);
-    renderProductSearchResults(result.items, result.source, trimmedQuery);
-  } catch (error) {
-    setProductSearchState("Search Unavailable", "SMBSystem public search is not reachable. Try again after the API is running.");
-  }
-}
-
-function openProductSearchModal(query = "") {
+function openProductSearchModal(query = "", trigger = null) {
   const modal = ensureProductSearchModal();
   const input = modal.querySelector("[data-product-search-input]");
+  const validation = modal.querySelector("[data-product-search-validation]");
+  lastProductSearchTrigger = trigger || document.activeElement;
   input.value = String(query || "").trim();
+  input.removeAttribute("aria-invalid");
+  validation.textContent = "";
   modal.hidden = false;
   document.body.classList.add("has-product-search-modal");
-  runProductSearch(input.value);
   window.setTimeout(() => input.focus(), 0);
 }
 
@@ -1433,7 +1400,7 @@ function isProductSearchForm(form) {
 
 function bindProductSearchUi() {
   document.querySelectorAll("[data-product-search-open]").forEach((button) => {
-    button.addEventListener("click", () => submitProductSearch(""));
+    button.addEventListener("click", () => openProductSearchModal("", button));
   });
 
   document.querySelectorAll(".search-form").forEach((form) => {
@@ -1487,6 +1454,12 @@ function ensureStandardMobileHeaderActions() {
   actions.className = "mobile-header-actions";
   actions.setAttribute("aria-label", "Mobile quick actions");
   actions.innerHTML = `
+    <button class="mobile-header-search" type="button" data-product-search-open aria-label="Search products" title="Search products">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+    </button>
     <button class="mobile-header-account" type="button" data-mobile-header-login aria-label="Log in or create an account" title="Account">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="8" r="4"></circle>
@@ -1510,6 +1483,35 @@ function ensureStandardMobileHeaderActions() {
       </div>
     </div>
   `;
+}
+
+function ensureStandardProductSearchActions() {
+  const desktopActions = document.querySelector(".topbar-options");
+  if (!desktopActions || desktopActions.querySelector(".site-search-button-desktop")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "site-search-button site-search-button-desktop";
+  button.dataset.productSearchOpen = "";
+  button.setAttribute("aria-label", "Search products");
+  button.title = "Search products";
+  button.innerHTML = `
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+    </span>
+  `;
+
+  const session = desktopActions.querySelector("[data-customer-session]");
+  if (session) {
+    session.insertAdjacentElement("afterend", button);
+  } else {
+    desktopActions.append(button);
+  }
 }
 
 function ensureConsistentSiteHeader() {
@@ -1822,6 +1824,137 @@ function setupMobileNavigationBelt() {
     window.addEventListener("resize", centerBelt);
   });
   setMobileNavActive(getDefaultMobileNavKey());
+}
+
+const STORY_UPDATE_STORAGE_KEY = "smbweb2.story-updates.v1";
+const STORY_UPDATE_POLL_INTERVAL_MS = 5 * 60 * 1000;
+const STORY_UPDATE_PAGE_SIZE = 100;
+const STORY_UPDATE_MAX_PAGES = 10;
+
+function getStoryUpdateLinks() {
+  return Array.from(document.querySelectorAll(
+    '[data-mobile-nav="stories"], [data-category-nav-list] a[href="stories.html"]'
+  ));
+}
+
+function ensureStoryUpdateBadges() {
+  getStoryUpdateLinks().forEach((link) => {
+    link.classList.add("story-updates-link");
+    if (link.querySelector("[data-story-update-badge]")) return;
+    const badge = document.createElement("b");
+    badge.dataset.storyUpdateBadge = "";
+    badge.hidden = true;
+    badge.textContent = "0";
+    link.append(badge);
+  });
+}
+
+function renderStoryUpdateCount(count) {
+  ensureStoryUpdateBadges();
+  const safeCount = Math.max(0, Number.parseInt(count, 10) || 0);
+  getStoryUpdateLinks().forEach((link) => {
+    const badge = link.querySelector("[data-story-update-badge]");
+    if (!badge) return;
+    badge.hidden = safeCount === 0;
+    badge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+    link.setAttribute(
+      "aria-label",
+      safeCount
+        ? `Stories, ${safeCount} new or updated ${safeCount === 1 ? "post" : "posts"}`
+        : "Stories"
+    );
+  });
+}
+
+function readSeenStorySnapshot() {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(STORY_UPDATE_STORAGE_KEY) || "null");
+    return value && typeof value === "object" && value.posts && typeof value.posts === "object"
+      ? value.posts
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSeenStorySnapshot(posts) {
+  try {
+    window.localStorage.setItem(STORY_UPDATE_STORAGE_KEY, JSON.stringify({
+      posts,
+      acknowledgedAt: new Date().toISOString()
+    }));
+  } catch {
+    // The indicator remains useful for this page even when storage is unavailable.
+  }
+}
+
+function getStoryUpdateApiRoot() {
+  const wordpressUrl = String(
+    window.SMBWEB_WORDPRESS_URL || "https://stories-cms.sarapmagbike.com"
+  ).replace(/\/$/, "");
+  return wordpressUrl ? `${wordpressUrl}/wp-json/wp/v2` : "";
+}
+
+async function fetchPublishedStorySnapshot() {
+  const apiRoot = getStoryUpdateApiRoot();
+  if (!apiRoot) throw new Error("WordPress Stories is not configured.");
+
+  const snapshot = {};
+  for (let page = 1; page <= STORY_UPDATE_MAX_PAGES; page += 1) {
+    const fields = "id,modified_gmt,modified,date_gmt,date";
+    const response = await fetch(
+      `${apiRoot}/posts?status=publish&per_page=${STORY_UPDATE_PAGE_SIZE}&page=${page}&orderby=modified&order=desc&_fields=${fields}`,
+      { credentials: "omit", cache: "no-store", headers: { Accept: "application/json" } }
+    );
+    if (!response.ok) {
+      if (response.status === 400 && page > 1) break;
+      throw new Error(`Unable to check Stories updates (${response.status}).`);
+    }
+    const posts = await response.json();
+    if (!Array.isArray(posts)) throw new Error("Unexpected Stories response.");
+    posts.forEach((post) => {
+      if (!post?.id) return;
+      snapshot[String(post.id)] = post.modified_gmt || post.modified || post.date_gmt || post.date || "";
+    });
+    if (posts.length < STORY_UPDATE_PAGE_SIZE) break;
+  }
+  return snapshot;
+}
+
+async function refreshStoryUpdateBadge() {
+  try {
+    const currentSnapshot = await fetchPublishedStorySnapshot();
+    const seenSnapshot = readSeenStorySnapshot();
+    const isStoriesIndex = window.location.pathname.endsWith("/stories.html");
+
+    if (!seenSnapshot || isStoriesIndex) {
+      saveSeenStorySnapshot(currentSnapshot);
+      renderStoryUpdateCount(0);
+      return;
+    }
+
+    const updateCount = Object.entries(currentSnapshot).reduce(
+      (count, [postId, modifiedAt]) => count + (seenSnapshot[postId] !== modifiedAt ? 1 : 0),
+      0
+    );
+    renderStoryUpdateCount(updateCount);
+  } catch {
+    renderStoryUpdateCount(0);
+  }
+}
+
+function initializeStoryUpdateBadge() {
+  ensureStoryUpdateBadges();
+  refreshStoryUpdateBadge();
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") refreshStoryUpdateBadge();
+  }, STORY_UPDATE_POLL_INTERVAL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshStoryUpdateBadge();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === STORY_UPDATE_STORAGE_KEY) refreshStoryUpdateBadge();
+  });
 }
 
 function setCatalogMode(isCatalogMode) {
@@ -5513,6 +5646,95 @@ const customerLevelBadgeAssets = {
 };
 let customerLevelBadgeLoadVersion = 0;
 
+function ensureCustomerLevelProgressElements() {
+  document.querySelectorAll("[data-customer-level-badge]").forEach((badgeLink) => {
+    const existing = badgeLink.nextElementSibling;
+    if (existing?.matches("[data-customer-level-progress]")) {
+      return;
+    }
+
+    const progress = document.createElement("div");
+    progress.className = "customer-level-progress";
+    progress.dataset.customerLevelProgress = "";
+    progress.hidden = true;
+    progress.innerHTML = `
+      <div
+        class="customer-level-progress-track"
+        role="progressbar"
+        aria-label="Progress to next SarapMagBadge level"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="0"
+      >
+        <span data-customer-level-progress-fill></span>
+      </div>
+      <small data-customer-level-progress-text>0%</small>
+    `;
+    badgeLink.insertAdjacentElement("afterend", progress);
+  });
+}
+
+function getCustomerLevelProgress(summary) {
+  const lifetimePoints = Math.max(0, Number(summary?.balances?.lifetimePoints) || 0);
+  const levelCode = String(summary?.level?.code || "").trim().toLowerCase();
+  const levels = Array.isArray(summary?.levels)
+    ? summary.levels
+      .map((level) => ({
+        ...level,
+        minimum: Math.max(0, Number(level?.minimum) || 0)
+      }))
+      .sort((left, right) => left.minimum - right.minimum)
+    : [];
+  const currentIndex = levels.findIndex((level) => String(level?.code || "").trim().toLowerCase() === levelCode);
+  const currentLevel = currentIndex >= 0
+    ? levels[currentIndex]
+    : [...levels].reverse().find((level) => lifetimePoints >= level.minimum);
+  const resolvedIndex = currentLevel ? levels.indexOf(currentLevel) : -1;
+  const nextLevel = resolvedIndex >= 0 ? levels[resolvedIndex + 1] : null;
+  const nextThreshold = nextLevel?.minimum
+    ?? (Number.isFinite(Number(summary?.level?.nextLevelPoints)) ? Number(summary.level.nextLevelPoints) : null);
+
+  if (!nextThreshold || nextThreshold <= lifetimePoints || !currentLevel) {
+    return {
+      percentage: 100,
+      text: "100% · Maximum level",
+      ariaLabel: "Maximum SarapMagBadge level reached"
+    };
+  }
+
+  const range = Math.max(1, nextThreshold - currentLevel.minimum);
+  const rawPercentage = ((lifetimePoints - currentLevel.minimum) / range) * 100;
+  const percentage = Math.min(99, Math.max(0, Math.round(rawPercentage)));
+  const nextName = String(nextLevel?.name || "next level").trim();
+  return {
+    percentage,
+    text: `${percentage}% to ${nextName}`,
+    ariaLabel: `${percentage}% progress to ${nextName}`
+  };
+}
+
+function renderCustomerLevelProgress(summary = null) {
+  ensureCustomerLevelProgressElements();
+  document.querySelectorAll("[data-customer-level-progress]").forEach((progress) => {
+    if (!summary?.balances || !summary?.level) {
+      progress.hidden = true;
+      return;
+    }
+
+    const state = getCustomerLevelProgress(summary);
+    const track = progress.querySelector(".customer-level-progress-track");
+    const fill = progress.querySelector("[data-customer-level-progress-fill]");
+    const text = progress.querySelector("[data-customer-level-progress-text]");
+    progress.hidden = false;
+    if (fill) fill.style.width = `${state.percentage}%`;
+    if (text) text.textContent = state.text;
+    if (track) {
+      track.setAttribute("aria-valuenow", String(state.percentage));
+      track.setAttribute("aria-label", state.ariaLabel);
+    }
+  });
+}
+
 function renderCustomerLevelBadge(summary = null) {
   const levelName = String(summary?.level?.name || "Noob").trim() || "Noob";
   const levelCode = String(summary?.level?.code || levelName).trim().toLowerCase();
@@ -5528,6 +5750,7 @@ function renderCustomerLevelBadge(summary = null) {
     link.setAttribute("aria-label", `Open your ${levelName} SarapMagBadge`);
     link.removeAttribute("aria-busy");
   });
+  renderCustomerLevelProgress(summary);
 }
 
 async function loadCustomerLevelBadge() {
@@ -6758,10 +6981,59 @@ async function submitPasswordReset(event) {
   }
 }
 
+function setLoginPasswordToggleState(button, passwordVisible) {
+  button.setAttribute("aria-pressed", String(passwordVisible));
+  button.setAttribute("aria-label", passwordVisible ? "Hide password" : "Show password");
+  button.title = passwordVisible ? "Hide password" : "Show password";
+  button.innerHTML = passwordVisible
+    ? `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 3l18 18"></path>
+        <path d="M10.6 10.7a2 2 0 0 0 2.7 2.7"></path>
+        <path d="M9.9 4.2A10.6 10.6 0 0 1 12 4c5.2 0 9 4.6 9 8a8.8 8.8 0 0 1-1.8 3.8"></path>
+        <path d="M6.6 6.6C4.3 8 3 10.2 3 12c0 3.4 3.8 8 9 8 1.6 0 3-.4 4.3-1.1"></path>
+      </svg>
+    `
+    : `
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3 12s3.8-8 9-8 9 8 9 8-3.8 8-9 8-9-8-9-8z"></path>
+        <circle cx="12" cy="12" r="2.6"></circle>
+      </svg>
+    `;
+}
+
+function ensureLoginPasswordToggles() {
+  document.querySelectorAll("[data-community-login-form], [data-customer-login-form]").forEach((form) => {
+    const input = form.querySelector('input[type="password"][name="password"]');
+    if (!(input instanceof HTMLInputElement) || input.closest(".login-password-control")) {
+      return;
+    }
+
+    const control = document.createElement("span");
+    control.className = "login-password-control";
+    input.insertAdjacentElement("beforebegin", control);
+    control.append(input);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "login-password-toggle";
+    toggle.dataset.loginPasswordToggle = "";
+    setLoginPasswordToggleState(toggle, false);
+    toggle.addEventListener("click", () => {
+      const passwordVisible = input.type === "password";
+      input.type = passwordVisible ? "text" : "password";
+      setLoginPasswordToggleState(toggle, passwordVisible);
+      input.focus({ preventScroll: true });
+    });
+    control.append(toggle);
+  });
+}
+
 function bindCustomerAccountUi() {
   addStaySignedInControls();
   ensureAccountRecoveryUi();
   ensureCustomerWelcomeModal();
+  ensureLoginPasswordToggles();
   document.querySelectorAll("[data-customer-login-form], [data-community-login-form]").forEach((form) => {
     if (!form.elements?.username || form.dataset.customerLoginBound === "true") {
       return;
@@ -7465,8 +7737,11 @@ function ensureCartButton() {
   const desktopActions = document.querySelector(".topbar-options");
   if (desktopActions && !desktopActions.querySelector(".site-cart-button-desktop")) {
     const button = createButton("site-cart-button-desktop");
+    const searchAction = desktopActions.querySelector(".site-search-button-desktop");
     const guestActions = desktopActions.querySelector("[data-customer-login-form]");
-    if (guestActions) {
+    if (searchAction) {
+      searchAction.insertAdjacentElement("afterend", button);
+    } else if (guestActions) {
       guestActions.insertAdjacentElement("afterend", button);
     } else {
       desktopActions.append(button);
@@ -8252,9 +8527,11 @@ async function startCatalog() {
   ensureConsistentSiteHeader();
   renderCategoryNav();
   setupMobileNavigationBelt();
+  initializeStoryUpdateBadge();
   removeLegacyHeaderTools();
   ensureStandardCustomerHeaderActions();
   ensureStandardMobileHeaderActions();
+  ensureStandardProductSearchActions();
   ensureCustomerLoginPrompt();
   initializeNotifications();
   initializeCartUi();
@@ -8309,7 +8586,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260730-profile-quick-images-v4')
+    navigator.serviceWorker.register('./sw.js?v=20260802-uniform-actions-v2')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

@@ -294,6 +294,49 @@
   font: inherit;
 }
 
+.login-password-control {
+  position: relative;
+  display: block;
+}
+
+.community-login-form .login-password-control input {
+  padding-right: 44px;
+}
+
+.community-login-form .login-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 1px;
+  width: 40px;
+  min-height: 36px;
+  padding: 0;
+  color: #4b4b4b;
+  border: 0;
+  background: transparent;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.community-login-form .login-password-toggle:hover,
+.community-login-form .login-password-toggle:focus-visible {
+  color: var(--red);
+  background: #f3f3f3;
+  outline: 2px solid var(--red);
+  outline-offset: -2px;
+}
+
+.community-login-form .login-password-toggle svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .community-login-form .stay-signed-in-control {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
@@ -1784,4 +1827,3 @@
   color: #156b2f;
   font-weight: 800;
 }
-

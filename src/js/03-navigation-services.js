@@ -13,6 +13,12 @@ function ensureStandardMobileHeaderActions() {
   actions.className = "mobile-header-actions";
   actions.setAttribute("aria-label", "Mobile quick actions");
   actions.innerHTML = `
+    <button class="mobile-header-search" type="button" data-product-search-open aria-label="Search products" title="Search products">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+    </button>
     <button class="mobile-header-account" type="button" data-mobile-header-login aria-label="Log in or create an account" title="Account">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="8" r="4"></circle>
@@ -36,6 +42,35 @@ function ensureStandardMobileHeaderActions() {
       </div>
     </div>
   `;
+}
+
+function ensureStandardProductSearchActions() {
+  const desktopActions = document.querySelector(".topbar-options");
+  if (!desktopActions || desktopActions.querySelector(".site-search-button-desktop")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "site-search-button site-search-button-desktop";
+  button.dataset.productSearchOpen = "";
+  button.setAttribute("aria-label", "Search products");
+  button.title = "Search products";
+  button.innerHTML = `
+    <span aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <circle cx="11" cy="11" r="6"></circle>
+        <path d="m16 16 4 4"></path>
+      </svg>
+    </span>
+  `;
+
+  const session = desktopActions.querySelector("[data-customer-session]");
+  if (session) {
+    session.insertAdjacentElement("afterend", button);
+  } else {
+    desktopActions.append(button);
+  }
 }
 
 function ensureConsistentSiteHeader() {
@@ -348,6 +383,137 @@ function setupMobileNavigationBelt() {
     window.addEventListener("resize", centerBelt);
   });
   setMobileNavActive(getDefaultMobileNavKey());
+}
+
+const STORY_UPDATE_STORAGE_KEY = "smbweb2.story-updates.v1";
+const STORY_UPDATE_POLL_INTERVAL_MS = 5 * 60 * 1000;
+const STORY_UPDATE_PAGE_SIZE = 100;
+const STORY_UPDATE_MAX_PAGES = 10;
+
+function getStoryUpdateLinks() {
+  return Array.from(document.querySelectorAll(
+    '[data-mobile-nav="stories"], [data-category-nav-list] a[href="stories.html"]'
+  ));
+}
+
+function ensureStoryUpdateBadges() {
+  getStoryUpdateLinks().forEach((link) => {
+    link.classList.add("story-updates-link");
+    if (link.querySelector("[data-story-update-badge]")) return;
+    const badge = document.createElement("b");
+    badge.dataset.storyUpdateBadge = "";
+    badge.hidden = true;
+    badge.textContent = "0";
+    link.append(badge);
+  });
+}
+
+function renderStoryUpdateCount(count) {
+  ensureStoryUpdateBadges();
+  const safeCount = Math.max(0, Number.parseInt(count, 10) || 0);
+  getStoryUpdateLinks().forEach((link) => {
+    const badge = link.querySelector("[data-story-update-badge]");
+    if (!badge) return;
+    badge.hidden = safeCount === 0;
+    badge.textContent = safeCount > 99 ? "99+" : String(safeCount);
+    link.setAttribute(
+      "aria-label",
+      safeCount
+        ? `Stories, ${safeCount} new or updated ${safeCount === 1 ? "post" : "posts"}`
+        : "Stories"
+    );
+  });
+}
+
+function readSeenStorySnapshot() {
+  try {
+    const value = JSON.parse(window.localStorage.getItem(STORY_UPDATE_STORAGE_KEY) || "null");
+    return value && typeof value === "object" && value.posts && typeof value.posts === "object"
+      ? value.posts
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSeenStorySnapshot(posts) {
+  try {
+    window.localStorage.setItem(STORY_UPDATE_STORAGE_KEY, JSON.stringify({
+      posts,
+      acknowledgedAt: new Date().toISOString()
+    }));
+  } catch {
+    // The indicator remains useful for this page even when storage is unavailable.
+  }
+}
+
+function getStoryUpdateApiRoot() {
+  const wordpressUrl = String(
+    window.SMBWEB_WORDPRESS_URL || "https://stories-cms.sarapmagbike.com"
+  ).replace(/\/$/, "");
+  return wordpressUrl ? `${wordpressUrl}/wp-json/wp/v2` : "";
+}
+
+async function fetchPublishedStorySnapshot() {
+  const apiRoot = getStoryUpdateApiRoot();
+  if (!apiRoot) throw new Error("WordPress Stories is not configured.");
+
+  const snapshot = {};
+  for (let page = 1; page <= STORY_UPDATE_MAX_PAGES; page += 1) {
+    const fields = "id,modified_gmt,modified,date_gmt,date";
+    const response = await fetch(
+      `${apiRoot}/posts?status=publish&per_page=${STORY_UPDATE_PAGE_SIZE}&page=${page}&orderby=modified&order=desc&_fields=${fields}`,
+      { credentials: "omit", cache: "no-store", headers: { Accept: "application/json" } }
+    );
+    if (!response.ok) {
+      if (response.status === 400 && page > 1) break;
+      throw new Error(`Unable to check Stories updates (${response.status}).`);
+    }
+    const posts = await response.json();
+    if (!Array.isArray(posts)) throw new Error("Unexpected Stories response.");
+    posts.forEach((post) => {
+      if (!post?.id) return;
+      snapshot[String(post.id)] = post.modified_gmt || post.modified || post.date_gmt || post.date || "";
+    });
+    if (posts.length < STORY_UPDATE_PAGE_SIZE) break;
+  }
+  return snapshot;
+}
+
+async function refreshStoryUpdateBadge() {
+  try {
+    const currentSnapshot = await fetchPublishedStorySnapshot();
+    const seenSnapshot = readSeenStorySnapshot();
+    const isStoriesIndex = window.location.pathname.endsWith("/stories.html");
+
+    if (!seenSnapshot || isStoriesIndex) {
+      saveSeenStorySnapshot(currentSnapshot);
+      renderStoryUpdateCount(0);
+      return;
+    }
+
+    const updateCount = Object.entries(currentSnapshot).reduce(
+      (count, [postId, modifiedAt]) => count + (seenSnapshot[postId] !== modifiedAt ? 1 : 0),
+      0
+    );
+    renderStoryUpdateCount(updateCount);
+  } catch {
+    renderStoryUpdateCount(0);
+  }
+}
+
+function initializeStoryUpdateBadge() {
+  ensureStoryUpdateBadges();
+  refreshStoryUpdateBadge();
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") refreshStoryUpdateBadge();
+  }, STORY_UPDATE_POLL_INTERVAL_MS);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") refreshStoryUpdateBadge();
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === STORY_UPDATE_STORAGE_KEY) refreshStoryUpdateBadge();
+  });
 }
 
 function setCatalogMode(isCatalogMode) {

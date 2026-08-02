@@ -506,8 +506,11 @@ function ensureCartButton() {
   const desktopActions = document.querySelector(".topbar-options");
   if (desktopActions && !desktopActions.querySelector(".site-cart-button-desktop")) {
     const button = createButton("site-cart-button-desktop");
+    const searchAction = desktopActions.querySelector(".site-search-button-desktop");
     const guestActions = desktopActions.querySelector("[data-customer-login-form]");
-    if (guestActions) {
+    if (searchAction) {
+      searchAction.insertAdjacentElement("afterend", button);
+    } else if (guestActions) {
       guestActions.insertAdjacentElement("afterend", button);
     } else {
       desktopActions.append(button);

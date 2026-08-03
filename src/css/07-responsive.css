@@ -979,7 +979,7 @@
     min-height: 96px;
     padding: 46px 8px 8px;
     border-radius: 8px;
-    background-size: auto, 230% 230%;
+    background-size: auto, cover;
   }
 
   .feature-card h2 {

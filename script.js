@@ -9113,7 +9113,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260803-home-leaderboard-carousel')
+    navigator.serviceWorker.register('./sw.js?v=20260803-bright-category-images')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

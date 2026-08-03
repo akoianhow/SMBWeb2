@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v33-home-leaderboard-carousel';
+const STATIC_CACHE = 'smbweb2-static-v34-bright-category-images';
 const CATALOG_CACHE = 'smbweb2-catalog-v1';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
@@ -37,6 +37,12 @@ const ASSETS_TO_CACHE = [
   './manifest.json',
   './assets/sarapmagbike-logo.png',
   './assets/gcash-mark.svg',
+  './assets/category-bike-frames.jpg',
+  './assets/category-parts-components.jpg',
+  './assets/category-cycling-clothing.jpg',
+  './assets/category-helmets-sunglasses.jpg',
+  './assets/category-tires-tubes.jpg',
+  './assets/category-services.jpg',
   './assets/sarapmagbadge-noob.png',
   './assets/sarapmagbadge-saks.png',
   './assets/sarapmagbadge-mamaw.png',

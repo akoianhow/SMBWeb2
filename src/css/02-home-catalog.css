@@ -488,16 +488,18 @@
 }
 
 .feature-card {
+  --feature-card-image: url("assets/category-bike-frames.jpg");
   cursor: pointer;
   min-height: 248px;
   padding: 86px 15px 15px;
   color: var(--white);
-  background-color: #222222;
+  background-color: #edf3ef;
   background-image:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.8) 55%),
-    url("assets/product-bikes.png");
+    linear-gradient(180deg, rgba(10, 20, 18, 0.02) 22%, rgba(10, 20, 18, 0.72) 100%),
+    var(--feature-card-image);
   background-repeat: no-repeat;
-  background-size: auto, 200% 200%;
+  background-position: center, center;
+  background-size: auto, cover;
 }
 
 .feature-card:hover,
@@ -510,6 +512,7 @@
   margin-bottom: 8px;
   font-size: 31px;
   line-height: 0.85;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.44);
   text-transform: uppercase;
 }
 
@@ -520,8 +523,9 @@
 
 .feature-card p {
   min-height: 54px;
-  color: #d6d6d6;
+  color: #f5f7f6;
   font-size: 11px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.72);
 }
 
 .feature-card a,
@@ -550,27 +554,33 @@
 }
 
 .feature-bike {
-  background-position: right top;
+  --feature-card-image: url("assets/category-bike-frames.jpg");
+  background-position: center, center;
 }
 
 .feature-parts {
-  background-position: left top;
+  --feature-card-image: url("assets/category-parts-components.jpg");
+  background-position: center, right center;
 }
 
 .feature-clothing {
-  background-position: left bottom;
+  --feature-card-image: url("assets/category-cycling-clothing.jpg");
+  background-position: center, right center;
 }
 
 .feature-helmets {
-  background-position: right bottom;
+  --feature-card-image: url("assets/category-helmets-sunglasses.jpg");
+  background-position: center, right center;
 }
 
 .feature-tires {
-  background-position: center top;
+  --feature-card-image: url("assets/category-tires-tubes.jpg");
+  background-position: center, right center;
 }
 
 .feature-services {
-  background-position: center bottom;
+  --feature-card-image: url("assets/category-services.jpg");
+  background-position: center, right center;
 }
 
 @keyframes feature-tile-belt {

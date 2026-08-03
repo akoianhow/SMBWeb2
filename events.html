@@ -18,7 +18,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260803-past-events">
+    <link rel="stylesheet" href="styles.css?v=20260803-event-shirt-orders">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -271,6 +271,28 @@
             </label>
             <label>Emergency contact<input name="emergencyContactName" required></label>
             <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel" required></label>
+            <section class="event-shirt-order span-2" data-event-shirt-order hidden>
+              <div class="event-shirt-summary">
+                <button type="button" class="event-shirt-thumbnail" data-event-shirt-image-open aria-label="View larger event shirt image">
+                  <img alt="Event shirt" data-event-shirt-thumbnail hidden>
+                  <span data-event-shirt-image-placeholder>Shirt</span>
+                </button>
+                <div>
+                  <span>Optional event shirt</span>
+                  <strong data-event-shirt-price>PHP 0.00</strong>
+                  <small data-event-shirt-cutoff></small>
+                  <button type="button" class="event-shirt-view-link" data-event-shirt-image-open>View Larger</button>
+                </div>
+              </div>
+              <label class="event-shirt-avail"><input name="availEventShirt" type="checkbox" data-event-shirt-avail> Avail Event Shirt</label>
+              <div class="event-shirt-fields" data-event-shirt-fields hidden>
+                <label>Size<select name="eventShirtSize" data-event-shirt-size></select></label>
+                <label>Color<select name="eventShirtColor" data-event-shirt-color></select></label>
+                <div class="event-payment-fee"><span>Shirt price</span><strong data-event-shirt-payment-price>PHP 0.00</strong></div>
+                <label data-event-shirt-reference-field>Payment reference<input name="eventShirtPaymentReference" maxlength="160"></label>
+                <label class="span-2" data-event-shirt-proof-field>Proof of shirt payment<input name="eventShirtPaymentProof" type="file" accept="image/jpeg,image/png,image/webp"></label>
+              </div>
+            </section>
             <div class="event-payment-fields span-2" data-event-payment-fields hidden>
               <div class="event-payment-fee">
                 <span>Registration fee</span>
@@ -294,6 +316,16 @@
           </div>
           <p class="event-registration-message" data-event-registration-message role="status"></p>
         </form>
+      </div>
+    </div>
+
+    <div class="event-registration-modal event-shirt-image-modal" data-event-shirt-image-modal hidden>
+      <div role="dialog" aria-modal="true" aria-labelledby="event-shirt-image-title">
+        <div class="event-modal-header">
+          <div><p>Event shirt</p><h2 id="event-shirt-image-title">Event Shirt Preview</h2></div>
+          <button type="button" data-event-shirt-image-close>Close</button>
+        </div>
+        <div class="event-shirt-gallery" data-event-shirt-gallery></div>
       </div>
     </div>
 
@@ -395,6 +427,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260803-past-events"></script>
+    <script src="script.js?v=20260803-event-shirt-orders"></script>
   </body>
 </html>

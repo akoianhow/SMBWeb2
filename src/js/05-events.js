@@ -87,6 +87,19 @@ function getEventPosterUrl(eventItem) {
   return parsed.toString();
 }
 
+function getEventShirtImageUrl(image) {
+  const url = normalizeApiUrl(image?.imageUrl || "");
+  if (!url) return "";
+  const parsed = new URL(url, window.location.origin);
+  parsed.searchParams.set("location", getSelectedPublicLocationSlug());
+  return parsed.toString();
+}
+
+function isEventShirtOrderOpen(eventItem) {
+  if (!eventItem?.hasEventShirt || !isEventRegistrationOpen(eventItem)) return false;
+  return !eventItem.eventShirtOrderClosesAt || new Date(eventItem.eventShirtOrderClosesAt).getTime() >= Date.now();
+}
+
 function getEventRegisteredCount(eventItem) {
   return Number(eventItem?.registeredCount ?? eventItem?.participantCount ?? eventItem?.participants?.filter((participant) => participant.status !== "cancelled").length ?? 0);
 }
@@ -713,6 +726,15 @@ function renderEventActionPanel(eventItem) {
       withdraw.addEventListener("click", () => withdrawEventRegistration(eventItem.id));
       registrationControls.append(withdraw);
     }
+    const shirtPaymentStatus = String(currentRegistration.eventShirtPaymentStatus || "not_required").toLowerCase();
+    if (!isCheckedIn && isEventShirtOrderOpen(eventItem) && !["pending_review", "paid", "waived"].includes(shirtPaymentStatus)) {
+      const shirtAction = document.createElement("button");
+      shirtAction.type = "button";
+      shirtAction.className = "event-shirt-order-action";
+      shirtAction.textContent = currentRegistration.hasEventShirtOrder ? "UPDATE EVENT SHIRT" : "ADD EVENT SHIRT";
+      shirtAction.addEventListener("click", openEventRegistrationModal);
+      registrationControls.append(shirtAction);
+    }
     if (registrationControls.children.length > 0) {
       panel.append(registrationControls);
     }
@@ -746,6 +768,11 @@ function getEventRegistrationStatusLabel(registration, eventItem) {
       return "REJECTED";
     }
     return "AWAITING CONFIRMATION";
+  }
+  if (registration?.hasEventShirtOrder) {
+    rows.push(["Event shirt", `${registration.eventShirtSize || "—"} · ${registration.eventShirtColor || "—"}`]);
+    rows.push(["Shirt payment", String(registration.eventShirtPaymentStatus || "not_required").replace(/_/g, " ")]);
+    rows.push(["Shirt status", String(registration.eventShirtFulfillmentStatus || "reserved").replace(/_/g, " ")]);
   }
 
   return registration?.status === "waitlisted" ? "Waitlisted" : "Registered";
@@ -787,12 +814,13 @@ function openEventRegistrationModal() {
   const paymentFields = document.querySelector("[data-event-payment-fields]");
   const waiver = document.querySelector("[data-event-waiver]");
   const feeLabel = document.querySelector("[data-event-registration-fee]");
+  const currentRegistration = getEventCurrentRegistration(eventItem);
   if (!eventItem || !modal || !form) {
     return;
   }
 
   if (title) {
-    title.textContent = `Register for ${eventItem.title || "event"}`;
+    title.textContent = currentRegistration ? `Update event shirt for ${eventItem.title || "event"}` : `Register for ${eventItem.title || "event"}`;
   }
   setMessage(message, "");
   form.elements.participantName.value = customerState.profile?.username || customerState.account?.username || "";
@@ -804,15 +832,17 @@ function openEventRegistrationModal() {
     form.elements.paymentProof.value = "";
   }
   form.elements.notes.value = "";
+  configureEventShirtOrderForm(eventItem, form, currentRegistration);
   const isRide = eventItem.eventType === "ride";
-  form.elements.waiverAccepted.checked = false;
+  form.elements.waiverAccepted.checked = Boolean(currentRegistration && isRide);
   form.elements.waiverAccepted.required = isRide;
   if (waiver) {
     waiver.hidden = !isRide;
   }
   const submit = document.querySelector("[data-event-registration-submit]");
   if (submit) {
-    submit.disabled = isRide;
+    submit.disabled = isRide && !form.elements.waiverAccepted.checked;
+    submit.textContent = currentRegistration ? "Save Event Shirt" : "Confirm Registration";
   }
   if (paymentFields) {
     paymentFields.hidden = !eventItem.isPaid;
@@ -822,6 +852,75 @@ function openEventRegistrationModal() {
   }
   modal.hidden = false;
   form.elements.bikeType.focus();
+}
+
+function configureEventShirtOrderForm(eventItem, form, currentRegistration) {
+  const order = document.querySelector("[data-event-shirt-order]");
+  const fields = document.querySelector("[data-event-shirt-fields]");
+  const thumbnail = document.querySelector("[data-event-shirt-thumbnail]");
+  const placeholder = document.querySelector("[data-event-shirt-image-placeholder]");
+  const priceText = document.querySelector("[data-event-shirt-price]");
+  const paymentPrice = document.querySelector("[data-event-shirt-payment-price]");
+  const cutoff = document.querySelector("[data-event-shirt-cutoff]");
+  const available = Boolean(eventItem?.hasEventShirt && isEventShirtOrderOpen(eventItem));
+  if (!order) return;
+  order.hidden = !available;
+  const price = Number(eventItem?.eventShirtPrice || 0);
+  const firstImageUrl = getEventShirtImageUrl(eventItem?.eventShirtImages?.[0]);
+  if (thumbnail) {
+    thumbnail.src = firstImageUrl;
+    thumbnail.hidden = !firstImageUrl;
+  }
+  if (placeholder) placeholder.hidden = Boolean(firstImageUrl);
+  if (priceText) priceText.textContent = price > 0 ? pesoFormatter.format(price) : "Free";
+  if (paymentPrice) paymentPrice.textContent = price > 0 ? pesoFormatter.format(price) : "Free";
+  if (cutoff) cutoff.textContent = eventItem?.eventShirtOrderClosesAt ? `Order by ${formatEventDateTime(eventItem.eventShirtOrderClosesAt)}` : "Available while registration is open";
+  const fillSelect = (select, values, selected, placeholderText) => {
+    if (!select) return;
+    select.replaceChildren(new Option(placeholderText, ""), ...(values || []).map((value) => new Option(value, value)));
+    select.value = selected || "";
+  };
+  fillSelect(form.elements.eventShirtSize, eventItem?.eventShirtSizes, currentRegistration?.eventShirtSize, "Select size");
+  fillSelect(form.elements.eventShirtColor, eventItem?.eventShirtColors, currentRegistration?.eventShirtColor, "Select color");
+  form.elements.availEventShirt.checked = Boolean(currentRegistration?.hasEventShirtOrder);
+  form.elements.eventShirtPaymentReference.value = "";
+  form.elements.eventShirtPaymentProof.value = "";
+  if (fields) fields.hidden = !form.elements.availEventShirt.checked;
+  updateEventShirtFieldRequirements(form, price);
+}
+
+function updateEventShirtFieldRequirements(form, price = Number(eventsState.activeEvent?.eventShirtPrice || 0)) {
+  const selected = form.elements.availEventShirt.checked;
+  const fields = document.querySelector("[data-event-shirt-fields]");
+  const referenceField = document.querySelector("[data-event-shirt-reference-field]");
+  const proofField = document.querySelector("[data-event-shirt-proof-field]");
+  if (fields) fields.hidden = !selected;
+  form.elements.eventShirtSize.required = selected;
+  form.elements.eventShirtColor.required = selected;
+  form.elements.eventShirtPaymentReference.required = selected && price > 0;
+  form.elements.eventShirtPaymentProof.required = selected && price > 0;
+  if (referenceField) referenceField.hidden = !selected || price <= 0;
+  if (proofField) proofField.hidden = !selected || price <= 0;
+}
+
+function openEventShirtImageModal() {
+  const modal = document.querySelector("[data-event-shirt-image-modal]");
+  const gallery = document.querySelector("[data-event-shirt-gallery]");
+  const images = eventsState.activeEvent?.eventShirtImages || [];
+  if (!modal || !gallery || images.length === 0) return;
+  gallery.replaceChildren(...images.map((image, index) => {
+    const figure = document.createElement("figure");
+    const element = document.createElement("img");
+    element.src = getEventShirtImageUrl(image);
+    element.alt = `${eventsState.activeEvent?.title || "Event"} shirt image ${index + 1}`;
+    figure.append(element);
+    return figure;
+  }));
+  modal.hidden = false;
+}
+
+function closeEventShirtImageModal() {
+  document.querySelector("[data-event-shirt-image-modal]")?.setAttribute("hidden", "");
 }
 
 function closeEventRegistrationModal() {
@@ -953,13 +1052,23 @@ async function buildEventRegistrationPayload(form) {
     emergencyContactPhone: form.elements.emergencyContactPhone.value.trim() || null,
     bikeType: form.elements.bikeType.value.trim() || null,
     notes: form.elements.notes.value.trim() || null,
-    waiverAccepted: eventsState.activeEvent?.eventType !== "ride" || form.elements.waiverAccepted.checked
+    waiverAccepted: eventsState.activeEvent?.eventType !== "ride" || form.elements.waiverAccepted.checked,
+    availEventShirt: Boolean(form.elements.availEventShirt?.checked),
+    eventShirtSize: form.elements.availEventShirt?.checked ? form.elements.eventShirtSize.value : null,
+    eventShirtColor: form.elements.availEventShirt?.checked ? form.elements.eventShirtColor.value : null,
+    eventShirtPaymentReference: form.elements.availEventShirt?.checked ? form.elements.eventShirtPaymentReference.value.trim() || null : null
   };
 
   if (paymentProof) {
     payload.paymentProofBase64 = await readFileAsBase64(paymentProof);
     payload.paymentProofFileName = paymentProof.name;
     payload.paymentProofContentType = paymentProof.type;
+  }
+  const shirtProof = form.elements.eventShirtPaymentProof?.files?.[0] || null;
+  if (shirtProof) {
+    payload.eventShirtPaymentProofBase64 = await readFileAsBase64(shirtProof);
+    payload.eventShirtPaymentProofFileName = shirtProof.name;
+    payload.eventShirtPaymentProofContentType = shirtProof.type;
   }
 
   return payload;
@@ -979,6 +1088,22 @@ async function submitEventRegistration(event) {
   if (!form.elements.emergencyContactName.value.trim() || !form.elements.emergencyContactPhone.value.trim()) {
     setMessage(message, "Enter an emergency contact name and phone number.", "error");
     return;
+  }
+  if (form.elements.availEventShirt?.checked) {
+    const price = Number(eventsState.activeEvent.eventShirtPrice || 0);
+    const proof = form.elements.eventShirtPaymentProof.files?.[0] || null;
+    if (!form.elements.eventShirtSize.value || !form.elements.eventShirtColor.value) {
+      setMessage(message, "Select an event shirt size and color.", "error");
+      return;
+    }
+    if (price > 0 && (!form.elements.eventShirtPaymentReference.value.trim() || !proof)) {
+      setMessage(message, "Enter the shirt payment reference and upload proof of payment.", "error");
+      return;
+    }
+    if (proof && (!["image/jpeg", "image/png", "image/webp"].includes(proof.type) || proof.size > 5 * 1024 * 1024)) {
+      setMessage(message, "Shirt payment proof must be a JPG, PNG, or WebP image up to 5 MB.", "error");
+      return;
+    }
   }
 
   setMessage(message, "Saving registration...");
@@ -1022,6 +1147,12 @@ function bindEventsUi() {
     if (submit) {
       submit.disabled = !event.currentTarget.checked;
     }
+  });
+  document.querySelector("[data-event-shirt-avail]")?.addEventListener("change", (event) => updateEventShirtFieldRequirements(event.currentTarget.form));
+  document.querySelectorAll("[data-event-shirt-image-open]").forEach((button) => button.addEventListener("click", openEventShirtImageModal));
+  document.querySelector("[data-event-shirt-image-close]")?.addEventListener("click", closeEventShirtImageModal);
+  document.querySelector("[data-event-shirt-image-modal]")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closeEventShirtImageModal();
   });
   document.querySelector("[data-event-registration-close]")?.addEventListener("click", closeEventRegistrationModal);
   document.querySelector("[data-event-registration-cancel]")?.addEventListener("click", closeEventRegistrationModal);

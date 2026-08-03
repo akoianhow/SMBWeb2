@@ -18,7 +18,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260803-event-shirt-orders">
+    <link rel="stylesheet" href="styles.css?v=20260803-attendance-code-modal">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -269,8 +269,10 @@
                 <option value="Others">Others</option>
               </select>
             </label>
-            <label>Emergency contact<input name="emergencyContactName" required></label>
-            <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel" required></label>
+            <div class="event-emergency-row span-2">
+              <label>Emergency contact<input name="emergencyContactName" required></label>
+              <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel" required></label>
+            </div>
             <section class="event-shirt-order span-2" data-event-shirt-order hidden>
               <div class="event-shirt-summary">
                 <button type="button" class="event-shirt-thumbnail" data-event-shirt-image-open aria-label="View larger event shirt image">
@@ -284,13 +286,31 @@
                   <button type="button" class="event-shirt-view-link" data-event-shirt-image-open>View Larger</button>
                 </div>
               </div>
-              <label class="event-shirt-avail"><input name="availEventShirt" type="checkbox" data-event-shirt-avail> Avail Event Shirt</label>
+              <div class="event-shirt-avail">
+                <label><input name="availEventShirt" type="checkbox" data-event-shirt-avail> Avail Event Shirt</label>
+                <span class="event-shirt-payment-account">
+                  <img src="assets/gcash-mark.svg" alt="GCash">
+                  <span>Send to 0966.975.2679 (C****N P**O)</span>
+                </span>
+              </div>
               <div class="event-shirt-fields" data-event-shirt-fields hidden>
-                <label>Size<select name="eventShirtSize" data-event-shirt-size></select></label>
-                <label>Color<select name="eventShirtColor" data-event-shirt-color></select></label>
-                <div class="event-payment-fee"><span>Shirt price</span><strong data-event-shirt-payment-price>PHP 0.00</strong></div>
+                <div class="event-shirt-option-row span-2">
+                  <label>Size<select name="eventShirtSize" data-event-shirt-size></select></label>
+                  <label>Color<select name="eventShirtColor" data-event-shirt-color></select></label>
+                  <div class="event-payment-fee"><span>Shirt price</span><strong data-event-shirt-payment-price>PHP 0.00</strong></div>
+                </div>
                 <label data-event-shirt-reference-field>Payment reference<input name="eventShirtPaymentReference" maxlength="160"></label>
-                <label class="span-2" data-event-shirt-proof-field>Proof of shirt payment<input name="eventShirtPaymentProof" type="file" accept="image/jpeg,image/png,image/webp"></label>
+                <label class="span-2" data-event-shirt-proof-field>
+                  Proof of shirt payment
+                  <input name="eventShirtPaymentProof" type="file" accept="image/jpeg,image/png,image/webp">
+                  <span class="event-payment-proof-preview" data-event-shirt-proof-preview hidden>
+                    <img alt="Selected shirt payment proof" data-event-shirt-proof-preview-image>
+                    <span class="event-payment-proof-preview-copy">
+                      <span data-event-shirt-proof-preview-name></span>
+                      <small>Only confirmed shirt payment will be processed.</small>
+                    </span>
+                  </span>
+                </label>
               </div>
             </section>
             <div class="event-payment-fields span-2" data-event-payment-fields hidden>
@@ -339,11 +359,12 @@
           <button type="button" data-event-attendance-close>Close</button>
         </div>
         <form class="event-registration-form" data-event-attendance-form>
-          <label>
+          <label data-event-attendance-code-field>
             Attendance code
             <input name="attendanceCode" autocomplete="off" maxlength="40" placeholder="Enter code from the organizer" required>
           </label>
-          <p class="event-form-note">Enter the code provided by the event organizer. Your registration will be marked as checked in.</p>
+          <p class="event-form-note" data-event-attendance-instructions>Enter the code provided by the event organizer. Your registration will be marked as checked in.</p>
+          <p class="event-attendance-unavailable-note" data-event-attendance-unavailable hidden>Please wait for the event organizer to set the attendance confirmation code.</p>
           <div class="event-modal-actions">
             <button type="submit" data-event-attendance-submit>Confirm Attendance</button>
             <button type="button" data-event-attendance-cancel>Cancel</button>
@@ -427,6 +448,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260803-event-shirt-orders"></script>
+    <script src="script.js?v=20260803-attendance-code-modal"></script>
   </body>
 </html>

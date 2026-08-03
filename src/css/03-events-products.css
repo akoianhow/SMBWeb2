@@ -591,6 +591,12 @@
   grid-column: 1 / -1;
 }
 
+.event-emergency-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
 .event-payment-fields {
   display: grid;
   grid-template-columns: minmax(180px, 0.55fr) minmax(0, 1fr);
@@ -671,13 +677,20 @@
 }
 
 .event-shirt-avail {
-  display: flex !important;
-  grid-template-columns: none !important;
-  gap: 8px !important;
+  display: flex;
+  gap: 10px;
   align-items: center;
+  justify-content: space-between;
   padding: 10px;
   border: 1px solid #efb8bb;
   background: #ffffff;
+}
+
+.event-shirt-avail label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
 }
 
 .event-shirt-avail input {
@@ -686,10 +699,72 @@
   accent-color: var(--red);
 }
 
+.event-shirt-payment-account {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #444444;
+  font-size: 11px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.event-shirt-payment-account img {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+}
+
 .event-shirt-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.event-shirt-option-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.event-payment-proof-preview {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid #d8d8d8;
+  background: #f8f8f8;
+  color: #444444;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.event-payment-proof-preview[hidden] {
+  display: none;
+}
+
+.event-payment-proof-preview img {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 1px solid #cccccc;
+  background: #ffffff;
+}
+
+.event-payment-proof-preview-copy {
+  display: grid;
+  gap: 4px;
+}
+
+.event-payment-proof-preview-copy small {
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
 }
 
 .event-shirt-order-action {
@@ -744,6 +819,21 @@
 
 .event-registration-message.is-error {
   color: var(--red);
+}
+
+.event-attendance-unavailable-note {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid #efb8bb;
+  color: #9f1118;
+  background: #fff3f3;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.event-attendance-unavailable-note[hidden] {
+  display: none;
 }
 
 .event-waiver {
@@ -860,6 +950,123 @@
   text-align: left;
 }
 
+.event-registration-record .event-registration-shirt-note {
+  align-content: center;
+}
+
+.event-registration-record .event-registration-shirt-note dd {
+  color: var(--red);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.event-shirt-payment-chip {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.event-shirt-fulfillment-chip {
+  display: inline-flex;
+  width: max-content;
+  max-width: 100%;
+  gap: 4px;
+  align-items: center;
+  padding: 3px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.event-shirt-fulfillment-chip.is-reserved {
+  color: #5a4300;
+  background: #f3cd55;
+}
+
+.event-shirt-fulfillment-chip.is-ready {
+  color: #ffffff;
+  background: #1769aa;
+}
+
+.event-shirt-fulfillment-chip.is-released {
+  color: #ffffff;
+  background: #17823b;
+}
+
+.event-shirt-fulfillment-chip.is-cancelled {
+  color: #ffffff;
+  background: #c21d28;
+}
+
+.event-shirt-fulfillment-chip.is-pending {
+  color: #3f454b;
+  background: #d9dde1;
+}
+
+.event-shirt-payment-chip.is-paid {
+  color: #ffffff;
+  background: #17823b;
+}
+
+.event-shirt-payment-chip.is-rejected {
+  color: #ffffff;
+  background: #c21d28;
+}
+
+.event-shirt-payment-chip.is-pending {
+  color: #5a4300;
+  background: #f3cd55;
+}
+
+.event-shirt-payment-chip-icon {
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  color: currentColor;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.event-shirt-fulfillment-chip-icon {
+  display: grid;
+  width: 13px;
+  height: 13px;
+  place-items: center;
+  border-radius: 50%;
+  color: currentColor;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.event-shirt-declined-chip {
+  width: max-content;
+  min-height: 0;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #c21d28;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.event-shirt-declined-chip:hover,
+.event-shirt-declined-chip:focus-visible {
+  background: #99141d;
+}
+
 .event-registration-controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -944,12 +1151,39 @@
     grid-template-columns: 1fr;
   }
 
+  .event-shirt-payment-account {
+    max-width: 58%;
+    font-size: 9px;
+  }
+
+  .event-shirt-payment-account img {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
+  }
+
   .event-shirt-fields {
     grid-template-columns: 1fr;
   }
 
   .event-shirt-fields .span-2 {
     grid-column: auto;
+  }
+
+  .event-emergency-row,
+  .event-shirt-option-row {
+    gap: 6px;
+  }
+
+  .event-shirt-option-row label,
+  .event-shirt-option-row .event-payment-fee {
+    min-width: 0;
+  }
+
+  .event-shirt-option-row select,
+  .event-shirt-option-row .event-payment-fee {
+    padding-right: 6px;
+    padding-left: 6px;
   }
 
   .event-detail-main {

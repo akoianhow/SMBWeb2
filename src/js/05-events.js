@@ -77,6 +77,26 @@ function formatEventDateTime(value) {
   return `${formatEventDate(value)} | ${formatEventTime(value)}`;
 }
 
+function getPhilippineCalendarDateKey(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year || ""}${values.month || ""}${values.day || ""}`;
+}
+
+function hasEventDateStarted(eventItem) {
+  const eventDate = eventItem?.startsAt || eventItem?.assemblyAt;
+  const eventDateKey = getPhilippineCalendarDateKey(eventDate);
+  const todayKey = getPhilippineCalendarDateKey(new Date());
+  return Boolean(eventDateKey && todayKey && todayKey >= eventDateKey);
+}
+
 function getEventPosterUrl(eventItem) {
   const url = normalizeApiUrl(eventItem?.posterImageUrl || eventItem?.posterUrl || eventItem?.imageUrl || "");
   if (!url) {
@@ -96,8 +116,9 @@ function getEventShirtImageUrl(image) {
 }
 
 function isEventShirtOrderOpen(eventItem) {
-  if (!eventItem?.hasEventShirt || !isEventRegistrationOpen(eventItem)) return false;
-  return !eventItem.eventShirtOrderClosesAt || new Date(eventItem.eventShirtOrderClosesAt).getTime() >= Date.now();
+  if (!eventItem?.hasEventShirt || !["open", "published"].includes(eventItem.status)) return false;
+  const closesAt = eventItem.eventShirtOrderClosesAt || eventItem.registrationClosesAt;
+  return !closesAt || new Date(closesAt).getTime() >= Date.now();
 }
 
 function getEventRegisteredCount(eventItem) {
@@ -342,7 +363,12 @@ function isPastEvent(eventItem) {
   if (typeof eventItem?.isPast === "boolean") {
     return eventItem.isPast;
   }
-  return eventItem?.status === "completed" || getEventEffectiveTime(eventItem) < Date.now();
+  if (eventItem?.status === "completed") {
+    return true;
+  }
+  const eventDateKey = getPhilippineCalendarDateKey(eventItem?.endsAt || eventItem?.startsAt || eventItem?.assemblyAt);
+  const todayKey = getPhilippineCalendarDateKey(new Date());
+  return Boolean(eventDateKey && todayKey && eventDateKey < todayKey);
 }
 
 function getYouTubeVideoUrl(value) {
@@ -703,20 +729,21 @@ function renderEventActionPanel(eventItem) {
       waitlisted.textContent = "WAITLISTED";
       waitlisted.disabled = true;
       registrationControls.append(waitlisted);
-    } else {
+    } else if (hasEventDateStarted(eventItem)) {
       const confirmAttendance = document.createElement("button");
       confirmAttendance.type = "button";
       confirmAttendance.className = "event-confirm-attendance-action";
       confirmAttendance.textContent = "CONFIRM ATTENDANCE";
-      confirmAttendance.disabled = eventItem.attendanceConfirmationEnabled === false;
       if (eventItem.attendanceConfirmationEnabled === false) {
-        confirmAttendance.title = "The organizer has not enabled attendance confirmation yet.";
+        confirmAttendance.title = "Confirmation code is not yet set.";
       }
       confirmAttendance.addEventListener("click", openEventAttendanceModal);
       registrationControls.append(confirmAttendance);
       if (eventItem.attendanceConfirmationEnabled === false) {
         registrationHelp = createTextElement("p", "Attendance confirmation will open after the organizer sets the event code.", "event-muted");
       }
+    } else {
+      registrationHelp = createTextElement("p", "Attendance confirmation will be available on the event date.", "event-muted");
     }
     if (!isCheckedIn) {
       const withdraw = document.createElement("button");
@@ -727,11 +754,11 @@ function renderEventActionPanel(eventItem) {
       registrationControls.append(withdraw);
     }
     const shirtPaymentStatus = String(currentRegistration.eventShirtPaymentStatus || "not_required").toLowerCase();
-    if (!isCheckedIn && isEventShirtOrderOpen(eventItem) && !["pending_review", "paid", "waived"].includes(shirtPaymentStatus)) {
+    if (!isCheckedIn && currentRegistration.hasEventShirtOrder && isEventShirtOrderOpen(eventItem) && !["pending_review", "paid", "waived"].includes(shirtPaymentStatus)) {
       const shirtAction = document.createElement("button");
       shirtAction.type = "button";
       shirtAction.className = "event-shirt-order-action";
-      shirtAction.textContent = currentRegistration.hasEventShirtOrder ? "UPDATE EVENT SHIRT" : "ADD EVENT SHIRT";
+      shirtAction.textContent = "UPDATE EVENT SHIRT";
       shirtAction.addEventListener("click", openEventRegistrationModal);
       registrationControls.append(shirtAction);
     }
@@ -769,12 +796,6 @@ function getEventRegistrationStatusLabel(registration, eventItem) {
     }
     return "AWAITING CONFIRMATION";
   }
-  if (registration?.hasEventShirtOrder) {
-    rows.push(["Event shirt", `${registration.eventShirtSize || "—"} · ${registration.eventShirtColor || "—"}`]);
-    rows.push(["Shirt payment", String(registration.eventShirtPaymentStatus || "not_required").replace(/_/g, " ")]);
-    rows.push(["Shirt status", String(registration.eventShirtFulfillmentStatus || "reserved").replace(/_/g, " ")]);
-  }
-
   return registration?.status === "waitlisted" ? "Waitlisted" : "Registered";
 }
 
@@ -796,13 +817,83 @@ function renderEventRegistrationRecord(registration) {
     rows.push(["Fee", pesoFormatter.format(Number(eventItem.feeAmount || 0))]);
     rows.push(["Payment", String(registration.paymentStatus || "unpaid").replace(/_/g, " ")]);
   }
+  if (registration?.hasEventShirtOrder) {
+    rows.push(["Event shirt", `${registration.eventShirtSize || "—"} · ${registration.eventShirtColor || "—"}`]);
+    rows.push(["Shirt payment", String(registration.eventShirtPaymentStatus || "not_required").replace(/_/g, " ")]);
+    rows.push(["Fulfillment", String(registration.eventShirtFulfillmentStatus || "reserved").replace(/_/g, " ")]);
+  }
 
   rows.forEach(([label, value]) => {
     const row = document.createElement("div");
-    row.append(createTextElement("dt", label), createTextElement("dd", value));
+    const detail = document.createElement("dd");
+    if (label === "Shirt payment") {
+      detail.append(createEventShirtPaymentStatusChip(value));
+    } else if (label === "Fulfillment") {
+      detail.append(createEventShirtFulfillmentStatusChip(value));
+    } else {
+      detail.textContent = value;
+    }
+    row.append(createTextElement("dt", label), detail);
     record.append(row);
   });
+  if (eventItem?.hasEventShirt && !registration?.hasEventShirtOrder && isEventShirtOrderOpen(eventItem)) {
+    const row = document.createElement("div");
+    const detail = document.createElement("dd");
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "event-shirt-declined-chip";
+    action.textContent = "EVENT SHIRT: NO";
+    action.addEventListener("click", openEventRegistrationModal);
+    detail.append(action);
+    row.append(createTextElement("dt", "Event shirt", "sr-only"), detail);
+    record.append(row);
+  }
+  if (registration?.hasEventShirtOrder) {
+    const note = document.createElement("div");
+    note.className = "event-registration-shirt-note";
+    note.append(
+      createTextElement("dt", "Shirt payment notice", "sr-only"),
+      createTextElement("dd", "Only confirmed shirt payment will be processed.")
+    );
+    record.append(note);
+  }
   return record;
+}
+
+function createEventShirtPaymentStatusChip(status) {
+  const normalized = String(status || "not required").trim().toLowerCase().replace(/_/g, " ");
+  const chip = document.createElement("span");
+  const isPaid = normalized === "paid";
+  const isRejected = normalized === "rejected";
+  chip.className = `event-shirt-payment-chip ${isPaid ? "is-paid" : isRejected ? "is-rejected" : "is-pending"}`;
+  if (isPaid || isRejected) {
+    const icon = document.createElement("span");
+    icon.className = "event-shirt-payment-chip-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = isPaid ? "✓" : "×";
+    chip.append(icon);
+  }
+  chip.append(createTextElement("span", isPaid ? "Paid" : isRejected ? "Rejected" : normalized.replace(/\b\w/g, (letter) => letter.toUpperCase())));
+  return chip;
+}
+
+function createEventShirtFulfillmentStatusChip(status) {
+  const normalized = String(status || "reserved").trim().toLowerCase().replace(/_/g, " ");
+  const allowedStatuses = new Set(["reserved", "ready", "released", "cancelled"]);
+  const state = allowedStatuses.has(normalized) ? normalized : "pending";
+  const chip = document.createElement("span");
+  chip.className = `event-shirt-fulfillment-chip is-${state}`;
+
+  if (state === "ready" || state === "released" || state === "cancelled") {
+    const icon = document.createElement("span");
+    icon.className = "event-shirt-fulfillment-chip-icon";
+    icon.setAttribute("aria-hidden", "true");
+    icon.textContent = state === "cancelled" ? "×" : "✓";
+    chip.append(icon);
+  }
+
+  chip.append(createTextElement("span", normalized.replace(/\b\w/g, (letter) => letter.toUpperCase())));
+  return chip;
 }
 
 function openEventRegistrationModal() {
@@ -885,8 +976,33 @@ function configureEventShirtOrderForm(eventItem, form, currentRegistration) {
   form.elements.availEventShirt.checked = Boolean(currentRegistration?.hasEventShirtOrder);
   form.elements.eventShirtPaymentReference.value = "";
   form.elements.eventShirtPaymentProof.value = "";
+  updateEventShirtPaymentProofPreview(form.elements.eventShirtPaymentProof);
   if (fields) fields.hidden = !form.elements.availEventShirt.checked;
   updateEventShirtFieldRequirements(form, price);
+}
+
+function updateEventShirtPaymentProofPreview(input) {
+  const preview = document.querySelector("[data-event-shirt-proof-preview]");
+  const image = document.querySelector("[data-event-shirt-proof-preview-image]");
+  const name = document.querySelector("[data-event-shirt-proof-preview-name]");
+  const file = input?.files?.[0] || null;
+  const isValid = Boolean(file
+    && ["image/jpeg", "image/png", "image/webp"].includes(file.type)
+    && file.size <= 5 * 1024 * 1024);
+  if (!preview || !image || !name) return;
+  preview.hidden = true;
+  image.removeAttribute("src");
+  name.textContent = "";
+  if (!isValid) return;
+
+  const reader = new FileReader();
+  reader.addEventListener("load", () => {
+    if (input.files?.[0] !== file) return;
+    image.src = String(reader.result || "");
+    name.textContent = file.name;
+    preview.hidden = false;
+  });
+  reader.readAsDataURL(file);
 }
 
 function updateEventShirtFieldRequirements(form, price = Number(eventsState.activeEvent?.eventShirtPrice || 0)) {
@@ -933,14 +1049,27 @@ function openEventAttendanceModal() {
   const form = document.querySelector("[data-event-attendance-form]");
   const title = document.querySelector("#event-attendance-title");
   const message = document.querySelector("[data-event-attendance-message]");
-  if (!eventItem || !modal || !form || eventItem.attendanceConfirmationEnabled === false) {
+  const codeField = document.querySelector("[data-event-attendance-code-field]");
+  const instructions = document.querySelector("[data-event-attendance-instructions]");
+  const unavailable = document.querySelector("[data-event-attendance-unavailable]");
+  const submit = document.querySelector("[data-event-attendance-submit]");
+  const cancel = document.querySelector("[data-event-attendance-cancel]");
+  if (!eventItem || !modal || !form || !title) {
     return;
   }
-  title.textContent = `Confirm attendance for ${eventItem.title || "event"}`;
+  const isEnabled = eventItem.attendanceConfirmationEnabled !== false;
+  title.textContent = isEnabled ? `Confirm attendance for ${eventItem.title || "event"}` : "CONFIRMATION CODE NOT YET SET";
   setMessage(message, "");
   form.reset();
+  if (codeField) codeField.hidden = !isEnabled;
+  if (instructions) instructions.hidden = !isEnabled;
+  if (unavailable) unavailable.hidden = isEnabled;
+  if (submit) submit.hidden = !isEnabled;
+  if (cancel) cancel.textContent = isEnabled ? "Cancel" : "Close";
+  form.elements.attendanceCode.disabled = !isEnabled;
+  form.elements.attendanceCode.required = isEnabled;
   modal.hidden = false;
-  form.elements.attendanceCode.focus();
+  (isEnabled ? form.elements.attendanceCode : cancel)?.focus();
 }
 
 function closeEventAttendanceModal() {
@@ -1149,6 +1278,7 @@ function bindEventsUi() {
     }
   });
   document.querySelector("[data-event-shirt-avail]")?.addEventListener("change", (event) => updateEventShirtFieldRequirements(event.currentTarget.form));
+  document.querySelector("[name='eventShirtPaymentProof']")?.addEventListener("change", (event) => updateEventShirtPaymentProofPreview(event.currentTarget));
   document.querySelectorAll("[data-event-shirt-image-open]").forEach((button) => button.addEventListener("click", openEventShirtImageModal));
   document.querySelector("[data-event-shirt-image-close]")?.addEventListener("click", closeEventShirtImageModal);
   document.querySelector("[data-event-shirt-image-modal]")?.addEventListener("click", (event) => {

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img" aria-labelledby="title">
+  <title id="title">GCash</title>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M31.6 10.2A17 17 0 1 0 31.6 37.8" stroke="#1769e0" stroke-width="5.4"/>
+    <path d="M29.2 17.2a9.2 9.2 0 1 0 0 13.6" stroke="#1769e0" stroke-width="5.4"/>
+    <path d="M27.8 24h8.4" stroke="#1769e0" stroke-width="5.4"/>
+    <path d="M37.2 15.1c2.1 2.3 3.3 5.4 3.3 8.9s-1.2 6.6-3.3 8.9" stroke="#66b4f5" stroke-width="4.4"/>
+    <path d="M43.2 11.1c3 3.5 4.8 8 4.8 12.9s-1.8 9.4-4.8 12.9" stroke="#66b4f5" stroke-width="3.4" transform="translate(-3.5)"/>
+  </g>
+</svg>

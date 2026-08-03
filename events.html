@@ -18,7 +18,7 @@
     >
     <title>Events | SarapMagBike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260802-uniform-actions-v2">
+    <link rel="stylesheet" href="styles.css?v=20260803-past-events">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -225,7 +225,7 @@
           <div>
             <p class="section-eyebrow">SarapMagBike Events</p>
             <h1>Rides, Workshops & Community Meetups</h1>
-            <span>Join upcoming public events for your selected SarapMagBike branch.</span>
+            <span>Join upcoming events and revisit past SarapMagBike rides, workshops, and meetups.</span>
           </div>
         </div>
 
@@ -269,8 +269,8 @@
                 <option value="Others">Others</option>
               </select>
             </label>
-            <label>Emergency contact<input name="emergencyContactName"></label>
-            <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel"></label>
+            <label>Emergency contact<input name="emergencyContactName" required></label>
+            <label>Emergency phone<input name="emergencyContactPhone" inputmode="tel" required></label>
             <div class="event-payment-fields span-2" data-event-payment-fields hidden>
               <div class="event-payment-fee">
                 <span>Registration fee</span>
@@ -280,7 +280,7 @@
             </div>
             <label class="span-2">Notes<textarea name="notes" placeholder="Optional ride notes for staff"></textarea></label>
           </div>
-          <p class="event-form-note">Participant name and email come from your public customer profile. Your display name and avatar may appear in the public participant list. Emergency and contact details stay private in SMBSystem.</p>
+          <p class="event-form-note">Participant name and email come from your public customer profile. Emergency contact name and phone are required and stay private in SMBSystem. Your display name and avatar may appear in the public participant list.</p>
           <label class="event-waiver" data-event-waiver>
             <input name="waiverAccepted" type="checkbox" required data-event-waiver-checkbox>
             <span>
@@ -395,6 +395,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260802-uniform-actions-v2"></script>
+    <script src="script.js?v=20260803-past-events"></script>
   </body>
 </html>

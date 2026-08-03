@@ -4902,6 +4902,7 @@ function setEventsState(title, detail, actionLabel) {
 function buildEventsQuery() {
   const params = new URLSearchParams();
   params.set("location", getSelectedPublicLocationSlug());
+  params.set("v", "20260803-past-events");
   return params.toString();
 }
 
@@ -4919,8 +4920,11 @@ async function loadEventsPageEvents() {
     eventsState.events = Array.isArray(rows) ? rows : [];
     renderEventsList();
     const selectedId = new URLSearchParams(window.location.search).get("event");
-    if (selectedId) {
+    const selectedEvent = eventsState.events.find((eventItem) => String(eventItem.id) === selectedId);
+    if (selectedId && selectedEvent && !isPastEvent(selectedEvent)) {
       await openEventDetail(selectedId, { updateUrl: false });
+    } else if (selectedId) {
+      window.history.replaceState({ view: "events" }, "", "events.html");
     }
   } catch (error) {
     const missingEndpoint = error.status === 404 || error.status === 405;
@@ -4943,11 +4947,65 @@ function renderEventsList() {
   }
 
   if (eventsState.events.length === 0) {
-    setEventsState("No upcoming events", "There are no upcoming public events for this branch right now.");
+    setEventsState("No public events", "There are no upcoming or past public events for this branch right now.");
     return;
   }
 
-  list.replaceChildren(...eventsState.events.map(renderEventCard));
+  const upcoming = eventsState.events
+    .filter((eventItem) => !isPastEvent(eventItem))
+    .sort((left, right) => getEventEffectiveTime(left) - getEventEffectiveTime(right));
+  const past = eventsState.events
+    .filter(isPastEvent)
+    .sort((left, right) => getEventEffectiveTime(right) - getEventEffectiveTime(left));
+
+  const sections = [];
+  if (upcoming.length > 0) {
+    sections.push(createEventsSection("Upcoming Events", upcoming.map((eventItem) => renderEventCard(eventItem, false))));
+  } else {
+    sections.push(createEventsSection("Upcoming Events", [createEventDetailState("No upcoming events", "There are no upcoming public events for this branch right now.")]));
+  }
+  if (past.length > 0) {
+    sections.push(createEventsSection("Past Events", past.map((eventItem) => renderEventCard(eventItem, true))));
+  }
+  list.replaceChildren(...sections);
+}
+
+function createEventsSection(title, cards) {
+  const section = document.createElement("section");
+  section.className = "events-public-section";
+  section.append(createTextElement("h2", title, "events-public-section-title"));
+  const grid = document.createElement("div");
+  grid.className = "events-public-section-grid";
+  grid.append(...cards);
+  section.append(grid);
+  return section;
+}
+
+function getEventEffectiveTime(eventItem) {
+  const value = eventItem?.endsAt || eventItem?.startsAt || eventItem?.assemblyAt;
+  const time = value ? new Date(value).getTime() : Number.NaN;
+  return Number.isFinite(time) ? time : 0;
+}
+
+function isPastEvent(eventItem) {
+  if (typeof eventItem?.isPast === "boolean") {
+    return eventItem.isPast;
+  }
+  return eventItem?.status === "completed" || getEventEffectiveTime(eventItem) < Date.now();
+}
+
+function getYouTubeVideoUrl(value) {
+  try {
+    const url = new URL(String(value || "").trim());
+    if (url.protocol !== "https:") return "";
+    const host = url.hostname.toLowerCase().replace(/\.$/, "");
+    if (host === "youtu.be") return url.pathname.replace(/^\/+|\/+$/g, "") ? url.href : "";
+    if (host !== "youtube.com" && !host.endsWith(".youtube.com")) return "";
+    if (url.pathname.toLowerCase().startsWith("/shorts/")) return url.pathname.slice(8).replace(/^\/+|\/+$/g, "") ? url.href : "";
+    return url.pathname.toLowerCase() === "/watch" && url.searchParams.get("v") ? url.href : "";
+  } catch {
+    return "";
+  }
 }
 
 function getEventCardSummary(eventItem) {
@@ -4955,22 +5013,24 @@ function getEventCardSummary(eventItem) {
   return text.length > 110 ? `${text.slice(0, 107).trim()}...` : text;
 }
 
-function renderEventCard(eventItem) {
+function renderEventCard(eventItem, isPast = isPastEvent(eventItem)) {
   const card = document.createElement("article");
-  card.className = "event-public-card";
+  card.className = `event-public-card${isPast ? " is-past" : ""}`;
 
   const poster = document.createElement("div");
   poster.className = "event-public-poster";
-  poster.tabIndex = 0;
-  poster.setAttribute("role", "button");
-  poster.setAttribute("aria-label", `View details for ${eventItem.title || "this event"}`);
-  poster.addEventListener("click", () => openEventDetail(eventItem.id));
-  poster.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      openEventDetail(eventItem.id);
-    }
-  });
+  if (!isPast) {
+    poster.tabIndex = 0;
+    poster.setAttribute("role", "button");
+    poster.setAttribute("aria-label", `View details for ${eventItem.title || "this event"}`);
+    poster.addEventListener("click", () => openEventDetail(eventItem.id));
+    poster.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openEventDetail(eventItem.id);
+      }
+    });
+  }
   const posterUrl = getEventPosterUrl(eventItem);
   if (posterUrl) {
     const image = document.createElement("img");
@@ -4988,11 +5048,28 @@ function renderEventCard(eventItem) {
   const statusRow = document.createElement("div");
   statusRow.className = "event-status-row";
   statusRow.append(
-    createTextElement("span", getEventStatusLabel(eventItem.status), `event-status ${getEventStatusClass(eventItem.status)}`),
-    createTextElement("strong", eventItem.isPaid ? pesoFormatter.format(Number(eventItem.feeAmount || 0)) : "Free")
+    createTextElement("span", isPast ? "Completed" : getEventStatusLabel(eventItem.status), `event-status ${isPast ? "completed" : getEventStatusClass(eventItem.status)}`),
+    createTextElement("strong", getEventTypeLabel(eventItem.eventType))
   );
 
   const title = createTextElement("h2", eventItem.title || "SarapMagBike Event");
+  if (isPast) {
+    const message = createTextElement("p", "This event was already done.", "event-past-message");
+    const date = createTextElement("p", formatEventDate(eventItem.assemblyAt), "event-past-date");
+    const videoUrl = getYouTubeVideoUrl(eventItem.youtubeVideoUrl);
+    const video = videoUrl ? document.createElement("a") : createTextElement("span", "YouTube video coming soon.", "event-youtube-pending");
+    if (videoUrl) {
+      video.href = videoUrl;
+      video.target = "_blank";
+      video.rel = "noopener noreferrer";
+      video.className = "event-youtube-link";
+      video.textContent = "Watch on YouTube ↗";
+    }
+    body.append(statusRow, title, date, message, video);
+    card.append(poster, body);
+    return card;
+  }
+
   const summary = createTextElement("p", getEventCardSummary(eventItem), "event-card-summary");
   const meta = document.createElement("div");
   meta.className = "event-meta-grid";
@@ -5036,6 +5113,13 @@ async function openEventDetail(eventId, { updateUrl = true } = {}) {
 
   try {
     const eventItem = await apiRequest(withPublicLocation(`/api/public/events/${eventId}`));
+    if (isPastEvent(eventItem)) {
+      document.querySelector("[data-events-list-layout]")?.removeAttribute("hidden");
+      document.querySelector("[data-events-toolbar]")?.removeAttribute("hidden");
+      detail.setAttribute("hidden", "");
+      window.history.replaceState({ view: "events" }, "", "events.html");
+      return;
+    }
     eventsState.activeEvent = eventItem;
     renderEventDetail(eventItem);
     if (updateUrl) {
@@ -5554,6 +5638,10 @@ async function submitEventRegistration(event) {
     setMessage(message, "Accept the bike ride waiver before registering.", "error");
     return;
   }
+  if (!form.elements.emergencyContactName.value.trim() || !form.elements.emergencyContactPhone.value.trim()) {
+    setMessage(message, "Enter an emergency contact name and phone number.", "error");
+    return;
+  }
 
   setMessage(message, "Saving registration...");
   try {
@@ -5630,7 +5718,6 @@ function bindEventsUi() {
     }
   });
 }
-
 const customerState = {
   account: null,
   profile: null,

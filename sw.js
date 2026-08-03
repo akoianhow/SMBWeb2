@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v32-attendance-code-modal';
+const STATIC_CACHE = 'smbweb2-static-v33-home-leaderboard-carousel';
 const CATALOG_CACHE = 'smbweb2-catalog-v1';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
@@ -115,6 +115,9 @@ function catalogPolicy(pathname) {
   }
   if (pathname === '/api/public/catalog/locations') {
     return { freshFor: 15 * MINUTE, staleFor: 60 * MINUTE };
+  }
+  if (pathname === '/api/public/loyalty/leaderboard') {
+    return { freshFor: MINUTE, staleFor: 15 * MINUTE };
   }
   if (pathname === '/api/public/site-status') {
     return { freshFor: 5 * MINUTE, staleFor: 15 * MINUTE };

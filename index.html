@@ -261,22 +261,43 @@
         </div>
       </section>
 
-      <section class="hero-slider" aria-label="Featured shop image" data-home-section>
-        <div class="slide-image" data-hero-media>
-          <video class="hero-video active" autoplay muted loop playsinline preload="metadata" poster="assets/hero-shop-intro-poster.jpg" aria-hidden="true">
-            <source src="assets/hero-shop-intro.mp4?v=20260730-optimized" type="video/mp4">
-            <source src="assets/hero-shop-intro.webm?v=20260730-optimized" type="video/webm">
-          </video>
-        </div>
-        <div class="hero-message">
-          <p>SarapMagBike Shop</p>
-          <h1>WELCOME, MASTER!</h1>
-          <span>Shop affordable bikes, and upgrades, book trusted workshop service and join SarapMagBike community rides.</span>
-          <div class="hero-actions">
-            <a href="appointments.html">Book Service</a>
-            <a class="hero-events-action" href="events.html">Events</a>
-            <a class="hero-community-action" href="#community" data-community-link>Community</a>
+      <section class="hero-slider hero-carousel" aria-label="SarapMagBike highlights" aria-roledescription="carousel" data-home-section data-hero-carousel>
+        <div class="hero-carousel-slide is-active" role="group" aria-label="1 of 2: Welcome" data-hero-carousel-slide="0">
+          <div class="slide-image" data-hero-media>
+            <video class="hero-video active" autoplay muted loop playsinline preload="metadata" poster="assets/hero-shop-intro-poster.jpg" aria-hidden="true">
+              <source src="assets/hero-shop-intro.mp4?v=20260730-optimized" type="video/mp4">
+              <source src="assets/hero-shop-intro.webm?v=20260730-optimized" type="video/webm">
+            </video>
           </div>
+          <div class="hero-message">
+            <p>SarapMagBike Shop</p>
+            <h1>WELCOME, MASTER!</h1>
+            <span>Shop affordable bikes, and upgrades, book trusted workshop service and join SarapMagBike community rides.</span>
+            <div class="hero-actions">
+              <a href="appointments.html">Book Service</a>
+              <a class="hero-events-action" href="events.html">Events</a>
+              <a class="hero-community-action" href="#community" data-community-link>Community</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-carousel-slide hero-leaderboard-slide" role="group" aria-label="2 of 2: Top riders" aria-hidden="true" data-hero-carousel-slide="1">
+          <header class="hero-leaderboard-header">
+            <div>
+              <p>SarapMagBadge</p>
+              <h2>Top Riders</h2>
+              <span>Top lifetime Kapotpoints earners</span>
+            </div>
+            <strong data-leaderboard-scope>All branches</strong>
+          </header>
+          <ol class="hero-leaderboard-list" data-loyalty-leaderboard-list aria-label="Top five Kapotpoints earners"></ol>
+        </div>
+
+        <div class="hero-carousel-controls" data-hero-carousel-controls hidden>
+          <button type="button" data-hero-carousel-previous aria-label="Previous slide">‹</button>
+          <button type="button" class="is-active" data-hero-carousel-dot="0" aria-label="Show welcome slide" aria-pressed="true"></button>
+          <button type="button" data-hero-carousel-dot="1" aria-label="Show Top Riders" aria-pressed="false"></button>
+          <button type="button" data-hero-carousel-next aria-label="Next slide">›</button>
         </div>
       </section>
 

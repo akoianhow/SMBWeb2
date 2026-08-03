@@ -1045,3 +1045,181 @@ function bindProductSearchUi() {
     }
   });
 }
+
+const heroLeaderboardState = {
+  activeIndex: 0,
+  autoTimer: null,
+  enabled: false,
+  paused: false,
+  refreshTimer: null,
+  touchStartX: null
+};
+
+function getLeaderboardInitials(username) {
+  const words = String(username || "Rider").trim().split(/[\s._-]+/).filter(Boolean);
+  return words.slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "R";
+}
+
+function renderHeroLeaderboard(rows) {
+  const list = document.querySelector("[data-loyalty-leaderboard-list]");
+  if (!list) return;
+  list.replaceChildren();
+
+  rows.slice(0, 5).forEach((row, index) => {
+    const item = document.createElement("li");
+    item.className = "hero-leaderboard-row";
+
+    const rank = createTextElement("span", String(row.rank || index + 1), "hero-leaderboard-rank");
+    rank.setAttribute("aria-label", `Rank ${row.rank || index + 1}`);
+
+    const avatar = document.createElement("span");
+    avatar.className = "hero-leaderboard-avatar";
+    if (row.profilePictureUrl) {
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = normalizeApiUrl(row.profilePictureUrl);
+      image.addEventListener("error", () => {
+        image.remove();
+        avatar.textContent = getLeaderboardInitials(row.username);
+      }, { once: true });
+      avatar.append(image);
+    } else {
+      avatar.textContent = getLeaderboardInitials(row.username);
+    }
+
+    const identity = document.createElement("span");
+    identity.className = "hero-leaderboard-identity";
+    identity.append(createTextElement("strong", row.username || "SarapMagBike rider"));
+    const level = document.createElement("span");
+    level.className = "hero-leaderboard-level";
+    const levelCode = ["noob", "saks", "mamaw", "master", "budolero"].includes(row.level?.code)
+      ? row.level.code
+      : "noob";
+    const levelIcon = document.createElement("img");
+    levelIcon.src = `assets/sarapmagbadge-${levelCode}.png`;
+    levelIcon.alt = "";
+    levelIcon.loading = "lazy";
+    level.append(levelIcon, createTextElement("small", row.level?.name || "Noob"));
+    identity.append(level);
+
+    const points = document.createElement("span");
+    points.className = "hero-leaderboard-points";
+    points.append(
+      createTextElement("strong", Number(row.lifetimePoints || 0).toLocaleString("en-PH")),
+      createTextElement("small", "points")
+    );
+
+    item.append(rank, avatar, identity, points);
+    list.append(item);
+  });
+}
+
+function showHeroCarouselSlide(index, manual = false) {
+  const carousel = document.querySelector("[data-hero-carousel]");
+  if (!carousel) return;
+  const slides = Array.from(carousel.querySelectorAll("[data-hero-carousel-slide]"));
+  const dots = Array.from(carousel.querySelectorAll("[data-hero-carousel-dot]"));
+  const availableSlides = heroLeaderboardState.enabled ? slides.length : 1;
+  heroLeaderboardState.activeIndex = (index + availableSlides) % availableSlides;
+
+  slides.forEach((slide, slideIndex) => {
+    const isActive = slideIndex === heroLeaderboardState.activeIndex;
+    slide.classList.toggle("is-active", isActive);
+    slide.setAttribute("aria-hidden", String(!isActive));
+  });
+  dots.forEach((dot, dotIndex) => {
+    const isActive = dotIndex === heroLeaderboardState.activeIndex;
+    dot.classList.toggle("is-active", isActive);
+    dot.setAttribute("aria-pressed", String(isActive));
+  });
+
+  const video = carousel.querySelector(".hero-video");
+  if (video) {
+    if (heroLeaderboardState.activeIndex === 0) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }
+
+  if (manual) startHeroCarouselAutoRotation();
+}
+
+function startHeroCarouselAutoRotation() {
+  window.clearInterval(heroLeaderboardState.autoTimer);
+  if (!heroLeaderboardState.enabled || prefersReducedMotion?.matches) return;
+  heroLeaderboardState.autoTimer = window.setInterval(() => {
+    if (!heroLeaderboardState.paused && !document.hidden) {
+      showHeroCarouselSlide(heroLeaderboardState.activeIndex + 1);
+    }
+  }, 7000);
+}
+
+function setHeroLeaderboardEnabled(enabled) {
+  const controls = document.querySelector("[data-hero-carousel-controls]");
+  heroLeaderboardState.enabled = Boolean(enabled);
+  if (controls) controls.hidden = !heroLeaderboardState.enabled;
+  if (!heroLeaderboardState.enabled) showHeroCarouselSlide(0);
+  startHeroCarouselAutoRotation();
+}
+
+async function loadHeroLeaderboard() {
+  const list = document.querySelector("[data-loyalty-leaderboard-list]");
+  if (!list) return;
+  try {
+    const location = encodeURIComponent(getSelectedPublicLocationSlug());
+    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=5`);
+    const rows = Array.isArray(result?.rows) ? result.rows : [];
+    if (rows.length === 0) {
+      setHeroLeaderboardEnabled(false);
+      return;
+    }
+    renderHeroLeaderboard(rows);
+    const scope = document.querySelector("[data-leaderboard-scope]");
+    if (scope) scope.textContent = result?.label || "All branches";
+    setHeroLeaderboardEnabled(true);
+  } catch {
+    if (!heroLeaderboardState.enabled) setHeroLeaderboardEnabled(false);
+  }
+}
+
+function initializeHeroLeaderboardCarousel() {
+  const carousel = document.querySelector("[data-hero-carousel]");
+  if (!carousel || carousel.dataset.carouselBound === "true") return;
+  carousel.dataset.carouselBound = "true";
+
+  carousel.querySelector("[data-hero-carousel-previous]")?.addEventListener("click", () => {
+    showHeroCarouselSlide(heroLeaderboardState.activeIndex - 1, true);
+  });
+  carousel.querySelector("[data-hero-carousel-next]")?.addEventListener("click", () => {
+    showHeroCarouselSlide(heroLeaderboardState.activeIndex + 1, true);
+  });
+  carousel.querySelectorAll("[data-hero-carousel-dot]").forEach((dot) => {
+    dot.addEventListener("click", () => showHeroCarouselSlide(Number(dot.dataset.heroCarouselDot), true));
+  });
+
+  carousel.addEventListener("mouseenter", () => { heroLeaderboardState.paused = true; });
+  carousel.addEventListener("mouseleave", () => { heroLeaderboardState.paused = false; });
+  carousel.addEventListener("focusin", () => { heroLeaderboardState.paused = true; });
+  carousel.addEventListener("focusout", (event) => {
+    if (!carousel.contains(event.relatedTarget)) heroLeaderboardState.paused = false;
+  });
+  carousel.addEventListener("touchstart", (event) => {
+    heroLeaderboardState.touchStartX = event.changedTouches[0]?.clientX ?? null;
+    heroLeaderboardState.paused = true;
+  }, { passive: true });
+  carousel.addEventListener("touchend", (event) => {
+    const endX = event.changedTouches[0]?.clientX;
+    if (heroLeaderboardState.enabled && heroLeaderboardState.touchStartX !== null && Number.isFinite(endX)) {
+      const distance = endX - heroLeaderboardState.touchStartX;
+      if (Math.abs(distance) >= 45) showHeroCarouselSlide(heroLeaderboardState.activeIndex + (distance < 0 ? 1 : -1), true);
+    }
+    heroLeaderboardState.touchStartX = null;
+    heroLeaderboardState.paused = false;
+  }, { passive: true });
+
+  loadHeroLeaderboard();
+  window.clearInterval(heroLeaderboardState.refreshTimer);
+  heroLeaderboardState.refreshTimer = window.setInterval(loadHeroLeaderboard, 60000);
+}

@@ -14,6 +14,7 @@ async function startCatalog() {
   ensureStandardMobileHeaderActions();
   ensureStandardProductSearchActions();
   ensureCustomerLoginPrompt();
+  initializeHeroLeaderboardCarousel();
   initializeNotifications();
   initializeCartUi();
   bindCustomerAccountUi();
@@ -67,7 +68,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260803-attendance-code-modal')
+    navigator.serviceWorker.register('./sw.js?v=20260803-home-leaderboard-carousel')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

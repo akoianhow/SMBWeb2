@@ -801,6 +801,78 @@
     border-radius: 8px;
   }
 
+  .hero-slider.hero-carousel {
+    height: 320px;
+  }
+
+  .hero-leaderboard-slide {
+    padding: 12px 10px 14px;
+  }
+
+  .hero-leaderboard-header {
+    min-height: 49px;
+    padding-right: 94px;
+  }
+
+  .hero-leaderboard-header h2 {
+    font-size: 23px;
+  }
+
+  .hero-leaderboard-header span {
+    font-size: 9px;
+  }
+
+  .hero-leaderboard-header > strong {
+    padding: 4px 6px;
+    font-size: 8px;
+  }
+
+  .hero-leaderboard-list {
+    gap: 4px;
+    margin-top: 8px;
+  }
+
+  .hero-leaderboard-row {
+    grid-template-columns: 22px 32px minmax(0, 1fr) auto;
+    min-height: 43px;
+    gap: 6px;
+    padding: 4px 7px;
+  }
+
+  .hero-leaderboard-rank {
+    font-size: 14px;
+  }
+
+  .hero-leaderboard-avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .hero-leaderboard-identity > strong,
+  .hero-leaderboard-points > strong {
+    font-size: 11px;
+  }
+
+  .hero-leaderboard-level img {
+    width: 15px;
+    height: 15px;
+  }
+
+  .hero-leaderboard-level small,
+  .hero-leaderboard-points small {
+    font-size: 8px;
+  }
+
+  .hero-carousel-controls {
+    top: 8px;
+    right: 8px;
+  }
+
+  .hero-carousel-controls button {
+    width: 24px;
+    height: 24px;
+  }
+
   .slide-image {
     background:
       linear-gradient(90deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.1) 72%),

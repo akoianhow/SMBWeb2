@@ -96,6 +96,8 @@
 }
 
 .hero-leaderboard-slide {
+  display: flex;
+  flex-direction: column;
   padding: 18px 24px 48px;
   color: #ffffff;
   background:
@@ -147,17 +149,34 @@
 
 .hero-leaderboard-list {
   display: grid;
+  flex: 1 1 auto;
+  align-content: start;
   gap: 5px;
+  min-height: 0;
   margin: 12px 0 0;
-  padding: 0;
+  padding: 0 4px 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(255, 255, 255, 0.34) transparent;
+  scrollbar-gutter: stable;
   list-style: none;
+}
+
+.hero-leaderboard-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.hero-leaderboard-list::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.34);
 }
 
 .hero-leaderboard-row {
   display: grid;
-  grid-template-columns: 30px 40px minmax(0, 1fr) auto;
+  grid-template-columns: 30px 46px minmax(0, 1fr) auto;
   align-items: center;
-  min-height: 46px;
+  min-height: 58px;
   gap: 8px;
   padding: 5px 10px;
   border: 1px solid #494949;
@@ -179,8 +198,8 @@
 
 .hero-leaderboard-avatar {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   overflow: hidden;
   place-items: center;
   border-radius: 50%;
@@ -231,6 +250,18 @@
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.hero-leaderboard-activity {
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  color: #bdbdbd;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .hero-leaderboard-points {

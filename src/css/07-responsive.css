@@ -833,8 +833,8 @@
   }
 
   .hero-leaderboard-row {
-    grid-template-columns: 22px 32px minmax(0, 1fr) auto;
-    min-height: 43px;
+    grid-template-columns: 22px 38px minmax(0, 1fr) auto;
+    min-height: 54px;
     gap: 6px;
     padding: 4px 7px;
   }
@@ -844,8 +844,8 @@
   }
 
   .hero-leaderboard-avatar {
-    width: 30px;
-    height: 30px;
+    width: 34px;
+    height: 34px;
   }
 
   .hero-leaderboard-identity > strong,
@@ -861,6 +861,10 @@
   .hero-leaderboard-level small,
   .hero-leaderboard-points small {
     font-size: 8px;
+  }
+
+  .hero-leaderboard-activity {
+    font-size: 7px;
   }
 
   .hero-carousel-controls {

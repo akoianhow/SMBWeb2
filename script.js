@@ -1459,7 +1459,7 @@ function renderHeroLeaderboard(rows) {
   if (!list) return;
   list.replaceChildren();
 
-  rows.slice(0, 5).forEach((row, index) => {
+  rows.slice(0, 10).forEach((row, index) => {
     const item = document.createElement("li");
     item.className = "hero-leaderboard-row";
 
@@ -1495,7 +1495,17 @@ function renderHeroLeaderboard(rows) {
     levelIcon.alt = "";
     levelIcon.loading = "lazy";
     level.append(levelIcon, createTextElement("small", row.level?.name || "Noob"));
-    identity.append(level);
+    const activityDescription = String(row.lastActivity?.description || "Not available").trim();
+    const activityPoints = Number(row.lastActivity?.pointsEarned || 0);
+    const activityPointLabel = activityPoints === 1 ? "point" : "points";
+    const activity = createTextElement(
+      "small",
+      activityPoints > 0
+        ? `Last Activity: ${activityDescription} : +${activityPoints.toLocaleString("en-PH")} ${activityPointLabel}.`
+        : `Last Activity: ${activityDescription}`,
+      "hero-leaderboard-activity"
+    );
+    identity.append(level, activity);
 
     const points = document.createElement("span");
     points.className = "hero-leaderboard-points";
@@ -1563,7 +1573,7 @@ async function loadHeroLeaderboard() {
   if (!list) return;
   try {
     const location = encodeURIComponent(getSelectedPublicLocationSlug());
-    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=5`);
+    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=10`);
     const rows = Array.isArray(result?.rows) ? result.rows : [];
     if (rows.length === 0) {
       setHeroLeaderboardEnabled(false);

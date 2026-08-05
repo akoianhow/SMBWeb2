@@ -17,6 +17,7 @@ const bundles = [
       "src/js/05-events.js",
       "src/js/06-customer-account.js",
       "src/js/07-product-cart.js",
+      "src/js/09-kapotpot-finder.js",
       "src/js/08-bootstrap-pwa.js"
     ]
   },
@@ -31,7 +32,8 @@ const bundles = [
       "src/css/06-profiles-orders-location.css",
       "src/css/07-responsive.css",
       "src/css/08-stories-cart-guest.css",
-      "src/css/09-notifications-polish.css"
+      "src/css/09-notifications-polish.css",
+      "src/css/10-kapotpot-finder.css"
     ]
   }
 ];

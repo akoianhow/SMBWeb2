@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-purchase-products-v1">
+    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-finder-v1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -346,6 +346,58 @@
               <p>Bike wash, tune-up, overhaul, diagnostics, repairs, and upgrade labor.</p>
               <a href="services.html">View Services</a>
             </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="kapotpot-finder" class="kapotpot-finder" aria-labelledby="kapotpot-finder-title" data-home-section data-kapotpot-finder>
+        <div class="kapotpot-finder-copy">
+          <p class="kapotpot-finder-eyebrow">SarapMagBike Community</p>
+          <h2 id="kapotpot-finder-title">KAPOTPOT FINDER</h2>
+          <p class="kapotpot-finder-intro">See SarapMagBike riders who chose to be visible near you.</p>
+
+          <div class="kapotpot-finder-summary" aria-live="polite">
+            <span class="kapotpot-active-dot" aria-hidden="true"></span>
+            <strong data-kapotpot-count>Open the Finder to check nearby riders</strong>
+            <span>Maximum 5 km radius</span>
+          </div>
+
+          <div class="kapotpot-finder-controls">
+            <label class="kapotpot-visibility-control">
+              <input type="checkbox" role="switch" data-kapotpot-visibility disabled>
+              <span class="kapotpot-switch" aria-hidden="true"></span>
+              <span data-kapotpot-visibility-label>Go Visible</span>
+            </label>
+            <button type="button" data-kapotpot-open>Open Finder</button>
+          </div>
+
+          <p class="kapotpot-privacy-note">
+            <span aria-hidden="true">▣</span>
+            Your exact location stays private. Visibility expires after 10 minutes of inactivity.
+          </p>
+          <p class="kapotpot-finder-message" data-kapotpot-message role="status">Log in to use Kapotpot Finder.</p>
+        </div>
+
+        <div class="kapotpot-map-shell" data-kapotpot-map-shell>
+          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within five kilometers"></div>
+          <div class="kapotpot-map-preview" data-kapotpot-map-preview>
+            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder five kilometer map preview">
+              <path d="M0 74L760 10M0 186L760 116M0 336L760 278M92 0L160 420M288 0L330 420M518 0L494 420M690 0L610 420" />
+              <path class="kapotpot-preview-river" d="M700 -20C620 70 726 138 634 220S572 356 522 446" />
+              <circle class="kapotpot-preview-radius" cx="380" cy="210" r="150" />
+              <circle class="kapotpot-preview-user" cx="380" cy="210" r="12" />
+              <g class="kapotpot-preview-rider"><circle cx="310" cy="132" r="15"/><text x="310" y="138">●</text></g>
+              <g class="kapotpot-preview-rider"><circle cx="474" cy="164" r="15"/><text x="474" y="170">●</text></g>
+              <g class="kapotpot-preview-rider"><circle cx="342" cy="296" r="15"/><text x="342" y="302">●</text></g>
+            </svg>
+            <div>
+              <strong>Find Kapotpots near you</strong>
+              <span>The map loads only when you open the Finder.</span>
+            </div>
+          </div>
+          <div class="kapotpot-map-legend" data-kapotpot-map-legend hidden>
+            <span><i class="is-you"></i>You</span>
+            <span><i class="is-kapotpot"></i>Kapotpot</span>
           </div>
         </div>
       </section>
@@ -708,6 +760,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-purchase-products-v1"></script>
+    <script src="script.js?v=20260805-kapotpot-finder-v1"></script>
   </body>
 </html>

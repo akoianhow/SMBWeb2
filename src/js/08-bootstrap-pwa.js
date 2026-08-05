@@ -71,7 +71,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-kapotpot-finder-v1')
+    navigator.serviceWorker.register('./sw.js?v=20260805-finder-order-v1')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

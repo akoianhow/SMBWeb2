@@ -283,13 +283,20 @@ body.has-kapotpot-map-fullscreen {
   gap: 3px;
   min-height: 60px;
   max-height: 274px;
-  padding: 30px 8px 22px;
+  padding: 30px 8px 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scroll-padding-bottom: 22px;
+  scroll-padding-bottom: 44px;
   background: transparent;
   scrollbar-color: rgba(255, 255, 255, 0.72) rgba(0, 0, 0, 0.18);
   scrollbar-width: thin;
+}
+
+.kapotpot-chat-messages::after {
+  content: "";
+  display: block;
+  min-height: 40px;
+  pointer-events: none;
 }
 
 .kapotpot-chat-empty {

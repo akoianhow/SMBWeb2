@@ -9347,7 +9347,13 @@ const kapotpotFinderState = {
   isBusy: false,
   watchId: null,
   pollTimer: null,
-  locationPermissionBlocked: false
+  locationPermissionBlocked: false,
+  chatSocket: null,
+  chatMessages: [],
+  chatReconnectTimer: null,
+  chatReconnectAttempts: 0,
+  chatShouldReconnect: false,
+  chatUnreadCount: 0
 };
 
 let kapotpotMapLibraryPromise = null;
@@ -9370,10 +9376,232 @@ function getKapotpotFinderElements() {
     message: root?.querySelector("[data-kapotpot-message]"),
     mapShell: root?.querySelector("[data-kapotpot-map-shell]"),
     fullscreenButton: root?.querySelector("[data-kapotpot-fullscreen]"),
+    chatToggle: root?.querySelector("[data-kapotpot-chat-toggle]"),
+    chatUnread: root?.querySelector("[data-kapotpot-chat-unread]"),
+    chatPanel: root?.querySelector("[data-kapotpot-chat-panel]"),
+    chatStatus: root?.querySelector("[data-kapotpot-chat-status]"),
+    chatMessages: root?.querySelector("[data-kapotpot-chat-messages]"),
+    chatError: root?.querySelector("[data-kapotpot-chat-error]"),
+    chatCompose: root?.querySelector("[data-kapotpot-chat-compose]"),
+    chatClose: root?.querySelector("[data-kapotpot-chat-close]"),
+    chatComposer: root?.querySelector("[data-kapotpot-chat-composer]"),
+    chatForm: root?.querySelector("[data-kapotpot-chat-form]"),
+    chatInput: root?.querySelector("[data-kapotpot-chat-input]"),
+    chatCount: root?.querySelector("[data-kapotpot-chat-count]"),
+    chatFeedback: root?.querySelector("[data-kapotpot-chat-feedback]"),
+    chatCancel: root?.querySelector("[data-kapotpot-chat-cancel]"),
+    chatSend: root?.querySelector("[data-kapotpot-chat-send]"),
     map: root?.querySelector("[data-kapotpot-map]"),
     preview: root?.querySelector("[data-kapotpot-map-preview]"),
     legend: root?.querySelector("[data-kapotpot-map-legend]")
   };
+}
+
+function getKapotpotChatSocketUrl() {
+  let apiBaseUrl = getApiBaseUrl();
+  if (!apiBaseUrl && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+    apiBaseUrl = `http://${window.location.hostname}:5088`;
+  }
+  const url = new URL("/api/public/kapotpot-finder/chat/socket", apiBaseUrl || window.location.origin);
+  url.searchParams.set("location", getSelectedPublicLocationSlug());
+  url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+  return url.toString();
+}
+
+function setKapotpotChatStatus(status) {
+  const { chatStatus } = getKapotpotFinderElements();
+  if (!chatStatus) return;
+  chatStatus.textContent = status;
+  chatStatus.classList.toggle("is-live", status === "LIVE");
+}
+
+function setKapotpotChatError(message = "") {
+  const { chatError } = getKapotpotFinderElements();
+  if (!chatError) return;
+  chatError.textContent = message;
+  chatError.hidden = !message;
+}
+
+function renderKapotpotChatControl() {
+  const { chatToggle, chatUnread, chatPanel, mapShell } = getKapotpotFinderElements();
+  const canChat = Boolean(customerState.account && kapotpotFinderState.isOpen);
+  if (chatToggle) chatToggle.hidden = !canChat;
+  if (chatUnread) {
+    chatUnread.textContent = kapotpotFinderState.chatUnreadCount > 9 ? "9+" : String(kapotpotFinderState.chatUnreadCount);
+    chatUnread.hidden = kapotpotFinderState.chatUnreadCount === 0;
+  }
+  if (!canChat && chatPanel) chatPanel.hidden = true;
+  mapShell?.classList.toggle("has-chat-open", Boolean(canChat && chatPanel && !chatPanel.hidden));
+}
+
+function renderKapotpotChatMessages() {
+  const { chatMessages } = getKapotpotFinderElements();
+  if (!chatMessages) return;
+  chatMessages.replaceChildren();
+  if (kapotpotFinderState.chatMessages.length === 0) {
+    chatMessages.append(createTextElement("p", "No messages yet. Say hello to nearby Kapotpots.", "kapotpot-chat-empty"));
+    return;
+  }
+
+  kapotpotFinderState.chatMessages.forEach((message) => {
+    const row = document.createElement("article");
+    row.className = "kapotpot-chat-message";
+    const avatar = createTextElement("span", getKapotpotInitials(message.displayName), "kapotpot-chat-message-avatar");
+    const avatarUrl = normalizeApiUrl(message.avatarUrl || "");
+    if (avatarUrl) {
+      const image = document.createElement("img");
+      image.src = avatarUrl;
+      image.alt = "";
+      image.addEventListener("error", () => image.remove(), { once: true });
+      avatar.append(image);
+    }
+    const content = document.createElement("div");
+    content.className = "kapotpot-chat-message-content";
+    content.append(
+      createTextElement("strong", message.displayName || "Kapotpot"),
+      createTextElement("p", message.body || "")
+    );
+    row.append(avatar, content);
+    chatMessages.append(row);
+  });
+  window.requestAnimationFrame(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+}
+
+function addKapotpotChatMessage(message) {
+  if (!message?.id || !message?.body) return;
+  const existingIndex = kapotpotFinderState.chatMessages.findIndex((item) => item.id === message.id);
+  if (existingIndex >= 0) kapotpotFinderState.chatMessages.splice(existingIndex, 1);
+  kapotpotFinderState.chatMessages.push(message);
+  kapotpotFinderState.chatMessages = kapotpotFinderState.chatMessages.slice(-50);
+  const { chatPanel } = getKapotpotFinderElements();
+  if (!chatPanel || chatPanel.hidden) {
+    kapotpotFinderState.chatUnreadCount = Math.min(99, kapotpotFinderState.chatUnreadCount + 1);
+  }
+  renderKapotpotChatMessages();
+  renderKapotpotChatControl();
+}
+
+function closeKapotpotChatComposer({ restoreFocus = true } = {}) {
+  const { chatComposer, chatToggle } = getKapotpotFinderElements();
+  if (!chatComposer || chatComposer.hidden) return;
+  chatComposer.hidden = true;
+  if (restoreFocus) chatToggle?.focus();
+}
+
+function renderKapotpotChatComposer() {
+  const { chatInput, chatCount, chatFeedback, chatSend } = getKapotpotFinderElements();
+  const message = chatInput?.value.trim() || "";
+  const length = Array.from(message).length;
+  const isConnected = kapotpotFinderState.chatSocket?.readyState === WebSocket.OPEN;
+  if (chatCount) chatCount.textContent = `${length} / 120`;
+  if (chatSend) chatSend.disabled = length === 0 || length > 120 || !isConnected;
+  if (chatFeedback) chatFeedback.textContent = length > 120 ? "Message is too long." : "";
+}
+
+function openKapotpotChatComposer() {
+  const { chatPanel, chatComposer, chatInput } = getKapotpotFinderElements();
+  if (!chatComposer || !customerState.account || !kapotpotFinderState.isOpen) return;
+  if (chatPanel) chatPanel.hidden = false;
+  kapotpotFinderState.chatUnreadCount = 0;
+  chatComposer.hidden = false;
+  setKapotpotChatError("");
+  renderKapotpotChatControl();
+  renderKapotpotChatComposer();
+  window.setTimeout(() => chatInput?.focus(), 0);
+}
+
+function openKapotpotChat() {
+  const { chatPanel } = getKapotpotFinderElements();
+  if (!chatPanel || !customerState.account || !kapotpotFinderState.isOpen) return;
+  chatPanel.hidden = false;
+  kapotpotFinderState.chatUnreadCount = 0;
+  renderKapotpotChatControl();
+  renderKapotpotChatMessages();
+  openKapotpotChatComposer();
+}
+
+function closeKapotpotChat() {
+  const { chatPanel, chatToggle } = getKapotpotFinderElements();
+  closeKapotpotChatComposer({ restoreFocus: false });
+  if (chatPanel) chatPanel.hidden = true;
+  renderKapotpotChatControl();
+  chatToggle?.focus();
+}
+
+function disconnectKapotpotChat({ clearMessages = false } = {}) {
+  kapotpotFinderState.chatShouldReconnect = false;
+  window.clearTimeout(kapotpotFinderState.chatReconnectTimer);
+  kapotpotFinderState.chatReconnectTimer = null;
+  const socket = kapotpotFinderState.chatSocket;
+  kapotpotFinderState.chatSocket = null;
+  if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, "Finder closed");
+  if (clearMessages) {
+    kapotpotFinderState.chatMessages = [];
+    kapotpotFinderState.chatUnreadCount = 0;
+    renderKapotpotChatMessages();
+  }
+  setKapotpotChatStatus("OFFLINE");
+  renderKapotpotChatComposer();
+}
+
+function scheduleKapotpotChatReconnect() {
+  if (!kapotpotFinderState.chatShouldReconnect || document.hidden) return;
+  window.clearTimeout(kapotpotFinderState.chatReconnectTimer);
+  const delay = Math.min(15000, 1000 * (2 ** Math.min(kapotpotFinderState.chatReconnectAttempts, 4)));
+  kapotpotFinderState.chatReconnectAttempts += 1;
+  kapotpotFinderState.chatReconnectTimer = window.setTimeout(connectKapotpotChat, delay);
+}
+
+function connectKapotpotChat() {
+  if (!customerState.account || !kapotpotFinderState.isOpen || !kapotpotFinderState.isVisible) return;
+  const currentSocket = kapotpotFinderState.chatSocket;
+  if (currentSocket && [WebSocket.CONNECTING, WebSocket.OPEN].includes(currentSocket.readyState)) return;
+  kapotpotFinderState.chatShouldReconnect = true;
+  setKapotpotChatStatus("CONNECTING");
+  setKapotpotChatError("");
+
+  let socket;
+  try {
+    socket = new WebSocket(getKapotpotChatSocketUrl());
+  } catch {
+    setKapotpotChatStatus("OFFLINE");
+    setKapotpotChatError("Chat could not connect. Try opening the Finder again.");
+    scheduleKapotpotChatReconnect();
+    return;
+  }
+  kapotpotFinderState.chatSocket = socket;
+  socket.addEventListener("open", () => {
+    if (kapotpotFinderState.chatSocket !== socket) return;
+    kapotpotFinderState.chatReconnectAttempts = 0;
+    setKapotpotChatStatus("LIVE");
+    setKapotpotChatError("");
+    renderKapotpotChatComposer();
+  });
+  socket.addEventListener("message", (event) => {
+    let payload;
+    try {
+      payload = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+    if (payload.type === "snapshot") {
+      kapotpotFinderState.chatMessages = (Array.isArray(payload.messages) ? payload.messages : []).slice(-50);
+      renderKapotpotChatMessages();
+    } else if (payload.type === "message") {
+      addKapotpotChatMessage(payload.message);
+    } else if (payload.type === "error") {
+      setKapotpotChatError(payload.error || "Message could not be sent.");
+    }
+  });
+  socket.addEventListener("close", () => {
+    if (kapotpotFinderState.chatSocket === socket) kapotpotFinderState.chatSocket = null;
+    setKapotpotChatStatus("OFFLINE");
+    renderKapotpotChatComposer();
+    scheduleKapotpotChatReconnect();
+  });
+  socket.addEventListener("error", () => setKapotpotChatError("Chat connection was interrupted."));
 }
 
 function setKapotpotMessage(message, type = "") {
@@ -9470,12 +9698,14 @@ function stopKapotpotPresenceUpdates() {
 
 function resetKapotpotFinderForGuest() {
   stopKapotpotPresenceUpdates();
+  disconnectKapotpotChat({ clearMessages: true });
   kapotpotFinderState.isVisible = false;
   kapotpotFinderState.latestPosition = null;
   kapotpotFinderState.nearbyLayer?.clearLayers();
   const { count } = getKapotpotFinderElements();
   if (count) count.textContent = "Log in to check nearby riders";
   renderKapotpotVisibility();
+  renderKapotpotChatControl();
   setKapotpotMessage("Log in to use Kapotpot Finder.");
 }
 
@@ -9718,6 +9948,7 @@ async function ensureKapotpotMap(position) {
   if (legend) legend.hidden = false;
   kapotpotFinderState.isOpen = true;
   renderKapotpotVisibility();
+  renderKapotpotChatControl();
 }
 
 function renderKapotpotNearby(response) {
@@ -9831,9 +10062,12 @@ async function openKapotpotFinder() {
   try {
     await syncKapotpotPresence();
     startKapotpotPresenceUpdates();
+    connectKapotpotChat();
   } catch {
     kapotpotFinderState.isVisible = false;
+    disconnectKapotpotChat();
     renderKapotpotVisibility();
+    renderKapotpotChatControl();
   }
 }
 
@@ -9865,7 +10099,17 @@ async function loadKapotpotPresenceStatus() {
 }
 
 function initializeKapotpotFinder() {
-  const { root, openButton, fullscreenButton } = getKapotpotFinderElements();
+  const {
+    root,
+    openButton,
+    fullscreenButton,
+    chatToggle,
+    chatCompose,
+    chatClose,
+    chatForm,
+    chatInput,
+    chatCancel
+  } = getKapotpotFinderElements();
   if (!root || root.dataset.kapotpotBound === "true") return;
   root.dataset.kapotpotBound = "true";
 
@@ -9883,6 +10127,31 @@ function initializeKapotpotFinder() {
 
   openButton?.addEventListener("click", () => openKapotpotLocationPrompt());
   fullscreenButton?.addEventListener("click", () => void toggleKapotpotMapFullscreen());
+  chatToggle?.addEventListener("click", openKapotpotChat);
+  chatCompose?.addEventListener("click", openKapotpotChatComposer);
+  chatClose?.addEventListener("click", closeKapotpotChat);
+  chatCancel?.addEventListener("click", () => closeKapotpotChatComposer());
+  chatInput?.addEventListener("input", renderKapotpotChatComposer);
+  chatForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const message = chatInput?.value.trim() || "";
+    const length = Array.from(message).length;
+    const socket = kapotpotFinderState.chatSocket;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      setKapotpotChatError("Chat is reconnecting. Try again in a moment.");
+      renderKapotpotChatComposer();
+      return;
+    }
+    if (length === 0 || length > 120) {
+      renderKapotpotChatComposer();
+      return;
+    }
+    socket.send(JSON.stringify({ type: "send", message }));
+    chatInput.value = "";
+    setKapotpotChatError("");
+    renderKapotpotChatComposer();
+    closeKapotpotChatComposer({ restoreFocus: false });
+  });
   document.addEventListener("fullscreenchange", () => {
     renderKapotpotFullscreenControl();
     resizeKapotpotMapAfterLayout();
@@ -9921,6 +10190,10 @@ function initializeKapotpotFinder() {
     if (event.target === event.currentTarget) closeKapotpotLocationPrompt({ cancelled: true });
   });
   document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && !getKapotpotFinderElements().chatComposer?.hidden) {
+      closeKapotpotChatComposer();
+      return;
+    }
     if (event.key === "Escape" && !document.querySelector("[data-kapotpot-location-prompt]")?.hidden) {
       closeKapotpotLocationPrompt({ cancelled: true });
     }
@@ -9935,17 +10208,32 @@ function initializeKapotpotFinder() {
     }
   });
   window.addEventListener("customer-session-changed", () => {
-    if (!customerState.account) closeKapotpotLocationPrompt();
+    if (!customerState.account) {
+      closeKapotpotLocationPrompt();
+      closeKapotpotChat();
+      disconnectKapotpotChat({ clearMessages: true });
+    }
     void loadKapotpotPresenceStatus();
   });
   document.addEventListener("visibilitychange", () => {
-    if (!document.hidden && kapotpotFinderState.isVisible && kapotpotFinderState.isOpen) {
-      void syncKapotpotPresence({ quiet: true }).catch(() => {});
+    if (document.hidden) {
+      disconnectKapotpotChat();
+      return;
+    }
+    if (kapotpotFinderState.isVisible && kapotpotFinderState.isOpen) {
+      void syncKapotpotPresence({ quiet: true })
+        .then(connectKapotpotChat)
+        .catch(() => {});
     }
   });
-  window.addEventListener("pagehide", stopKapotpotPresenceUpdates);
+  window.addEventListener("pagehide", () => {
+    stopKapotpotPresenceUpdates();
+    disconnectKapotpotChat();
+  });
   renderKapotpotVisibility();
   renderKapotpotFullscreenControl();
+  renderKapotpotChatControl();
+  renderKapotpotChatMessages();
 }
 async function startCatalog() {
   await initializePublicLocations();

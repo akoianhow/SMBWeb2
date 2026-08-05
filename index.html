@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-fullscreen-v1">
+    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-chat-v1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -448,6 +448,13 @@
               <path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"></path>
             </svg>
           </button>
+          <button class="kapotpot-chat-toggle" type="button" data-kapotpot-chat-toggle aria-label="Open Kapotpot chat" title="Open Kapotpot chat" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 5h14v10H9l-4 4V5Z"></path>
+              <path d="M8 9h8M8 12h5"></path>
+            </svg>
+            <span data-kapotpot-chat-unread hidden></span>
+          </button>
           <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within fifty kilometers"></div>
           <div class="kapotpot-map-preview" data-kapotpot-map-preview>
             <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder 50 kilometer map preview with a 5 kilometer inner zone">
@@ -470,6 +477,39 @@
             <span><i class="is-kapotpot"></i>Kapotpot</span>
             <span><i class="is-nearby-zone"></i>5 km zone</span>
             <span><i class="is-search-zone"></i>50 km limit</span>
+          </div>
+          <section class="kapotpot-chat-panel" data-kapotpot-chat-panel aria-label="Kapotpot chat" hidden>
+            <header>
+              <div>
+                <strong>KAPOTPOT CHAT</strong>
+                <span data-kapotpot-chat-status>CONNECTING</span>
+              </div>
+              <div class="kapotpot-chat-panel-actions">
+                <button type="button" data-kapotpot-chat-compose aria-label="Write a message" title="Write a message">＋</button>
+                <button type="button" data-kapotpot-chat-close aria-label="Close chat" title="Close chat">×</button>
+              </div>
+            </header>
+            <div class="kapotpot-chat-messages" data-kapotpot-chat-messages role="log" aria-live="polite" aria-relevant="additions"></div>
+            <p class="kapotpot-chat-error" data-kapotpot-chat-error role="status" hidden></p>
+            <footer><span>Temporary branch chat</span><span>50 messages max</span></footer>
+          </section>
+          <div class="kapotpot-chat-composer" data-kapotpot-chat-composer hidden>
+            <form data-kapotpot-chat-form aria-labelledby="kapotpot-chat-title">
+              <h3 id="kapotpot-chat-title">SEND A MESSAGE</h3>
+              <p>Visible to Kapotpots using this map.</p>
+              <label>
+                <span class="sr-only">Message</span>
+                <textarea data-kapotpot-chat-input maxlength="120" rows="4" placeholder="Type a short message…" required></textarea>
+              </label>
+              <div class="kapotpot-chat-composer-meta">
+                <span data-kapotpot-chat-feedback role="status"></span>
+                <strong data-kapotpot-chat-count>0 / 120</strong>
+              </div>
+              <div class="kapotpot-chat-composer-actions">
+                <button type="button" data-kapotpot-chat-cancel>CANCEL</button>
+                <button type="submit" data-kapotpot-chat-send disabled>SEND</button>
+              </div>
+            </form>
           </div>
         </div>
       </section>
@@ -790,6 +830,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-kapotpot-fullscreen-v1"></script>
+    <script src="script.js?v=20260805-kapotpot-chat-v1"></script>
   </body>
 </html>

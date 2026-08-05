@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v56-kapotpot-fullscreen';
+const STATIC_CACHE = 'smbweb2-static-v57-kapotpot-chat';
 const CATALOG_CACHE = 'smbweb2-catalog-v3-kapotpot-finder';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);

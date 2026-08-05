@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-leaderboard-activity-v2">
+    <link rel="stylesheet" href="styles.css?v=20260805-leaderboard-refresh-v1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -288,7 +288,14 @@
               <h2>Leaderboard</h2>
               <span>Top lifetime Kapotpoints earners</span>
             </div>
-            <strong data-leaderboard-scope>All branches</strong>
+            <div class="hero-leaderboard-header-actions">
+              <strong data-leaderboard-scope>All branches</strong>
+              <button type="button" class="hero-leaderboard-refresh" data-leaderboard-refresh aria-label="Refresh leaderboard" title="Refresh leaderboard">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M20 11a8 8 0 1 0-2.34 5.66M20 11V5m0 6h-6" />
+                </svg>
+              </button>
+            </div>
           </header>
           <ol class="hero-leaderboard-list" data-loyalty-leaderboard-list aria-label="Top ten Kapotpoints earners"></ol>
         </div>
@@ -650,6 +657,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-leaderboard-activity-v2"></script>
+    <script src="script.js?v=20260805-leaderboard-refresh-v1"></script>
   </body>
 </html>

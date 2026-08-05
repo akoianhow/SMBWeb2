@@ -1174,12 +1174,20 @@ function setHeroLeaderboardEnabled(enabled) {
   startHeroCarouselAutoRotation();
 }
 
-async function loadHeroLeaderboard() {
+async function loadHeroLeaderboard({ forceRefresh = false } = {}) {
   const list = document.querySelector("[data-loyalty-leaderboard-list]");
   if (!list) return;
+  const refreshButton = document.querySelector("[data-leaderboard-refresh]");
+  if (forceRefresh && refreshButton?.disabled) return;
+  if (forceRefresh && refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.classList.add("is-refreshing");
+    refreshButton.setAttribute("aria-label", "Refreshing leaderboard");
+  }
   try {
     const location = encodeURIComponent(getSelectedPublicLocationSlug());
-    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=10`);
+    const cacheBuster = forceRefresh ? `&_=${Date.now()}` : "";
+    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=10${cacheBuster}`);
     const rows = Array.isArray(result?.rows) ? result.rows : [];
     if (rows.length === 0) {
       setHeroLeaderboardEnabled(false);
@@ -1191,6 +1199,12 @@ async function loadHeroLeaderboard() {
     setHeroLeaderboardEnabled(true);
   } catch {
     if (!heroLeaderboardState.enabled) setHeroLeaderboardEnabled(false);
+  } finally {
+    if (forceRefresh && refreshButton) {
+      refreshButton.disabled = false;
+      refreshButton.classList.remove("is-refreshing");
+      refreshButton.setAttribute("aria-label", "Refresh leaderboard");
+    }
   }
 }
 
@@ -1207,6 +1221,9 @@ function initializeHeroLeaderboardCarousel() {
   });
   carousel.querySelectorAll("[data-hero-carousel-dot]").forEach((dot) => {
     dot.addEventListener("click", () => showHeroCarouselSlide(Number(dot.dataset.heroCarouselDot), true));
+  });
+  carousel.querySelector("[data-leaderboard-refresh]")?.addEventListener("click", () => {
+    loadHeroLeaderboard({ forceRefresh: true });
   });
 
   carousel.addEventListener("mouseenter", () => { heroLeaderboardState.paused = true; });

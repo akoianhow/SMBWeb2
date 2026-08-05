@@ -1414,7 +1414,14 @@ body.is-catalog-mode .content {
   font-size: 11px;
 }
 
-.hero-leaderboard-header > strong {
+.hero-leaderboard-header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-leaderboard-header-actions > strong {
   flex: 0 0 auto;
   padding: 5px 8px;
   color: #eeeeee;
@@ -1422,6 +1429,56 @@ body.is-catalog-mode .content {
   background: #404040;
   font-size: 10px;
   text-transform: uppercase;
+}
+
+.hero-leaderboard-refresh {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, opacity 160ms ease;
+}
+
+.hero-leaderboard-refresh:hover,
+.hero-leaderboard-refresh:focus-visible {
+  border-color: #ffffff;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.hero-leaderboard-refresh:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+.hero-leaderboard-refresh:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.hero-leaderboard-refresh svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.hero-leaderboard-refresh.is-refreshing svg {
+  animation: hero-leaderboard-refresh-spin 700ms linear infinite;
+}
+
+@keyframes hero-leaderboard-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .hero-leaderboard-list {
@@ -9102,9 +9159,23 @@ body.is-catalog-mode .product-section {
     font-size: 9px;
   }
 
-  .hero-leaderboard-header > strong {
+  .hero-leaderboard-header-actions {
+    gap: 4px;
+  }
+
+  .hero-leaderboard-header-actions > strong {
     padding: 4px 6px;
     font-size: 8px;
+  }
+
+  .hero-leaderboard-refresh {
+    width: 24px;
+    height: 24px;
+  }
+
+  .hero-leaderboard-refresh svg {
+    width: 12px;
+    height: 12px;
   }
 
   .hero-leaderboard-list {

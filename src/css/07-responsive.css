@@ -822,9 +822,23 @@
     font-size: 9px;
   }
 
-  .hero-leaderboard-header > strong {
+  .hero-leaderboard-header-actions {
+    gap: 4px;
+  }
+
+  .hero-leaderboard-header-actions > strong {
     padding: 4px 6px;
     font-size: 8px;
+  }
+
+  .hero-leaderboard-refresh {
+    width: 24px;
+    height: 24px;
+  }
+
+  .hero-leaderboard-refresh svg {
+    width: 12px;
+    height: 12px;
   }
 
   .hero-leaderboard-list {

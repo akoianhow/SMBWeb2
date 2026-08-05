@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v40-leaderboard-page';
+const STATIC_CACHE = 'smbweb2-static-v41-recent-purchases';
 const CATALOG_CACHE = 'smbweb2-catalog-v1';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
@@ -124,6 +124,9 @@ function catalogPolicy(pathname) {
     return { freshFor: 15 * MINUTE, staleFor: 60 * MINUTE };
   }
   if (pathname === '/api/public/loyalty/leaderboard') {
+    return { freshFor: MINUTE, staleFor: 15 * MINUTE };
+  }
+  if (pathname === '/api/public/recent-purchases') {
     return { freshFor: MINUTE, staleFor: 15 * MINUTE };
   }
   if (pathname === '/api/public/site-status') {

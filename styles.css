@@ -1493,9 +1493,23 @@ body.is-catalog-mode .content {
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
 }
 
-.home-leaderboard-panel {
+.home-community-proof-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
   margin: 26px 0;
+}
+
+.home-leaderboard-panel {
+  display: flex;
+  min-width: 0;
+  margin: 0;
   padding: 24px;
+  flex-direction: column;
+}
+
+.home-community-proof-row .public-leaderboard-heading h2 {
+  font-size: clamp(24px, 3vw, 39px);
 }
 
 .public-leaderboard-heading {
@@ -1593,6 +1607,85 @@ body.is-catalog-mode .content {
 .home-leaderboard-more:hover,
 .home-leaderboard-more:focus-visible {
   color: var(--red);
+}
+
+.recent-purchases-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-purchase-row {
+  display: grid;
+  min-height: 64px;
+  padding: 8px 10px;
+  align-items: center;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 10px;
+  border: 1px solid #4b4b4b;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.065);
+}
+
+.recent-purchase-row:first-child {
+  border-color: rgba(237, 28, 39, 0.9);
+  background: rgba(237, 28, 39, 0.16);
+}
+
+.recent-purchase-avatar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  overflow: hidden;
+  place-items: center;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  background: #ed1c27;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.recent-purchase-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.recent-purchase-details {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.recent-purchase-details strong,
+.recent-purchase-details small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-purchase-details strong {
+  font-size: 14px;
+}
+
+.recent-purchase-details small,
+.recent-purchase-time,
+.recent-purchases-consent-note {
+  color: #cfcfcf;
+  font-size: 10px;
+}
+
+.recent-purchase-time {
+  white-space: nowrap;
+}
+
+.recent-purchases-consent-note {
+  margin: auto 0 0;
+  padding-top: 18px;
+  text-align: center;
 }
 
 .leaderboard-page-content {
@@ -9369,9 +9462,29 @@ body.is-catalog-mode .product-section {
     font-size: 7px;
   }
 
-  .home-leaderboard-panel {
+  .home-community-proof-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
     margin: 18px 0;
+  }
+
+  .home-leaderboard-panel {
+    margin: 0;
     padding: 16px 10px;
+  }
+
+  .home-community-proof-row .public-leaderboard-heading h2 {
+    font-size: 25px;
+  }
+
+  .recent-purchase-row {
+    min-height: 58px;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+  }
+
+  .recent-purchase-avatar {
+    width: 38px;
+    height: 38px;
   }
 
   .public-leaderboard-heading {

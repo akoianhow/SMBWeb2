@@ -1530,6 +1530,99 @@ function renderHomeLeaderboardMessage(message) {
   list.replaceChildren(item);
 }
 
+function formatRecentPurchaseTime(value) {
+  const occurredAt = Date.parse(value || "");
+  if (!Number.isFinite(occurredAt)) return "Recently";
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - occurredAt) / 60000));
+  if (elapsedMinutes < 1) return "Just now";
+  if (elapsedMinutes < 60) return `${elapsedMinutes} min ago`;
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return `${elapsedHours} hr${elapsedHours === 1 ? "" : "s"} ago`;
+  const elapsedDays = Math.floor(elapsedHours / 24);
+  if (elapsedDays < 7) return `${elapsedDays} day${elapsedDays === 1 ? "" : "s"} ago`;
+  return new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(occurredAt));
+}
+
+function renderRecentPurchaseMessage(message) {
+  const list = document.querySelector("[data-recent-purchases-list]");
+  if (!list) return;
+  list.replaceChildren(createTextElement("li", message, "public-leaderboard-loading"));
+}
+
+function renderRecentPurchases(rows) {
+  const list = document.querySelector("[data-recent-purchases-list]");
+  if (!list) return;
+  list.replaceChildren();
+  rows.slice(0, 5).forEach((row) => {
+    const item = document.createElement("li");
+    item.className = "recent-purchase-row";
+
+    const avatar = document.createElement("span");
+    avatar.className = "recent-purchase-avatar";
+    if (row.profilePictureUrl) {
+      const image = document.createElement("img");
+      image.alt = "";
+      image.loading = "lazy";
+      image.src = normalizeApiUrl(row.profilePictureUrl);
+      image.addEventListener("error", () => {
+        image.remove();
+        avatar.textContent = getLeaderboardInitials(row.displayName);
+      }, { once: true });
+      avatar.append(image);
+    } else {
+      avatar.textContent = row.isPublicProfile ? getLeaderboardInitials(row.displayName) : "SMB";
+    }
+
+    const details = document.createElement("span");
+    details.className = "recent-purchase-details";
+    details.append(
+      createTextElement("strong", row.displayName || "SarapMagBike rider"),
+      createTextElement("small", row.itemSummary || "Shop purchase")
+    );
+    item.append(avatar, details, createTextElement("time", formatRecentPurchaseTime(row.completedAt), "recent-purchase-time"));
+    list.append(item);
+  });
+}
+
+async function loadRecentPurchases({ forceRefresh = false } = {}) {
+  const list = document.querySelector("[data-recent-purchases-list]");
+  if (!list) return;
+  const refreshButton = document.querySelector("[data-recent-purchases-refresh]");
+  if (forceRefresh && refreshButton?.disabled) return;
+  if (refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.classList.add("is-refreshing");
+    refreshButton.setAttribute("aria-label", "Refreshing recent purchases");
+  }
+  try {
+    const location = encodeURIComponent(getSelectedPublicLocationSlug());
+    const cacheBuster = forceRefresh ? `&_=${Date.now()}` : "";
+    const result = await apiRequest(`/api/public/recent-purchases?location=${location}&take=5${cacheBuster}`);
+    const rows = Array.isArray(result?.rows) ? result.rows : [];
+    if (rows.length === 0) renderRecentPurchaseMessage("No completed shop purchases yet.");
+    else renderRecentPurchases(rows);
+    document.querySelectorAll("[data-recent-purchases-scope]").forEach((scope) => {
+      scope.textContent = result?.label || "Quezon City";
+    });
+  } catch {
+    renderRecentPurchaseMessage("Recent purchases are temporarily unavailable.");
+  } finally {
+    if (refreshButton) {
+      refreshButton.disabled = false;
+      refreshButton.classList.remove("is-refreshing");
+      refreshButton.setAttribute("aria-label", "Refresh recent purchases");
+    }
+  }
+}
+
+function initializeRecentPurchases() {
+  if (!document.querySelector("[data-recent-purchases-list]")) return;
+  document.querySelector("[data-recent-purchases-refresh]")?.addEventListener("click", () => {
+    loadRecentPurchases({ forceRefresh: true });
+  });
+  loadRecentPurchases();
+}
+
 function showHeroCarouselSlide(index, manual = false) {
   const carousel = document.querySelector("[data-hero-carousel]");
   if (!carousel) return;
@@ -7026,6 +7119,7 @@ function fillProfileForm(profile) {
   if (form.elements.password) form.elements.password.value = "";
   if (form.elements.confirmPassword) form.elements.confirmPassword.value = "";
   if (form.elements.marketingConsent) form.elements.marketingConsent.checked = false;
+  if (form.elements.showRecentPurchaseActivity) form.elements.showRecentPurchaseActivity.checked = Boolean(profile?.showRecentPurchaseActivity);
   form.querySelectorAll("input[name='riderTypes']").forEach((input) => {
     input.checked = (profile?.riderTypes || []).includes(input.value);
   });
@@ -7173,6 +7267,7 @@ async function submitProfile(event) {
       profileImageBase64: image?.base64 || null,
       profileImageContentType: image?.contentType || null,
       marketingConsent: form.elements.marketingConsent ? form.elements.marketingConsent.checked : false,
+      showRecentPurchaseActivity: form.elements.showRecentPurchaseActivity ? form.elements.showRecentPurchaseActivity.checked : false,
       website: form.elements.website ? form.elements.website.value : ""
     };
 
@@ -7212,7 +7307,8 @@ async function submitProfile(event) {
         riderTypes: payload.riderTypes,
         profileImageBase64: payload.profileImageBase64,
         profileImageContentType: payload.profileImageContentType,
-        marketingConsent: payload.marketingConsent
+        marketingConsent: payload.marketingConsent,
+        showRecentPurchaseActivity: payload.showRecentPurchaseActivity
       })
     });
     customerState.profile = profile;
@@ -9151,6 +9247,7 @@ async function startCatalog() {
   ensureStandardProductSearchActions();
   ensureCustomerLoginPrompt();
   initializeHeroLeaderboardCarousel();
+  initializeRecentPurchases();
   initializeLeaderboardPage();
   initializeNotifications();
   initializeCartUi();
@@ -9205,7 +9302,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-leaderboard-page-v3')
+    navigator.serviceWorker.register('./sw.js?v=20260805-recent-purchases-v1')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

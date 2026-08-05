@@ -251,7 +251,8 @@ function getProfileEditFields(panel, profile) {
       <label>Hometown<input name="hometown" maxlength="120" value="${escapeHtml(profile.hometown || "")}"></label>
       <label>Birthday<input type="date" name="birthday" value="${escapeHtml(profile.birthday || "")}"></label>
       <label class="rider-profile-check"><input type="checkbox" name="showHometown" ${profile.showHometown ? "checked" : ""}> Show hometown publicly</label>
-      <label class="rider-profile-check"><input type="checkbox" name="showBirthday" ${profile.showBirthday ? "checked" : ""}> Show birthday month and day publicly</label>`;
+      <label class="rider-profile-check"><input type="checkbox" name="showBirthday" ${profile.showBirthday ? "checked" : ""}> Show birthday month and day publicly</label>
+      <label class="rider-profile-check"><input type="checkbox" name="showRecentPurchaseActivity" ${profile.showRecentPurchaseActivity ? "checked" : ""}> Show my username and profile picture in Recent Shop Purchases. Totals and private details stay hidden.</label>`;
   }
   return `
     <label>Strava URL<input type="url" name="stravaUrl" value="${escapeHtml(profile.stravaUrl || "")}" placeholder="https://www.strava.com/athletes/..."></label>
@@ -400,6 +401,7 @@ function createRiderProfilePayload(profile, overrides = {}) {
     otherUrl: profile.otherUrl || "",
     showHometown: Boolean(profile.showHometown),
     showBirthday: Boolean(profile.showBirthday),
+    showRecentPurchaseActivity: Boolean(profile.showRecentPurchaseActivity),
     profileImageBase64: null,
     profileImageContentType: null,
     coverImageBase64: null,
@@ -460,6 +462,7 @@ async function submitRiderEdit(event) {
       stravaUrl: value("stravaUrl", profile.stravaUrl), instagramUrl: value("instagramUrl", profile.instagramUrl), facebookUrl: value("facebookUrl", profile.facebookUrl), otherUrl: value("otherUrl", profile.otherUrl),
       showHometown: form.elements.showHometown ? form.elements.showHometown.checked : profile.showHometown,
       showBirthday: form.elements.showBirthday ? form.elements.showBirthday.checked : profile.showBirthday,
+      showRecentPurchaseActivity: form.elements.showRecentPurchaseActivity ? form.elements.showRecentPurchaseActivity.checked : profile.showRecentPurchaseActivity,
       profileImageBase64: profileImage.base64, profileImageContentType: profileImage.contentType,
       coverImageBase64: coverImage.base64, coverImageContentType: coverImage.contentType
     };

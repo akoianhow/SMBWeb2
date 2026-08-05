@@ -776,6 +776,7 @@ function fillProfileForm(profile) {
   if (form.elements.password) form.elements.password.value = "";
   if (form.elements.confirmPassword) form.elements.confirmPassword.value = "";
   if (form.elements.marketingConsent) form.elements.marketingConsent.checked = false;
+  if (form.elements.showRecentPurchaseActivity) form.elements.showRecentPurchaseActivity.checked = Boolean(profile?.showRecentPurchaseActivity);
   form.querySelectorAll("input[name='riderTypes']").forEach((input) => {
     input.checked = (profile?.riderTypes || []).includes(input.value);
   });
@@ -923,6 +924,7 @@ async function submitProfile(event) {
       profileImageBase64: image?.base64 || null,
       profileImageContentType: image?.contentType || null,
       marketingConsent: form.elements.marketingConsent ? form.elements.marketingConsent.checked : false,
+      showRecentPurchaseActivity: form.elements.showRecentPurchaseActivity ? form.elements.showRecentPurchaseActivity.checked : false,
       website: form.elements.website ? form.elements.website.value : ""
     };
 
@@ -962,7 +964,8 @@ async function submitProfile(event) {
         riderTypes: payload.riderTypes,
         profileImageBase64: payload.profileImageBase64,
         profileImageContentType: payload.profileImageContentType,
-        marketingConsent: payload.marketingConsent
+        marketingConsent: payload.marketingConsent,
+        showRecentPurchaseActivity: payload.showRecentPurchaseActivity
       })
     });
     customerState.profile = profile;

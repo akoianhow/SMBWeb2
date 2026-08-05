@@ -9446,7 +9446,9 @@ function renderKapotpotChatMessages() {
   kapotpotFinderState.chatMessages.forEach((message) => {
     const row = document.createElement("article");
     row.className = "kapotpot-chat-message";
-    const avatar = createTextElement("span", getKapotpotInitials(message.displayName), "kapotpot-chat-message-avatar");
+    const avatar = document.createElement("span");
+    avatar.className = "kapotpot-chat-message-avatar";
+    avatar.setAttribute("aria-hidden", "true");
     const avatarUrl = normalizeApiUrl(message.avatarUrl || "");
     if (avatarUrl) {
       const image = document.createElement("img");

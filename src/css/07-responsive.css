@@ -898,12 +898,17 @@
 
   .recent-purchase-row {
     min-height: 58px;
-    grid-template-columns: 42px minmax(0, 1fr) auto;
+    grid-template-columns: 42px minmax(0, 1fr);
   }
 
   .recent-purchase-avatar {
     width: 38px;
     height: 38px;
+  }
+
+  .recent-purchase-product > img {
+    width: 26px;
+    height: 26px;
   }
 
   .public-leaderboard-heading {

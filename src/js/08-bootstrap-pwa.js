@@ -70,7 +70,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-recent-purchases-v1')
+    navigator.serviceWorker.register('./sw.js?v=20260805-purchase-products-v1')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

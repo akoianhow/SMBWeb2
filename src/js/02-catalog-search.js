@@ -1136,19 +1136,6 @@ function renderHomeLeaderboardMessage(message) {
   list.replaceChildren(item);
 }
 
-function formatRecentPurchaseTime(value) {
-  const occurredAt = Date.parse(value || "");
-  if (!Number.isFinite(occurredAt)) return "Recently";
-  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - occurredAt) / 60000));
-  if (elapsedMinutes < 1) return "Just now";
-  if (elapsedMinutes < 60) return `${elapsedMinutes} min ago`;
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-  if (elapsedHours < 24) return `${elapsedHours} hr${elapsedHours === 1 ? "" : "s"} ago`;
-  const elapsedDays = Math.floor(elapsedHours / 24);
-  if (elapsedDays < 7) return `${elapsedDays} day${elapsedDays === 1 ? "" : "s"} ago`;
-  return new Intl.DateTimeFormat("en-PH", { month: "short", day: "numeric" }).format(new Date(occurredAt));
-}
-
 function renderRecentPurchaseMessage(message) {
   const list = document.querySelector("[data-recent-purchases-list]");
   if (!list) return;
@@ -1181,11 +1168,25 @@ function renderRecentPurchases(rows) {
 
     const details = document.createElement("span");
     details.className = "recent-purchase-details";
-    details.append(
-      createTextElement("strong", row.displayName || "SarapMagBike rider"),
-      createTextElement("small", row.itemSummary || "Shop purchase")
-    );
-    item.append(avatar, details, createTextElement("time", formatRecentPurchaseTime(row.completedAt), "recent-purchase-time"));
+    details.append(createTextElement("strong", row.displayName || "SarapMagBike rider"));
+
+    const product = document.createElement("span");
+    product.className = "recent-purchase-product";
+    if (row.itemImageUrl) {
+      const productImage = document.createElement("img");
+      productImage.alt = "";
+      productImage.loading = "lazy";
+      productImage.src = normalizeApiUrl(row.itemImageUrl);
+      productImage.addEventListener("error", () => productImage.remove(), { once: true });
+      product.append(productImage);
+    }
+    product.append(createTextElement("span", row.itemName || "Shop purchase"));
+    const additionalItemCount = Math.max(0, Number(row.additionalItemCount || 0));
+    if (additionalItemCount > 0) {
+      product.append(createTextElement("small", `(and ${additionalItemCount.toLocaleString("en-PH")} more)`, "recent-purchase-more"));
+    }
+    details.append(product);
+    item.append(avatar, details);
     list.append(item);
   });
 }

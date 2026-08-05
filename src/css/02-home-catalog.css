@@ -345,7 +345,7 @@
   min-height: 64px;
   padding: 8px 10px;
   align-items: center;
-  grid-template-columns: 48px minmax(0, 1fr) auto;
+  grid-template-columns: 48px minmax(0, 1fr);
   gap: 10px;
   border: 1px solid #4b4b4b;
   border-radius: 10px;
@@ -394,14 +394,39 @@
   font-size: 14px;
 }
 
-.recent-purchase-details small,
-.recent-purchase-time,
+.recent-purchase-product,
+.recent-purchase-more,
 .recent-purchases-consent-note {
   color: #cfcfcf;
   font-size: 10px;
 }
 
-.recent-purchase-time {
+.recent-purchase-product {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.recent-purchase-product > img {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  background: #ffffff;
+  object-fit: cover;
+}
+
+.recent-purchase-product > span {
+  min-width: 0;
+  overflow: hidden;
+  color: #eeeeee;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-purchase-more {
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 

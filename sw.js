@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'smbweb2-static-v41-recent-purchases';
-const CATALOG_CACHE = 'smbweb2-catalog-v1';
+const STATIC_CACHE = 'smbweb2-static-v42-purchase-products';
+const CATALOG_CACHE = 'smbweb2-catalog-v2-purchase-products';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
 

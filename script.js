@@ -1454,12 +1454,11 @@ function getLeaderboardInitials(username) {
   return words.slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "R";
 }
 
-function renderHeroLeaderboard(rows) {
-  const list = document.querySelector("[data-loyalty-leaderboard-list]");
+function renderLeaderboardRows(list, rows, limit = 10) {
   if (!list) return;
   list.replaceChildren();
 
-  rows.slice(0, 10).forEach((row, index) => {
+  rows.slice(0, limit).forEach((row, index) => {
     const item = document.createElement("li");
     item.className = "hero-leaderboard-row";
 
@@ -1519,6 +1518,18 @@ function renderHeroLeaderboard(rows) {
   });
 }
 
+function renderHeroLeaderboard(rows) {
+  renderLeaderboardRows(document.querySelector("[data-loyalty-leaderboard-list]"), rows, 10);
+  renderLeaderboardRows(document.querySelector("[data-home-leaderboard-list]"), rows, 5);
+}
+
+function renderHomeLeaderboardMessage(message) {
+  const list = document.querySelector("[data-home-leaderboard-list]");
+  if (!list) return;
+  const item = createTextElement("li", message, "public-leaderboard-loading");
+  list.replaceChildren(item);
+}
+
 function showHeroCarouselSlide(index, manual = false) {
   const carousel = document.querySelector("[data-hero-carousel]");
   if (!carousel) return;
@@ -1571,12 +1582,14 @@ function setHeroLeaderboardEnabled(enabled) {
 async function loadHeroLeaderboard({ forceRefresh = false } = {}) {
   const list = document.querySelector("[data-loyalty-leaderboard-list]");
   if (!list) return;
-  const refreshButton = document.querySelector("[data-leaderboard-refresh]");
-  if (forceRefresh && refreshButton?.disabled) return;
-  if (forceRefresh && refreshButton) {
-    refreshButton.disabled = true;
-    refreshButton.classList.add("is-refreshing");
-    refreshButton.setAttribute("aria-label", "Refreshing leaderboard");
+  const refreshButtons = Array.from(document.querySelectorAll("[data-leaderboard-refresh], [data-home-leaderboard-refresh]"));
+  if (forceRefresh && refreshButtons.some((button) => button.disabled)) return;
+  if (forceRefresh) {
+    refreshButtons.forEach((button) => {
+      button.disabled = true;
+      button.classList.add("is-refreshing");
+      button.setAttribute("aria-label", "Refreshing leaderboard");
+    });
   }
   try {
     const location = encodeURIComponent(getSelectedPublicLocationSlug());
@@ -1584,22 +1597,69 @@ async function loadHeroLeaderboard({ forceRefresh = false } = {}) {
     const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=10${cacheBuster}`);
     const rows = Array.isArray(result?.rows) ? result.rows : [];
     if (rows.length === 0) {
+      renderHomeLeaderboardMessage("No leaderboard activity yet.");
       setHeroLeaderboardEnabled(false);
       return;
     }
     renderHeroLeaderboard(rows);
-    const scope = document.querySelector("[data-leaderboard-scope]");
-    if (scope) scope.textContent = result?.label || "All branches";
+    document.querySelectorAll("[data-leaderboard-scope]").forEach((scope) => {
+      scope.textContent = result?.label || "All branches";
+    });
     setHeroLeaderboardEnabled(true);
   } catch {
+    renderHomeLeaderboardMessage("Leaderboard is temporarily unavailable.");
     if (!heroLeaderboardState.enabled) setHeroLeaderboardEnabled(false);
   } finally {
-    if (forceRefresh && refreshButton) {
+    if (forceRefresh) {
+      refreshButtons.forEach((button) => {
+        button.disabled = false;
+        button.classList.remove("is-refreshing");
+        button.setAttribute("aria-label", button.matches("[data-home-leaderboard-refresh]") ? "Refresh homepage leaderboard" : "Refresh leaderboard");
+      });
+    }
+  }
+}
+
+async function loadLeaderboardPage({ forceRefresh = false } = {}) {
+  const list = document.querySelector("[data-leaderboard-page-list]");
+  if (!list) return;
+  const refreshButton = document.querySelector("[data-leaderboard-page-refresh]");
+  const status = document.querySelector("[data-leaderboard-page-status]");
+  if (forceRefresh && refreshButton?.disabled) return;
+  if (refreshButton) {
+    refreshButton.disabled = true;
+    refreshButton.classList.add("is-refreshing");
+    refreshButton.setAttribute("aria-label", "Refreshing leaderboard");
+  }
+  if (status) status.textContent = forceRefresh ? "Refreshing standings…" : "Loading top riders…";
+  try {
+    const location = encodeURIComponent(getSelectedPublicLocationSlug());
+    const cacheBuster = forceRefresh ? `&_=${Date.now()}` : "";
+    const result = await apiRequest(`/api/public/loyalty/leaderboard?location=${location}&take=25${cacheBuster}`);
+    const rows = Array.isArray(result?.rows) ? result.rows : [];
+    renderLeaderboardRows(list, rows, 25);
+    document.querySelectorAll("[data-leaderboard-page-scope]").forEach((scope) => {
+      scope.textContent = result?.label || "All branches";
+    });
+    if (status) status.textContent = rows.length > 0 ? `Showing the top ${rows.length} Kapotpoints earners.` : "No leaderboard activity yet.";
+  } catch {
+    list.replaceChildren();
+    if (status) status.textContent = "Leaderboard is temporarily unavailable. Please try again.";
+  } finally {
+    if (refreshButton) {
       refreshButton.disabled = false;
       refreshButton.classList.remove("is-refreshing");
       refreshButton.setAttribute("aria-label", "Refresh leaderboard");
     }
   }
+}
+
+function initializeLeaderboardPage() {
+  if (!document.querySelector("[data-leaderboard-page-list]")) return;
+  document.querySelector("[data-leaderboard-page-refresh]")?.addEventListener("click", () => {
+    loadLeaderboardPage({ forceRefresh: true });
+  });
+  loadLeaderboardPage();
 }
 
 function initializeHeroLeaderboardCarousel() {
@@ -1617,6 +1677,9 @@ function initializeHeroLeaderboardCarousel() {
     dot.addEventListener("click", () => showHeroCarouselSlide(Number(dot.dataset.heroCarouselDot), true));
   });
   carousel.querySelector("[data-leaderboard-refresh]")?.addEventListener("click", () => {
+    loadHeroLeaderboard({ forceRefresh: true });
+  });
+  document.querySelector("[data-home-leaderboard-refresh]")?.addEventListener("click", () => {
     loadHeroLeaderboard({ forceRefresh: true });
   });
 
@@ -2209,8 +2272,9 @@ function renderCategoryNav() {
   const isAppointmentsPage = window.location.pathname.endsWith("/appointments.html");
   const isEventsPage = window.location.pathname.endsWith("/events.html");
   const isStoriesPage = window.location.pathname.endsWith("/stories.html") || window.location.pathname.endsWith("/story.html");
+  const isLeaderboardPage = window.location.pathname.endsWith("/leaderboard.html");
   const isAccountPage = ["/orders.html", "/profile.html", "/badge.html"].some((path) => window.location.pathname.endsWith(path));
-  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage || isAccountPage;
+  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage || isLeaderboardPage || isAccountPage;
   const goToHomeTarget = (targetId) => {
     if (isStandalonePage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;
@@ -9087,6 +9151,7 @@ async function startCatalog() {
   ensureStandardProductSearchActions();
   ensureCustomerLoginPrompt();
   initializeHeroLeaderboardCarousel();
+  initializeLeaderboardPage();
   initializeNotifications();
   initializeCartUi();
   bindCustomerAccountUi();
@@ -9140,7 +9205,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260803-bright-category-images')
+    navigator.serviceWorker.register('./sw.js?v=20260805-leaderboard-page-v3')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

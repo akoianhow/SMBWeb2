@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v37-leaderboard-refresh';
+const STATIC_CACHE = 'smbweb2-static-v40-leaderboard-page';
 const CATALOG_CACHE = 'smbweb2-catalog-v1';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
   './',
   './404.html',
   './index.html',
+  './leaderboard.html',
   './coming-soon.html',
   './guest-order.html',
   './services.html',

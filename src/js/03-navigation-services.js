@@ -563,8 +563,9 @@ function renderCategoryNav() {
   const isAppointmentsPage = window.location.pathname.endsWith("/appointments.html");
   const isEventsPage = window.location.pathname.endsWith("/events.html");
   const isStoriesPage = window.location.pathname.endsWith("/stories.html") || window.location.pathname.endsWith("/story.html");
+  const isLeaderboardPage = window.location.pathname.endsWith("/leaderboard.html");
   const isAccountPage = ["/orders.html", "/profile.html", "/badge.html"].some((path) => window.location.pathname.endsWith(path));
-  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage || isAccountPage;
+  const isStandalonePage = isServicesPage || isAppointmentsPage || isEventsPage || isStoriesPage || isLeaderboardPage || isAccountPage;
   const goToHomeTarget = (targetId) => {
     if (isStandalonePage) {
       window.location.href = targetId === "top" ? "index.html" : `index.html#${targetId}`;

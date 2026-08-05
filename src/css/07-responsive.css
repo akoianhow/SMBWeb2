@@ -881,6 +881,58 @@
     font-size: 7px;
   }
 
+  .home-leaderboard-panel {
+    margin: 18px 0;
+    padding: 16px 10px;
+  }
+
+  .public-leaderboard-heading {
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .public-leaderboard-heading h1,
+  .public-leaderboard-heading h2 {
+    font-size: 25px;
+  }
+
+  .public-leaderboard-heading span {
+    font-size: 9px;
+  }
+
+  .public-leaderboard-heading > strong,
+  .public-leaderboard-heading-actions > strong,
+  .leaderboard-page-heading-actions > strong {
+    padding: 5px 7px;
+    font-size: 8px;
+  }
+
+  .public-leaderboard-heading-actions {
+    gap: 5px;
+  }
+
+  .home-leaderboard-list,
+  .leaderboard-page-list {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+  }
+
+  .leaderboard-page-content {
+    padding-top: 14px;
+    padding-bottom: 26px;
+  }
+
+  .leaderboard-page-shell {
+    margin: 0;
+    padding: 18px 10px;
+  }
+
+  .leaderboard-page-heading-actions {
+    gap: 5px;
+  }
+
   .hero-carousel-controls {
     top: 8px;
     right: 8px;

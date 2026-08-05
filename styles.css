@@ -13085,22 +13085,8 @@ body.has-kapotpot-map-fullscreen {
   min-width: 0;
 }
 
-.kapotpot-chat-message-content strong {
-  display: block;
-  overflow: hidden;
-  font-size: 9px;
-  line-height: 1.15;
-  text-shadow:
-    -1px -1px 2px rgba(0, 0, 0, 0.98),
-    1px -1px 2px rgba(0, 0, 0, 0.98),
-    -1px 1px 2px rgba(0, 0, 0, 0.98),
-    1px 1px 2px rgba(0, 0, 0, 0.98);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .kapotpot-chat-message-content p {
-  margin: 1px 0 0;
+  margin: 0;
   color: #ffffff;
   font-size: 9px;
   font-weight: 700;

@@ -9461,10 +9461,7 @@ function renderKapotpotChatMessages() {
     }
     const content = document.createElement("div");
     content.className = "kapotpot-chat-message-content";
-    content.append(
-      createTextElement("strong", message.displayName || "Kapotpot"),
-      createTextElement("p", message.body || "")
-    );
+    content.append(createTextElement("p", message.body || ""));
     row.append(content);
     chatMessages.append(row);
   });

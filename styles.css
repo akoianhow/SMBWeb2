@@ -1617,6 +1617,31 @@ body.is-catalog-mode .content {
   list-style: none;
 }
 
+.recent-purchases-list .recent-purchase-row {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.recent-purchases-list.is-sliding-out .recent-purchase-row {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+.recent-purchases-list.is-sliding-in .recent-purchase-row {
+  animation: recent-purchase-slide-in 300ms ease both;
+}
+
+@keyframes recent-purchase-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .recent-purchase-row {
   display: grid;
   min-height: 64px;
@@ -1676,6 +1701,14 @@ body.is-catalog-mode .content {
 .recent-purchases-consent-note {
   color: #cfcfcf;
   font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-purchases-list .recent-purchase-row,
+  .recent-purchases-list.is-sliding-in .recent-purchase-row {
+    animation: none;
+    transition: none;
+  }
 }
 
 .recent-purchase-product {
@@ -13038,23 +13071,50 @@ body.has-customer-welcome {
 
 .kapotpot-user-marker,
 .kapotpot-rider-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
   border: 3px solid #ffffff;
   border-radius: 50%;
+  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.34);
 }
 
 .kapotpot-user-marker {
   background: #257ae7;
+  box-shadow: 0 0 0 3px #257ae7, 0 3px 10px rgba(0, 0, 0, 0.36);
 }
 
 .kapotpot-rider-marker {
+  color: #ffffff;
+  background: var(--red);
+  box-shadow: 0 0 0 2px var(--red), 0 3px 9px rgba(0, 0, 0, 0.34);
+}
+
+.kapotpot-marker-fallback {
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
   color: #ffffff;
-  background: var(--red);
-  font-size: 13px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.kapotpot-user-marker .kapotpot-marker-fallback {
+  font-size: 12px;
+}
+
+.kapotpot-marker-avatar {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #ffffff;
 }
 
 .kapotpot-popup {
@@ -13103,6 +13163,110 @@ body.has-customer-welcome {
   font-size: 8px;
 }
 
+.kapotpot-location-prompt {
+  position: fixed;
+  z-index: 1400;
+  inset: 0;
+  display: grid;
+  padding: 20px;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.kapotpot-location-prompt[hidden] {
+  display: none;
+}
+
+.kapotpot-location-prompt > section {
+  width: min(430px, 100%);
+  padding: 28px;
+  color: #262626;
+  border-top: 4px solid var(--red);
+  background: #ffffff;
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.34);
+}
+
+.kapotpot-location-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 16px;
+  place-items: center;
+  color: #ffffff;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.kapotpot-location-icon svg {
+  width: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.kapotpot-location-prompt section > p:first-of-type {
+  margin: 0 0 5px;
+  color: var(--red);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kapotpot-location-prompt h2 {
+  margin: 0 0 12px;
+  font-size: 25px;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+
+.kapotpot-location-prompt section > p:last-of-type,
+.kapotpot-location-prompt li,
+.kapotpot-location-prompt small {
+  color: #5d5d5d;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kapotpot-location-prompt ul {
+  display: grid;
+  gap: 5px;
+  margin: 16px 0 20px;
+  padding-left: 20px;
+}
+
+.kapotpot-location-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kapotpot-location-actions button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  font-weight: 900;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.kapotpot-location-actions button:first-child {
+  color: #ffffff;
+  background: var(--red);
+}
+
+.kapotpot-location-actions button:last-child {
+  color: #333333;
+  background: #e8e8e8;
+}
+
+body.has-kapotpot-location-prompt {
+  overflow: hidden;
+}
+
 @media (max-width: 760px) {
   .kapotpot-finder {
     grid-template-columns: 1fr;
@@ -13145,6 +13309,18 @@ body.has-customer-welcome {
 
   .kapotpot-map-legend {
     bottom: 20px;
+  }
+
+  .kapotpot-location-prompt {
+    padding: 12px;
+  }
+
+  .kapotpot-location-prompt > section {
+    padding: 22px 18px;
+  }
+
+  .kapotpot-location-actions {
+    grid-template-columns: 1fr;
   }
 }
 

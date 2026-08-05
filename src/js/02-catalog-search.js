@@ -1055,6 +1055,17 @@ const heroLeaderboardState = {
   touchStartX: null
 };
 
+const recentPurchasesState = {
+  rows: [],
+  activePage: 0,
+  autoTimer: null,
+  transitionTimer: null,
+  paused: false
+};
+
+const RECENT_PURCHASE_PAGE_SIZE = 5;
+const RECENT_PURCHASE_ROTATION_MS = 5000;
+
 function getLeaderboardInitials(username) {
   const words = String(username || "Rider").trim().split(/[\s._-]+/).filter(Boolean);
   return words.slice(0, 2).map((word) => word[0]?.toUpperCase()).join("") || "R";
@@ -1142,11 +1153,30 @@ function renderRecentPurchaseMessage(message) {
   list.replaceChildren(createTextElement("li", message, "public-leaderboard-loading"));
 }
 
+function shuffleRecentPurchases(rows) {
+  const shuffled = [...rows];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function getRecentPurchasePage(pageIndex) {
+  const rows = recentPurchasesState.rows;
+  if (rows.length <= RECENT_PURCHASE_PAGE_SIZE) return rows;
+  const startIndex = pageIndex * RECENT_PURCHASE_PAGE_SIZE;
+  return Array.from(
+    { length: RECENT_PURCHASE_PAGE_SIZE },
+    (_, offset) => rows[(startIndex + offset) % rows.length]
+  );
+}
+
 function renderRecentPurchases(rows) {
   const list = document.querySelector("[data-recent-purchases-list]");
   if (!list) return;
   list.replaceChildren();
-  rows.slice(0, 5).forEach((row) => {
+  rows.slice(0, RECENT_PURCHASE_PAGE_SIZE).forEach((row) => {
     const item = document.createElement("li");
     item.className = "recent-purchase-row";
 
@@ -1191,9 +1221,54 @@ function renderRecentPurchases(rows) {
   });
 }
 
+function showRecentPurchasePage(pageIndex, { animate = true } = {}) {
+  const list = document.querySelector("[data-recent-purchases-list]");
+  if (!list || recentPurchasesState.rows.length === 0) return;
+  const pageCount = Math.max(1, Math.ceil(recentPurchasesState.rows.length / RECENT_PURCHASE_PAGE_SIZE));
+  const wrappedPageIndex = (pageIndex + pageCount) % pageCount;
+  if (pageIndex >= pageCount) {
+    recentPurchasesState.rows = shuffleRecentPurchases(recentPurchasesState.rows);
+  }
+  recentPurchasesState.activePage = wrappedPageIndex;
+
+  window.clearTimeout(recentPurchasesState.transitionTimer);
+  const shouldAnimate = animate && !prefersReducedMotion?.matches;
+  const commitPage = () => {
+    renderRecentPurchases(getRecentPurchasePage(recentPurchasesState.activePage));
+    list.classList.remove("is-sliding-out");
+    if (!shouldAnimate) return;
+    list.classList.add("is-sliding-in");
+    recentPurchasesState.transitionTimer = window.setTimeout(() => {
+      list.classList.remove("is-sliding-in");
+    }, 320);
+  };
+
+  if (!shouldAnimate) {
+    commitPage();
+    return;
+  }
+  list.classList.remove("is-sliding-in");
+  list.classList.add("is-sliding-out");
+  recentPurchasesState.transitionTimer = window.setTimeout(commitPage, 220);
+}
+
+function startRecentPurchaseCarousel() {
+  window.clearInterval(recentPurchasesState.autoTimer);
+  const pageCount = Math.ceil(recentPurchasesState.rows.length / RECENT_PURCHASE_PAGE_SIZE);
+  if (pageCount <= 1) return;
+  recentPurchasesState.autoTimer = window.setInterval(() => {
+    if (!recentPurchasesState.paused && !document.hidden) {
+      showRecentPurchasePage(recentPurchasesState.activePage + 1);
+    }
+  }, RECENT_PURCHASE_ROTATION_MS);
+}
+
 async function loadRecentPurchases({ forceRefresh = false } = {}) {
   const list = document.querySelector("[data-recent-purchases-list]");
   if (!list) return;
+  window.clearInterval(recentPurchasesState.autoTimer);
+  window.clearTimeout(recentPurchasesState.transitionTimer);
+  list.classList.remove("is-sliding-in", "is-sliding-out");
   const refreshButton = document.querySelector("[data-recent-purchases-refresh]");
   if (forceRefresh && refreshButton?.disabled) return;
   if (refreshButton) {
@@ -1204,10 +1279,17 @@ async function loadRecentPurchases({ forceRefresh = false } = {}) {
   try {
     const location = encodeURIComponent(getSelectedPublicLocationSlug());
     const cacheBuster = forceRefresh ? `&_=${Date.now()}` : "";
-    const result = await apiRequest(`/api/public/recent-purchases?location=${location}&take=5${cacheBuster}`);
+    const result = await apiRequest(`/api/public/recent-purchases?location=${location}&take=20${cacheBuster}`);
     const rows = Array.isArray(result?.rows) ? result.rows : [];
-    if (rows.length === 0) renderRecentPurchaseMessage("No completed shop purchases yet.");
-    else renderRecentPurchases(rows);
+    recentPurchasesState.rows = shuffleRecentPurchases(rows.slice(0, 20));
+    recentPurchasesState.activePage = 0;
+    if (rows.length === 0) {
+      window.clearInterval(recentPurchasesState.autoTimer);
+      renderRecentPurchaseMessage("No completed shop purchases yet.");
+    } else {
+      showRecentPurchasePage(0, { animate: false });
+      startRecentPurchaseCarousel();
+    }
     document.querySelectorAll("[data-recent-purchases-scope]").forEach((scope) => {
       scope.textContent = result?.label || "Quezon City";
     });
@@ -1223,9 +1305,20 @@ async function loadRecentPurchases({ forceRefresh = false } = {}) {
 }
 
 function initializeRecentPurchases() {
-  if (!document.querySelector("[data-recent-purchases-list]")) return;
+  const panel = document.querySelector(".home-recent-purchases-panel");
+  if (!panel || !document.querySelector("[data-recent-purchases-list]")) return;
   document.querySelector("[data-recent-purchases-refresh]")?.addEventListener("click", () => {
     loadRecentPurchases({ forceRefresh: true });
+  });
+  panel.addEventListener("mouseenter", () => { recentPurchasesState.paused = true; });
+  panel.addEventListener("mouseleave", () => { recentPurchasesState.paused = false; });
+  panel.addEventListener("focusin", () => { recentPurchasesState.paused = true; });
+  panel.addEventListener("focusout", (event) => {
+    if (!panel.contains(event.relatedTarget)) recentPurchasesState.paused = false;
+  });
+  window.addEventListener("pagehide", () => {
+    window.clearInterval(recentPurchasesState.autoTimer);
+    window.clearTimeout(recentPurchasesState.transitionTimer);
   });
   loadRecentPurchases();
 }

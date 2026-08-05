@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-finder-order-v1">
+    <link rel="stylesheet" href="styles.css?v=20260805-purchase-carousel-v4">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -468,6 +468,29 @@
         </div>
       </section>
 
+      <div class="kapotpot-location-prompt" data-kapotpot-location-prompt hidden>
+        <section role="dialog" aria-modal="true" aria-labelledby="kapotpot-location-title" aria-describedby="kapotpot-location-description">
+          <span class="kapotpot-location-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 21s6-5.4 6-12a6 6 0 1 0-12 0c0 6.6 6 12 6 12Z"></path><circle cx="12" cy="9" r="2.2"></circle></svg>
+          </span>
+          <p>Location access</p>
+          <h2 id="kapotpot-location-title">Allow location to open the Finder</h2>
+          <p id="kapotpot-location-description">
+            Kapotpot Finder needs your current location to check for opted-in riders within 5 km.
+          </p>
+          <ul>
+            <li>Your exact location is never shown to other riders.</li>
+            <li>You remain hidden unless you turn on Go Visible.</li>
+            <li>You can remove access anytime in your browser settings.</li>
+          </ul>
+          <div class="kapotpot-location-actions">
+            <button type="button" data-kapotpot-location-allow>Allow location access</button>
+            <button type="button" data-kapotpot-location-cancel>Not now</button>
+          </div>
+          <small>Your browser will show its own location permission prompt next.</small>
+        </section>
+      </div>
+
       <section id="leaderboard" class="home-community-proof-row" aria-label="SarapMagBike community activity" data-home-section>
         <section class="home-leaderboard-panel" aria-labelledby="home-leaderboard-title">
           <header class="public-leaderboard-heading">
@@ -496,7 +519,7 @@
             <div>
               <p>Shop Activity</p>
               <h2 id="home-recent-purchases-title">Recent Purchases</h2>
-              <span>Latest 5 completed POS purchases</span>
+              <span>Random picks from the latest 20 completed POS purchases</span>
             </div>
             <div class="public-leaderboard-heading-actions">
               <strong data-recent-purchases-scope>Quezon City</strong>
@@ -507,7 +530,7 @@
               </button>
             </div>
           </header>
-          <ol class="recent-purchases-list" data-recent-purchases-list aria-label="Five most recent shop purchases">
+          <ol class="recent-purchases-list" data-recent-purchases-list aria-label="Five random purchases from the latest twenty shop purchases">
             <li class="public-leaderboard-loading">Loading recent purchases…</li>
           </ol>
           <p class="recent-purchases-consent-note">Public profiles are shown only with customer consent.</p>
@@ -760,6 +783,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-finder-order-v1"></script>
+    <script src="script.js?v=20260805-purchase-carousel-v4"></script>
   </body>
 </html>

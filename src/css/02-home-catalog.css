@@ -340,6 +340,31 @@
   list-style: none;
 }
 
+.recent-purchases-list .recent-purchase-row {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.recent-purchases-list.is-sliding-out .recent-purchase-row {
+  opacity: 0;
+  transform: translateX(-28px);
+}
+
+.recent-purchases-list.is-sliding-in .recent-purchase-row {
+  animation: recent-purchase-slide-in 300ms ease both;
+}
+
+@keyframes recent-purchase-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .recent-purchase-row {
   display: grid;
   min-height: 64px;
@@ -399,6 +424,14 @@
 .recent-purchases-consent-note {
   color: #cfcfcf;
   font-size: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-purchases-list .recent-purchase-row,
+  .recent-purchases-list.is-sliding-in .recent-purchase-row {
+    animation: none;
+    transition: none;
+  }
 }
 
 .recent-purchase-product {

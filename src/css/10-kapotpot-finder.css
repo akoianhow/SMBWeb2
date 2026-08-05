@@ -136,6 +136,81 @@
   background: #eef1f1;
 }
 
+.kapotpot-map-shell:fullscreen,
+.kapotpot-map-shell:-webkit-full-screen,
+.kapotpot-map-shell.is-fullscreen-fallback {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  background: #eef1f1;
+}
+
+.kapotpot-map-shell.is-fullscreen-fallback {
+  position: fixed;
+  z-index: 1800;
+  inset: 0;
+}
+
+body.has-kapotpot-map-fullscreen {
+  overflow: hidden;
+}
+
+.kapotpot-map-fullscreen {
+  position: absolute;
+  z-index: 700;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  color: #202020;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.kapotpot-map-fullscreen:hover {
+  color: var(--red);
+  background: #ffffff;
+}
+
+.kapotpot-map-fullscreen:focus-visible {
+  outline: 3px solid rgba(223, 32, 39, 0.3);
+  outline-offset: 2px;
+}
+
+.kapotpot-map-fullscreen svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.kapotpot-map-fullscreen .kapotpot-collapse-icon,
+.kapotpot-map-fullscreen.is-active .kapotpot-expand-icon {
+  display: none;
+}
+
+.kapotpot-map-fullscreen.is-active .kapotpot-collapse-icon {
+  display: block;
+}
+
+@supports (height: 100dvh) {
+  .kapotpot-map-shell:fullscreen,
+  .kapotpot-map-shell:-webkit-full-screen,
+  .kapotpot-map-shell.is-fullscreen-fallback {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+}
+
 .kapotpot-map {
   position: absolute;
   inset: 0;

@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-avatar-markers-v1">
+    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-fullscreen-v1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -440,6 +440,14 @@
         </div>
 
         <div class="kapotpot-map-shell" data-kapotpot-map-shell>
+          <button class="kapotpot-map-fullscreen" type="button" data-kapotpot-fullscreen aria-label="View map full screen" aria-pressed="false" title="View map full screen">
+            <svg class="kapotpot-expand-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"></path>
+            </svg>
+            <svg class="kapotpot-collapse-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"></path>
+            </svg>
+          </button>
           <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within fifty kilometers"></div>
           <div class="kapotpot-map-preview" data-kapotpot-map-preview>
             <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder 50 kilometer map preview with a 5 kilometer inner zone">
@@ -782,6 +790,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-kapotpot-avatar-markers-v1"></script>
+    <script src="script.js?v=20260805-kapotpot-fullscreen-v1"></script>
   </body>
 </html>

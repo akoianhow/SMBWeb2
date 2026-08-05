@@ -31,6 +31,8 @@ function getKapotpotFinderElements() {
     openButton: root?.querySelector("[data-kapotpot-open]"),
     count: root?.querySelector("[data-kapotpot-count]"),
     message: root?.querySelector("[data-kapotpot-message]"),
+    mapShell: root?.querySelector("[data-kapotpot-map-shell]"),
+    fullscreenButton: root?.querySelector("[data-kapotpot-fullscreen]"),
     map: root?.querySelector("[data-kapotpot-map]"),
     preview: root?.querySelector("[data-kapotpot-map-preview]"),
     legend: root?.querySelector("[data-kapotpot-map-legend]")
@@ -42,6 +44,62 @@ function setKapotpotMessage(message, type = "") {
   if (!element) return;
   element.textContent = message;
   element.classList.toggle("is-error", type === "error");
+}
+
+function isKapotpotMapFullscreen() {
+  const { mapShell } = getKapotpotFinderElements();
+  const nativeFullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+  return Boolean(mapShell && (nativeFullscreenElement === mapShell || mapShell.classList.contains("is-fullscreen-fallback")));
+}
+
+function renderKapotpotFullscreenControl() {
+  const { fullscreenButton } = getKapotpotFinderElements();
+  if (!fullscreenButton) return;
+  const isFullscreen = isKapotpotMapFullscreen();
+  const label = isFullscreen ? "Exit full screen map" : "View map full screen";
+  fullscreenButton.classList.toggle("is-active", isFullscreen);
+  fullscreenButton.setAttribute("aria-pressed", String(isFullscreen));
+  fullscreenButton.setAttribute("aria-label", label);
+  fullscreenButton.title = label;
+}
+
+function resizeKapotpotMapAfterLayout() {
+  window.setTimeout(() => kapotpotFinderState.map?.invalidateSize(), 0);
+  window.setTimeout(() => kapotpotFinderState.map?.invalidateSize(), 180);
+}
+
+async function toggleKapotpotMapFullscreen() {
+  const { mapShell } = getKapotpotFinderElements();
+  if (!mapShell) return;
+  const nativeFullscreenElement = document.fullscreenElement || document.webkitFullscreenElement;
+
+  if (nativeFullscreenElement === mapShell) {
+    const exitFullscreen = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exitFullscreen) {
+      try {
+        await exitFullscreen.call(document);
+      } catch {}
+    }
+  } else if (mapShell.classList.contains("is-fullscreen-fallback")) {
+    mapShell.classList.remove("is-fullscreen-fallback");
+    document.body.classList.remove("has-kapotpot-map-fullscreen");
+  } else {
+    const requestFullscreen = mapShell.requestFullscreen || mapShell.webkitRequestFullscreen;
+    if (requestFullscreen) {
+      try {
+        await requestFullscreen.call(mapShell);
+      } catch {
+        mapShell.classList.add("is-fullscreen-fallback");
+        document.body.classList.add("has-kapotpot-map-fullscreen");
+      }
+    } else {
+      mapShell.classList.add("is-fullscreen-fallback");
+      document.body.classList.add("has-kapotpot-map-fullscreen");
+    }
+  }
+
+  renderKapotpotFullscreenControl();
+  resizeKapotpotMapAfterLayout();
 }
 
 function setKapotpotBusy(isBusy) {
@@ -470,7 +528,7 @@ async function loadKapotpotPresenceStatus() {
 }
 
 function initializeKapotpotFinder() {
-  const { root, openButton } = getKapotpotFinderElements();
+  const { root, openButton, fullscreenButton } = getKapotpotFinderElements();
   if (!root || root.dataset.kapotpotBound === "true") return;
   root.dataset.kapotpotBound = "true";
 
@@ -487,6 +545,15 @@ function initializeKapotpotFinder() {
   }
 
   openButton?.addEventListener("click", () => openKapotpotLocationPrompt());
+  fullscreenButton?.addEventListener("click", () => void toggleKapotpotMapFullscreen());
+  document.addEventListener("fullscreenchange", () => {
+    renderKapotpotFullscreenControl();
+    resizeKapotpotMapAfterLayout();
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    renderKapotpotFullscreenControl();
+    resizeKapotpotMapAfterLayout();
+  });
   document.querySelector("[data-kapotpot-location-allow]")?.addEventListener("click", async (event) => {
     const button = event.currentTarget;
     if (kapotpotFinderState.locationPermissionBlocked) {
@@ -520,6 +587,15 @@ function initializeKapotpotFinder() {
     if (event.key === "Escape" && !document.querySelector("[data-kapotpot-location-prompt]")?.hidden) {
       closeKapotpotLocationPrompt({ cancelled: true });
     }
+    if (event.key === "Escape") {
+      const { mapShell } = getKapotpotFinderElements();
+      if (mapShell?.classList.contains("is-fullscreen-fallback")) {
+        mapShell.classList.remove("is-fullscreen-fallback");
+        document.body.classList.remove("has-kapotpot-map-fullscreen");
+        renderKapotpotFullscreenControl();
+        resizeKapotpotMapAfterLayout();
+      }
+    }
   });
   window.addEventListener("customer-session-changed", () => {
     if (!customerState.account) closeKapotpotLocationPrompt();
@@ -532,4 +608,5 @@ function initializeKapotpotFinder() {
   });
   window.addEventListener("pagehide", stopKapotpotPresenceUpdates);
   renderKapotpotVisibility();
+  renderKapotpotFullscreenControl();
 }

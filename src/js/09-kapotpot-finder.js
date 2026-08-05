@@ -127,6 +127,12 @@ function renderKapotpotChatMessages() {
     row.append(avatar, content);
     chatMessages.append(row);
   });
+  scrollKapotpotChatToBottom();
+}
+
+function scrollKapotpotChatToBottom() {
+  const { chatMessages } = getKapotpotFinderElements();
+  if (!chatMessages) return;
   window.requestAnimationFrame(() => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
@@ -182,6 +188,7 @@ function openKapotpotChat() {
   kapotpotFinderState.chatUnreadCount = 0;
   renderKapotpotChatControl();
   renderKapotpotChatMessages();
+  scrollKapotpotChatToBottom();
   openKapotpotChatComposer();
 }
 

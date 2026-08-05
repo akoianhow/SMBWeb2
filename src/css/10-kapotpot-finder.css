@@ -244,60 +244,22 @@ body.has-kapotpot-map-fullscreen {
   max-height: min(360px, calc(100% - 86px));
   overflow: hidden;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background: rgba(18, 18, 18, 0.2);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(3px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
 }
 
 .kapotpot-chat-panel[hidden] {
   display: none;
 }
 
-.kapotpot-chat-panel header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 9px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(18, 18, 18, 0.76);
-}
-
-.kapotpot-chat-panel header > div:first-child {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.kapotpot-chat-panel header strong {
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-
-.kapotpot-chat-panel header [data-kapotpot-chat-status] {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #ff777c;
-  font-size: 8px;
-  font-weight: 900;
-}
-
-.kapotpot-chat-panel header [data-kapotpot-chat-status]::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.kapotpot-chat-panel header [data-kapotpot-chat-status].is-live {
-  color: #73df9e;
-}
-
 .kapotpot-chat-panel-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
   display: flex;
   gap: 5px;
 }
@@ -311,7 +273,8 @@ body.has-kapotpot-map-fullscreen {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(18, 18, 18, 0.68);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
   cursor: pointer;
 }
 
@@ -320,7 +283,7 @@ body.has-kapotpot-map-fullscreen {
   gap: 3px;
   min-height: 60px;
   max-height: 274px;
-  padding: 6px 8px;
+  padding: 30px 8px 6px;
   overflow-y: auto;
   overscroll-behavior: contain;
   background: transparent;
@@ -333,9 +296,14 @@ body.has-kapotpot-map-fullscreen {
   padding: 8px 10px;
   color: #ffffff;
   border-radius: 4px;
-  background: rgba(18, 18, 18, 0.46);
+  background: transparent;
   font-size: 10px;
   text-align: center;
+  text-shadow:
+    -1px -1px 2px rgba(0, 0, 0, 0.98),
+    1px -1px 2px rgba(0, 0, 0, 0.98),
+    -1px 1px 2px rgba(0, 0, 0, 0.98),
+    1px 1px 2px rgba(0, 0, 0, 0.98);
 }
 
 .kapotpot-chat-message {
@@ -422,9 +390,15 @@ body.has-kapotpot-map-fullscreen {
   gap: 8px;
   padding: 5px 9px;
   color: #eeeeee;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(18, 18, 18, 0.7);
+  border-top: 0;
+  background: transparent;
   font-size: 7px;
+  font-weight: 800;
+  text-shadow:
+    -1px -1px 2px rgba(0, 0, 0, 0.98),
+    1px -1px 2px rgba(0, 0, 0, 0.98),
+    -1px 1px 2px rgba(0, 0, 0, 0.98),
+    1px 1px 2px rgba(0, 0, 0, 0.98);
 }
 
 .kapotpot-map-shell.has-chat-open .kapotpot-map-legend {

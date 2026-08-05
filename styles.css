@@ -8638,6 +8638,10 @@ body.is-catalog-mode .product-section {
   background: #333333;
 }
 @media (max-width: 760px) {
+  .home-recent-purchases-panel {
+    display: none;
+  }
+
   .public-location-picker {
     place-items: end stretch;
     padding: 0;
@@ -12984,6 +12988,13 @@ body.has-customer-welcome {
 }
 
 .kapotpot-preview-radius {
+  fill: rgba(223, 32, 39, 0.06);
+  stroke: var(--red);
+  stroke-width: 3;
+  stroke-dasharray: 10 8;
+}
+
+.kapotpot-preview-nearby-radius {
   fill: rgba(37, 122, 231, 0.11);
   stroke: #257ae7;
   stroke-width: 3;
@@ -13067,6 +13078,20 @@ body.has-customer-welcome {
 
 .kapotpot-map-legend .is-kapotpot {
   background: var(--red);
+}
+
+.kapotpot-map-legend .is-nearby-zone,
+.kapotpot-map-legend .is-search-zone {
+  background: transparent;
+  border: 2px dashed;
+}
+
+.kapotpot-map-legend .is-nearby-zone {
+  border-color: #257ae7;
+}
+
+.kapotpot-map-legend .is-search-zone {
+  border-color: var(--red);
 }
 
 .kapotpot-user-marker,
@@ -13222,7 +13247,7 @@ body.has-customer-welcome {
   text-transform: uppercase;
 }
 
-.kapotpot-location-prompt section > p:last-of-type,
+.kapotpot-location-prompt [data-kapotpot-location-description],
 .kapotpot-location-prompt li,
 .kapotpot-location-prompt small {
   color: #5d5d5d;
@@ -13261,6 +13286,26 @@ body.has-customer-welcome {
 .kapotpot-location-actions button:last-child {
   color: #333333;
   background: #e8e8e8;
+}
+
+.kapotpot-location-actions button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+}
+
+.kapotpot-location-feedback {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  color: #8c151a;
+  border: 1px solid rgba(237, 28, 39, 0.35);
+  background: rgba(237, 28, 39, 0.08);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.kapotpot-location-feedback[hidden] {
+  display: none;
 }
 
 body.has-kapotpot-location-prompt {

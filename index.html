@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-purchase-carousel-v4">
+    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-radius50-v1">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -425,7 +425,7 @@
           <div class="kapotpot-finder-summary" aria-live="polite">
             <span class="kapotpot-active-dot" aria-hidden="true"></span>
             <strong data-kapotpot-count>Open the Finder to check nearby riders</strong>
-            <span>Maximum 5 km radius</span>
+            <span>Maximum 50 km radius</span>
           </div>
 
           <div class="kapotpot-finder-controls">
@@ -445,12 +445,13 @@
         </div>
 
         <div class="kapotpot-map-shell" data-kapotpot-map-shell>
-          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within five kilometers"></div>
+          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within fifty kilometers"></div>
           <div class="kapotpot-map-preview" data-kapotpot-map-preview>
-            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder five kilometer map preview">
+            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder 50 kilometer map preview with a 5 kilometer inner zone">
               <path d="M0 74L760 10M0 186L760 116M0 336L760 278M92 0L160 420M288 0L330 420M518 0L494 420M690 0L610 420" />
               <path class="kapotpot-preview-river" d="M700 -20C620 70 726 138 634 220S572 356 522 446" />
               <circle class="kapotpot-preview-radius" cx="380" cy="210" r="150" />
+              <circle class="kapotpot-preview-nearby-radius" cx="380" cy="210" r="35" />
               <circle class="kapotpot-preview-user" cx="380" cy="210" r="12" />
               <g class="kapotpot-preview-rider"><circle cx="310" cy="132" r="15"/><text x="310" y="138">●</text></g>
               <g class="kapotpot-preview-rider"><circle cx="474" cy="164" r="15"/><text x="474" y="170">●</text></g>
@@ -464,6 +465,8 @@
           <div class="kapotpot-map-legend" data-kapotpot-map-legend hidden>
             <span><i class="is-you"></i>You</span>
             <span><i class="is-kapotpot"></i>Kapotpot</span>
+            <span><i class="is-nearby-zone"></i>5 km zone</span>
+            <span><i class="is-search-zone"></i>50 km limit</span>
           </div>
         </div>
       </section>
@@ -475,10 +478,10 @@
           </span>
           <p>Location access</p>
           <h2 id="kapotpot-location-title">Allow location to open the Finder</h2>
-          <p id="kapotpot-location-description">
-            Kapotpot Finder needs your current location to check for opted-in riders within 5 km.
+          <p id="kapotpot-location-description" data-kapotpot-location-description>
+            Kapotpot Finder needs your current location to check for opted-in riders within 50 km.
           </p>
-          <ul>
+          <ul data-kapotpot-location-steps>
             <li>Your exact location is never shown to other riders.</li>
             <li>You remain hidden unless you turn on Go Visible.</li>
             <li>You can remove access anytime in your browser settings.</li>
@@ -487,7 +490,8 @@
             <button type="button" data-kapotpot-location-allow>Allow location access</button>
             <button type="button" data-kapotpot-location-cancel>Not now</button>
           </div>
-          <small>Your browser will show its own location permission prompt next.</small>
+          <p class="kapotpot-location-feedback" data-kapotpot-location-feedback role="status" hidden></p>
+          <small data-kapotpot-location-note>Your browser will show its own location permission prompt next.</small>
         </section>
       </div>
 
@@ -783,6 +787,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-purchase-carousel-v4"></script>
+    <script src="script.js?v=20260805-kapotpot-radius50-v1"></script>
   </body>
 </html>

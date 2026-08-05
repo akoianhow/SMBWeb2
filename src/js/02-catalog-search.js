@@ -1307,6 +1307,7 @@ async function loadRecentPurchases({ forceRefresh = false } = {}) {
 function initializeRecentPurchases() {
   const panel = document.querySelector(".home-recent-purchases-panel");
   if (!panel || !document.querySelector("[data-recent-purchases-list]")) return;
+  const mobileLayout = window.matchMedia("(max-width: 760px)");
   document.querySelector("[data-recent-purchases-refresh]")?.addEventListener("click", () => {
     loadRecentPurchases({ forceRefresh: true });
   });
@@ -1320,7 +1321,17 @@ function initializeRecentPurchases() {
     window.clearInterval(recentPurchasesState.autoTimer);
     window.clearTimeout(recentPurchasesState.transitionTimer);
   });
-  loadRecentPurchases();
+  const syncRecentPurchasesForViewport = () => {
+    if (mobileLayout.matches) {
+      window.clearInterval(recentPurchasesState.autoTimer);
+      window.clearTimeout(recentPurchasesState.transitionTimer);
+      return;
+    }
+    if (recentPurchasesState.rows.length > 0) startRecentPurchaseCarousel();
+    else loadRecentPurchases();
+  };
+  mobileLayout.addEventListener?.("change", syncRecentPurchasesForViewport);
+  syncRecentPurchasesForViewport();
 }
 
 function showHeroCarouselSlide(index, manual = false) {

@@ -71,7 +71,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-purchase-carousel-v4')
+    navigator.serviceWorker.register('./sw.js?v=20260805-location-check-v7')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

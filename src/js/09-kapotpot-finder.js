@@ -1,6 +1,7 @@
 const kapotpotFinderState = {
   map: null,
   radiusCircle: null,
+  nearbyRadiusCircle: null,
   selfMarker: null,
   nearbyLayer: null,
   latestPosition: null,
@@ -9,7 +10,8 @@ const kapotpotFinderState = {
   isBusy: false,
   watchId: null,
   pollTimer: null,
-  pendingEnableVisibility: false
+  pendingEnableVisibility: false,
+  locationPermissionBlocked: false
 };
 
 let kapotpotMapLibraryPromise = null;
@@ -140,7 +142,10 @@ function requestKapotpotPosition() {
       resolve,
       (error) => {
         if (error.code === error.PERMISSION_DENIED) {
-          reject(new Error("Location permission is blocked. Open this site's browser settings, allow Location, then try again."));
+          kapotpotFinderState.locationPermissionBlocked = true;
+          const permissionError = new Error("Location access is turned off for this site.");
+          permissionError.kapotpotPermissionBlocked = true;
+          reject(permissionError);
         } else if (error.code === error.TIMEOUT) {
           reject(new Error("Your location took too long to load. Move to an open area and try again."));
         } else {
@@ -152,26 +157,72 @@ function requestKapotpotPosition() {
   });
 }
 
+function renderKapotpotLocationPromptMode(isBlocked) {
+  const prompt = document.querySelector("[data-kapotpot-location-prompt]");
+  if (!prompt) return;
+  const heading = prompt.querySelector("h2");
+  const description = prompt.querySelector("[data-kapotpot-location-description]");
+  const steps = prompt.querySelector("[data-kapotpot-location-steps]");
+  const allowButton = prompt.querySelector("[data-kapotpot-location-allow]");
+  const note = prompt.querySelector("[data-kapotpot-location-note]");
+  prompt.classList.toggle("is-permission-blocked", isBlocked);
+  if (heading) heading.textContent = isBlocked
+    ? "Turn on location for this site"
+    : "Allow location to open the Finder";
+  if (description) description.textContent = isBlocked
+    ? "Your browser currently blocks location access for SarapMagBike. Change the site permission, then retry."
+    : "Kapotpot Finder needs your current location to check for opted-in riders within 50 km.";
+  if (steps) {
+    const messages = isBlocked
+      ? [
+          "Open this site's controls beside the browser address bar or in the browser menu.",
+          "Change Location permission to Allow.",
+          "Return here and select Try location again."
+        ]
+      : [
+          "Your exact location is never shown to other riders.",
+          "You remain hidden unless you turn on Go Visible.",
+          "You can remove access anytime in your browser settings."
+        ];
+    steps.replaceChildren(...messages.map((message) => createTextElement("li", message)));
+  }
+  if (allowButton) allowButton.textContent = isBlocked ? "Try location again" : "Allow location access";
+  if (note) note.textContent = isBlocked
+    ? "Browsers do not show another permission prompt until the blocked site setting is changed."
+    : "Your browser will show its own location permission prompt next.";
+  setKapotpotLocationFeedback("");
+}
+
+function setKapotpotLocationFeedback(message) {
+  const feedback = document.querySelector("[data-kapotpot-location-feedback]");
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.hidden = !message;
+}
+
 function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
   const prompt = document.querySelector("[data-kapotpot-location-prompt]");
   if (!prompt || prompt.hidden) return;
+  const wasPermissionBlocked = prompt.classList.contains("is-permission-blocked");
   prompt.hidden = true;
   document.body.classList.remove("has-kapotpot-location-prompt");
   if (cancelled) {
     kapotpotFinderState.pendingEnableVisibility = false;
     renderKapotpotVisibility();
-    setKapotpotMessage("Location access was not requested. You remain hidden.");
+    setKapotpotMessage(wasPermissionBlocked
+      ? "Location remains off for this site. You remain hidden."
+      : "Location access was not requested. You remain hidden.");
     getKapotpotFinderElements().openButton?.focus();
   }
 }
 
-function openKapotpotLocationPrompt(enableVisibility = false) {
+function openKapotpotLocationPrompt(enableVisibility = false, { blocked = kapotpotFinderState.locationPermissionBlocked } = {}) {
   if (!customerState.account) {
     setKapotpotMessage("Log in to use Kapotpot Finder.");
     openCommunityLoginForm();
     return;
   }
-  if (kapotpotFinderState.isOpen) {
+  if (kapotpotFinderState.isOpen && !blocked) {
     void openKapotpotFinder(enableVisibility);
     return;
   }
@@ -181,6 +232,7 @@ function openKapotpotLocationPrompt(enableVisibility = false) {
     return;
   }
   kapotpotFinderState.pendingEnableVisibility = enableVisibility;
+  renderKapotpotLocationPromptMode(blocked);
   prompt.hidden = false;
   document.body.classList.add("has-kapotpot-location-prompt");
   prompt.querySelector("[data-kapotpot-location-allow]")?.focus();
@@ -248,6 +300,15 @@ async function ensureKapotpotMap(position) {
     }).addTo(kapotpotFinderState.map);
     kapotpotFinderState.nearbyLayer = window.L.layerGroup().addTo(kapotpotFinderState.map);
     kapotpotFinderState.radiusCircle = window.L.circle([latitude, longitude], {
+      radius: 50000,
+      color: "#df2027",
+      weight: 2,
+      dashArray: "10 8",
+      fillColor: "#df2027",
+      fillOpacity: 0.05,
+      interactive: false
+    }).addTo(kapotpotFinderState.map);
+    kapotpotFinderState.nearbyRadiusCircle = window.L.circle([latitude, longitude], {
       radius: 5000,
       color: "#257ae7",
       weight: 2,
@@ -263,6 +324,7 @@ async function ensureKapotpotMap(position) {
     }).addTo(kapotpotFinderState.map).bindTooltip("You", { permanent: false, direction: "top" });
   } else {
     kapotpotFinderState.radiusCircle.setLatLng([latitude, longitude]);
+    kapotpotFinderState.nearbyRadiusCircle?.setLatLng([latitude, longitude]);
     kapotpotFinderState.selfMarker
       .setLatLng([latitude, longitude])
       .setIcon(getCurrentKapotpotMarkerIcon());
@@ -333,6 +395,7 @@ function updateKapotpotSelfPosition(position) {
   const point = [position.coords.latitude, position.coords.longitude];
   kapotpotFinderState.selfMarker?.setLatLng(point);
   kapotpotFinderState.radiusCircle?.setLatLng(point);
+  kapotpotFinderState.nearbyRadiusCircle?.setLatLng(point);
 }
 
 async function syncKapotpotPresence({ quiet = false } = {}) {
@@ -389,13 +452,19 @@ async function openKapotpotFinder(enableVisibility = false) {
   setKapotpotMessage("Requesting your location…");
   try {
     const position = await requestKapotpotPosition();
+    kapotpotFinderState.locationPermissionBlocked = false;
     kapotpotFinderState.latestPosition = position;
     await ensureKapotpotMap(position);
     setKapotpotMessage(kapotpotFinderState.isVisible || enableVisibility
       ? "Checking for nearby Kapotpots…"
       : "Your location is shown only to you. Turn on Go Visible to see opted-in riders nearby.");
   } catch (error) {
-    setKapotpotMessage(error.message || "Kapotpot Finder could not be opened.", "error");
+    if (error.kapotpotPermissionBlocked) {
+      setKapotpotMessage("Location is off for this site. Follow the browser steps shown, then retry.", "error");
+      openKapotpotLocationPrompt(enableVisibility, { blocked: true });
+    } else {
+      setKapotpotMessage(error.message || "Kapotpot Finder could not be opened.", "error");
+    }
     renderKapotpotVisibility();
     return;
   } finally {
@@ -464,6 +533,18 @@ function initializeKapotpotFinder() {
   if (!root || root.dataset.kapotpotBound === "true") return;
   root.dataset.kapotpotBound = "true";
 
+  if (navigator.permissions?.query) {
+    navigator.permissions.query({ name: "geolocation" }).then((permission) => {
+      const syncPermission = () => {
+        kapotpotFinderState.locationPermissionBlocked = permission.state === "denied";
+        const prompt = document.querySelector("[data-kapotpot-location-prompt]");
+        if (prompt && !prompt.hidden) renderKapotpotLocationPromptMode(kapotpotFinderState.locationPermissionBlocked);
+      };
+      syncPermission();
+      permission.addEventListener?.("change", syncPermission);
+    }).catch(() => {});
+  }
+
   openButton?.addEventListener("click", () => openKapotpotLocationPrompt(false));
   visibility?.addEventListener("change", () => {
     if (visibility.checked) {
@@ -472,8 +553,29 @@ function initializeKapotpotFinder() {
       void hideKapotpotPresence();
     }
   });
-  document.querySelector("[data-kapotpot-location-allow]")?.addEventListener("click", () => {
+  document.querySelector("[data-kapotpot-location-allow]")?.addEventListener("click", async (event) => {
     const enableVisibility = kapotpotFinderState.pendingEnableVisibility;
+    const button = event.currentTarget;
+    if (kapotpotFinderState.locationPermissionBlocked) {
+      button.disabled = true;
+      button.textContent = "Checking…";
+      setKapotpotLocationFeedback("Checking this site's Location permission…");
+      let permissionState = "unknown";
+      if (navigator.permissions?.query) {
+        permissionState = await navigator.permissions.query({ name: "geolocation" })
+          .then((permission) => permission.state)
+          .catch(() => "unknown");
+      }
+      if (permissionState === "denied") {
+        renderKapotpotLocationPromptMode(true);
+        setKapotpotLocationFeedback("Location is still blocked. Change this site's Location setting to Allow, then select Check again.");
+        button.disabled = false;
+        button.textContent = "Check again";
+        return;
+      }
+      kapotpotFinderState.locationPermissionBlocked = false;
+      button.disabled = false;
+    }
     kapotpotFinderState.pendingEnableVisibility = false;
     closeKapotpotLocationPrompt();
     void openKapotpotFinder(enableVisibility);

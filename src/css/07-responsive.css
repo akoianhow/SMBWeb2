@@ -1,4 +1,8 @@
 @media (max-width: 760px) {
+  .home-recent-purchases-panel {
+    display: none;
+  }
+
   .public-location-picker {
     place-items: end stretch;
     padding: 0;

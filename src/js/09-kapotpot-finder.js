@@ -109,16 +109,18 @@ function renderKapotpotChatMessages() {
   kapotpotFinderState.chatMessages.forEach((message) => {
     const row = document.createElement("article");
     row.className = "kapotpot-chat-message";
-    const avatar = document.createElement("span");
-    avatar.className = "kapotpot-chat-message-avatar";
-    avatar.setAttribute("aria-hidden", "true");
     const avatarUrl = normalizeApiUrl(message.avatarUrl || "");
     if (avatarUrl) {
       const image = document.createElement("img");
       image.src = avatarUrl;
       image.alt = "";
-      image.addEventListener("error", () => image.remove(), { once: true });
-      avatar.append(image);
+      image.className = "kapotpot-chat-message-avatar";
+      image.addEventListener("error", () => {
+        image.remove();
+        row.classList.remove("has-avatar");
+      }, { once: true });
+      row.classList.add("has-avatar");
+      row.append(image);
     }
     const content = document.createElement("div");
     content.className = "kapotpot-chat-message-content";
@@ -126,7 +128,7 @@ function renderKapotpotChatMessages() {
       createTextElement("strong", message.displayName || "Kapotpot"),
       createTextElement("p", message.body || "")
     );
-    row.append(avatar, content);
+    row.append(content);
     chatMessages.append(row);
   });
   scrollKapotpotChatToBottom();

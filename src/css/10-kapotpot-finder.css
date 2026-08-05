@@ -308,7 +308,7 @@ body.has-kapotpot-map-fullscreen {
 
 .kapotpot-chat-message {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 6px;
   align-items: start;
   min-height: 24px;
@@ -318,34 +318,16 @@ body.has-kapotpot-map-fullscreen {
   box-shadow: none;
 }
 
+.kapotpot-chat-message.has-avatar {
+  grid-template-columns: 22px minmax(0, 1fr);
+}
+
 .kapotpot-chat-message-avatar {
-  display: grid;
+  display: block;
   width: 22px;
   height: 22px;
-  overflow: hidden;
-  place-items: center;
-  color: #ffffff;
-  border: 2px solid rgba(255, 255, 255, 0.78);
+  border: 0;
   border-radius: 50%;
-  background: var(--red);
-  font-size: 7px;
-  font-weight: 900;
-}
-
-.kapotpot-chat-message-avatar::before {
-  content: "";
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 7px 0 3px rgba(255, 255, 255, 0.92);
-}
-
-.kapotpot-chat-message-avatar img {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
 

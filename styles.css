@@ -12994,11 +12994,11 @@ body.has-kapotpot-map-fullscreen {
   max-height: min(390px, calc(100% - 86px));
   overflow: hidden;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  background: rgba(26, 26, 26, 0.92);
+  background: rgba(18, 18, 18, 0.2);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(3px);
 }
 
 .kapotpot-chat-panel[hidden] {
@@ -13011,7 +13011,8 @@ body.has-kapotpot-map-fullscreen {
   justify-content: space-between;
   gap: 10px;
   padding: 11px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(18, 18, 18, 0.76);
 }
 
 .kapotpot-chat-panel header > div:first-child {
@@ -13071,11 +13072,15 @@ body.has-kapotpot-map-fullscreen {
   padding: 11px 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
+  background: rgba(18, 18, 18, 0.08);
 }
 
 .kapotpot-chat-empty {
   margin: auto;
-  color: #cfcfcf;
+  padding: 8px 10px;
+  color: #ffffff;
+  border-radius: 4px;
+  background: rgba(18, 18, 18, 0.76);
   font-size: 10px;
   text-align: center;
 }
@@ -13085,6 +13090,11 @@ body.has-kapotpot-map-fullscreen {
   grid-template-columns: 28px minmax(0, 1fr);
   gap: 8px;
   align-items: start;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  background: rgba(18, 18, 18, 0.78);
+  box-shadow: 0 2px 7px rgba(0, 0, 0, 0.2);
 }
 
 .kapotpot-chat-message-avatar {
@@ -13115,16 +13125,18 @@ body.has-kapotpot-map-fullscreen {
   display: block;
   overflow: hidden;
   font-size: 10px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .kapotpot-chat-message-content p {
   margin: 2px 0 0;
-  color: #eeeeee;
+  color: #ffffff;
   font-size: 10px;
   line-height: 1.35;
   overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
 }
 
 .kapotpot-chat-error {
@@ -13146,8 +13158,9 @@ body.has-kapotpot-map-fullscreen {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 12px;
-  color: #bdbdbd;
+  color: #eeeeee;
   border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 18, 18, 0.7);
   font-size: 8px;
 }
 

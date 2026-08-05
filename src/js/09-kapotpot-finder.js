@@ -10,7 +10,6 @@ const kapotpotFinderState = {
   isBusy: false,
   watchId: null,
   pollTimer: null,
-  pendingEnableVisibility: false,
   locationPermissionBlocked: false
 };
 
@@ -29,8 +28,6 @@ function getKapotpotFinderElements() {
   const root = document.querySelector("[data-kapotpot-finder]");
   return {
     root,
-    visibility: root?.querySelector("[data-kapotpot-visibility]"),
-    visibilityLabel: root?.querySelector("[data-kapotpot-visibility-label]"),
     openButton: root?.querySelector("[data-kapotpot-open]"),
     count: root?.querySelector("[data-kapotpot-count]"),
     message: root?.querySelector("[data-kapotpot-message]"),
@@ -49,23 +46,15 @@ function setKapotpotMessage(message, type = "") {
 
 function setKapotpotBusy(isBusy) {
   kapotpotFinderState.isBusy = isBusy;
-  const { openButton, visibility } = getKapotpotFinderElements();
+  const { openButton } = getKapotpotFinderElements();
   if (openButton) openButton.disabled = isBusy;
-  if (visibility) visibility.disabled = isBusy || !customerState.account;
 }
 
 function renderKapotpotVisibility() {
-  const { root, visibility, visibilityLabel, openButton } = getKapotpotFinderElements();
+  const { root, openButton } = getKapotpotFinderElements();
   if (!root) return;
   const isLoggedIn = Boolean(customerState.account);
   root.classList.toggle("is-visible", kapotpotFinderState.isVisible);
-  if (visibility) {
-    visibility.checked = kapotpotFinderState.isVisible;
-    visibility.disabled = kapotpotFinderState.isBusy || !isLoggedIn;
-  }
-  if (visibilityLabel) {
-    visibilityLabel.textContent = kapotpotFinderState.isVisible ? "Visible Nearby" : "Go Visible";
-  }
   if (openButton) {
     openButton.textContent = !isLoggedIn
       ? "Login to Open"
@@ -181,7 +170,7 @@ function renderKapotpotLocationPromptMode(isBlocked) {
         ]
       : [
           "Your exact location is never shown to other riders.",
-          "You remain hidden unless you turn on Go Visible.",
+          "Opening the Finder makes you visible to other users for up to 10 minutes.",
           "You can remove access anytime in your browser settings."
         ];
     steps.replaceChildren(...messages.map((message) => createTextElement("li", message)));
@@ -207,7 +196,6 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
   prompt.hidden = true;
   document.body.classList.remove("has-kapotpot-location-prompt");
   if (cancelled) {
-    kapotpotFinderState.pendingEnableVisibility = false;
     renderKapotpotVisibility();
     setKapotpotMessage(wasPermissionBlocked
       ? "Location remains off for this site. You remain hidden."
@@ -216,22 +204,21 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
   }
 }
 
-function openKapotpotLocationPrompt(enableVisibility = false, { blocked = kapotpotFinderState.locationPermissionBlocked } = {}) {
+function openKapotpotLocationPrompt({ blocked = kapotpotFinderState.locationPermissionBlocked } = {}) {
   if (!customerState.account) {
     setKapotpotMessage("Log in to use Kapotpot Finder.");
     openCommunityLoginForm();
     return;
   }
   if (kapotpotFinderState.isOpen && !blocked) {
-    void openKapotpotFinder(enableVisibility);
+    void openKapotpotFinder();
     return;
   }
   const prompt = document.querySelector("[data-kapotpot-location-prompt]");
   if (!prompt) {
-    void openKapotpotFinder(enableVisibility);
+    void openKapotpotFinder();
     return;
   }
-  kapotpotFinderState.pendingEnableVisibility = enableVisibility;
   renderKapotpotLocationPromptMode(blocked);
   prompt.hidden = false;
   document.body.classList.add("has-kapotpot-location-prompt");
@@ -357,34 +344,11 @@ function renderKapotpotNearby(response) {
     const marker = window.L.marker([latitude, longitude], {
       icon: createKapotpotDivIcon("kapotpot-rider-marker", {
         imageUrl: rider.avatarUrl || rider.profilePictureUrl || "",
-        label: getKapotpotInitials(rider.displayName || "SMB"),
-        imageAlt: `${rider.displayName || "SarapMagBike rider"} profile picture`
+        label: "",
+        imageAlt: ""
       }),
-      title: "Approximate Kapotpot location"
+      interactive: false
     });
-    const popup = document.createElement("div");
-    popup.className = "kapotpot-popup";
-    const avatar = document.createElement("span");
-    avatar.className = "kapotpot-popup-avatar";
-    if (rider.avatarUrl) {
-      const image = document.createElement("img");
-      image.src = normalizeApiUrl(rider.avatarUrl);
-      image.alt = "";
-      image.addEventListener("error", () => {
-        avatar.textContent = getKapotpotInitials(rider.displayName || "SMB");
-        image.remove();
-      }, { once: true });
-      avatar.append(image);
-    } else {
-      avatar.textContent = getKapotpotInitials(rider.displayName || "SMB");
-    }
-    const details = document.createElement("div");
-    details.append(
-      createTextElement("strong", rider.displayName || "SarapMagBike rider"),
-      createTextElement("span", rider.distanceLabel || "Active nearby")
-    );
-    popup.append(avatar, details);
-    marker.bindPopup(popup);
     marker.addTo(kapotpotFinderState.nearbyLayer);
   });
 }
@@ -440,7 +404,7 @@ function startKapotpotPresenceUpdates() {
   }, 60000);
 }
 
-async function openKapotpotFinder(enableVisibility = false) {
+async function openKapotpotFinder() {
   if (!customerState.account) {
     setKapotpotMessage("Log in to use Kapotpot Finder.");
     openCommunityLoginForm();
@@ -455,13 +419,11 @@ async function openKapotpotFinder(enableVisibility = false) {
     kapotpotFinderState.locationPermissionBlocked = false;
     kapotpotFinderState.latestPosition = position;
     await ensureKapotpotMap(position);
-    setKapotpotMessage(kapotpotFinderState.isVisible || enableVisibility
-      ? "Checking for nearby Kapotpots…"
-      : "Your location is shown only to you. Turn on Go Visible to see opted-in riders nearby.");
+    setKapotpotMessage("Checking for nearby Kapotpots…");
   } catch (error) {
     if (error.kapotpotPermissionBlocked) {
       setKapotpotMessage("Location is off for this site. Follow the browser steps shown, then retry.", "error");
-      openKapotpotLocationPrompt(enableVisibility, { blocked: true });
+      openKapotpotLocationPrompt({ blocked: true });
     } else {
       setKapotpotMessage(error.message || "Kapotpot Finder could not be opened.", "error");
     }
@@ -471,32 +433,11 @@ async function openKapotpotFinder(enableVisibility = false) {
     setKapotpotBusy(false);
   }
 
-  if (kapotpotFinderState.isVisible || enableVisibility) {
-    try {
-      await syncKapotpotPresence();
-      startKapotpotPresenceUpdates();
-    } catch {
-      kapotpotFinderState.isVisible = false;
-      renderKapotpotVisibility();
-    }
-  }
-}
-
-async function hideKapotpotPresence() {
-  if (!customerState.account || kapotpotFinderState.isBusy) return;
-  setKapotpotBusy(true);
   try {
-    await apiRequest("/api/public/kapotpot-finder/presence", { method: "DELETE" });
+    await syncKapotpotPresence();
+    startKapotpotPresenceUpdates();
+  } catch {
     kapotpotFinderState.isVisible = false;
-    stopKapotpotPresenceUpdates();
-    kapotpotFinderState.nearbyLayer?.clearLayers();
-    const { count } = getKapotpotFinderElements();
-    if (count) count.textContent = "Visibility is off";
-    setKapotpotMessage("You are hidden. Your stored presence has been removed.");
-  } catch (error) {
-    setKapotpotMessage(error.message || "Visibility could not be turned off.", "error");
-  } finally {
-    setKapotpotBusy(false);
     renderKapotpotVisibility();
   }
 }
@@ -517,7 +458,7 @@ async function loadKapotpotPresenceStatus() {
     }
     setKapotpotMessage(kapotpotFinderState.isVisible
       ? "Your previous presence is still active and will expire automatically."
-      : "Hidden by default. Open the Finder when you are ready.");
+      : "Opening the Finder makes you visible to other users for up to 10 minutes.");
   } catch (error) {
     kapotpotFinderState.isVisible = false;
     setKapotpotMessage(error.status === 404
@@ -529,7 +470,7 @@ async function loadKapotpotPresenceStatus() {
 }
 
 function initializeKapotpotFinder() {
-  const { root, visibility, openButton } = getKapotpotFinderElements();
+  const { root, openButton } = getKapotpotFinderElements();
   if (!root || root.dataset.kapotpotBound === "true") return;
   root.dataset.kapotpotBound = "true";
 
@@ -545,16 +486,8 @@ function initializeKapotpotFinder() {
     }).catch(() => {});
   }
 
-  openButton?.addEventListener("click", () => openKapotpotLocationPrompt(false));
-  visibility?.addEventListener("change", () => {
-    if (visibility.checked) {
-      openKapotpotLocationPrompt(true);
-    } else {
-      void hideKapotpotPresence();
-    }
-  });
+  openButton?.addEventListener("click", () => openKapotpotLocationPrompt());
   document.querySelector("[data-kapotpot-location-allow]")?.addEventListener("click", async (event) => {
-    const enableVisibility = kapotpotFinderState.pendingEnableVisibility;
     const button = event.currentTarget;
     if (kapotpotFinderState.locationPermissionBlocked) {
       button.disabled = true;
@@ -576,9 +509,8 @@ function initializeKapotpotFinder() {
       kapotpotFinderState.locationPermissionBlocked = false;
       button.disabled = false;
     }
-    kapotpotFinderState.pendingEnableVisibility = false;
     closeKapotpotLocationPrompt();
-    void openKapotpotFinder(enableVisibility);
+    void openKapotpotFinder();
   });
   document.querySelector("[data-kapotpot-location-cancel]")?.addEventListener("click", () => closeKapotpotLocationPrompt({ cancelled: true }));
   document.querySelector("[data-kapotpot-location-prompt]")?.addEventListener("click", (event) => {

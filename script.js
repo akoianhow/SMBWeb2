@@ -9341,6 +9341,7 @@ const kapotpotFinderState = {
   nearbyRadiusCircle: null,
   selfMarker: null,
   nearbyLayer: null,
+  visibleMarkerSignature: "",
   latestPosition: null,
   isVisible: false,
   isOpen: false,
@@ -9690,7 +9691,7 @@ function renderKapotpotVisibility() {
     openButton.textContent = !isLoggedIn
       ? "Login to Open"
       : kapotpotFinderState.isOpen
-        ? "Refresh Nearby"
+        ? "Refresh Map"
         : "Open Finder";
   }
 }
@@ -9709,9 +9710,10 @@ function resetKapotpotFinderForGuest() {
   disconnectKapotpotChat({ clearMessages: true });
   kapotpotFinderState.isVisible = false;
   kapotpotFinderState.latestPosition = null;
+  kapotpotFinderState.visibleMarkerSignature = "";
   kapotpotFinderState.nearbyLayer?.clearLayers();
   const { count } = getKapotpotFinderElements();
-  if (count) count.textContent = "Log in to check nearby riders";
+  if (count) count.textContent = "Log in to see visible riders";
   renderKapotpotVisibility();
   renderKapotpotChatControl();
   setKapotpotMessage("Log in to use Kapotpot Finder.");
@@ -9793,7 +9795,7 @@ function renderKapotpotLocationPromptMode(isBlocked) {
     : "Allow location to open the Finder";
   if (description) description.textContent = isBlocked
     ? "Your browser currently blocks location access for SarapMagBike. Change the site permission, then retry."
-    : "Kapotpot Finder needs your current location to check for opted-in riders within 50 km.";
+    : "Kapotpot Finder needs your current location to place you on the map and show active opted-in riders.";
   if (steps) {
     const messages = isBlocked
       ? [
@@ -9951,6 +9953,7 @@ async function ensureKapotpotMap(position) {
   }
 
   kapotpotFinderState.map.fitBounds(kapotpotFinderState.radiusCircle.getBounds(), { padding: [18, 18] });
+  kapotpotFinderState.visibleMarkerSignature = "";
   window.setTimeout(() => kapotpotFinderState.map?.invalidateSize(), 0);
   if (preview) preview.hidden = true;
   if (legend) legend.hidden = false;
@@ -9964,8 +9967,8 @@ function renderKapotpotNearby(response) {
   const { count } = getKapotpotFinderElements();
   if (count) {
     count.textContent = nearby.length === 0
-      ? "No visible Kapotpots nearby right now"
-      : `${nearby.length.toLocaleString("en-PH")} Kapotpot${nearby.length === 1 ? "" : "s"} nearby`;
+      ? "No other visible Kapotpots right now"
+      : `${nearby.length.toLocaleString("en-PH")} visible Kapotpot${nearby.length === 1 ? "" : "s"}`;
   }
 
   if (!kapotpotFinderState.nearbyLayer || !window.L) return;
@@ -9985,6 +9988,21 @@ function renderKapotpotNearby(response) {
     });
     marker.addTo(kapotpotFinderState.nearbyLayer);
   });
+
+  const markerSignature = nearby
+    .map((rider) => `${rider.markerKey || ""}:${Number(rider.latitude)}:${Number(rider.longitude)}`)
+    .join("|");
+  if (markerSignature !== kapotpotFinderState.visibleMarkerSignature) {
+    kapotpotFinderState.visibleMarkerSignature = markerSignature;
+    const bounds = kapotpotFinderState.radiusCircle?.getBounds();
+    if (bounds) {
+      kapotpotFinderState.nearbyLayer.eachLayer((layer) => {
+        const point = typeof layer.getLatLng === "function" ? layer.getLatLng() : null;
+        if (point) bounds.extend(point);
+      });
+      kapotpotFinderState.map?.fitBounds(bounds, { padding: [18, 18] });
+    }
+  }
 }
 
 function updateKapotpotSelfPosition(position) {
@@ -10053,7 +10071,7 @@ async function openKapotpotFinder() {
     kapotpotFinderState.locationPermissionBlocked = false;
     kapotpotFinderState.latestPosition = position;
     await ensureKapotpotMap(position);
-    setKapotpotMessage("Checking for nearby Kapotpots…");
+    setKapotpotMessage("Checking for visible Kapotpots…");
   } catch (error) {
     if (error.kapotpotPermissionBlocked) {
       setKapotpotMessage("Location is off for this site. Follow the browser steps shown, then retry.", "error");
@@ -10090,8 +10108,8 @@ async function loadKapotpotPresenceStatus() {
     const { count } = getKapotpotFinderElements();
     if (count) {
       count.textContent = kapotpotFinderState.isVisible
-        ? "You are visible—open to refresh nearby riders"
-        : "Open the Finder to check nearby riders";
+        ? "You are visible—open to refresh the map"
+        : "Open the Finder to see visible riders";
     }
     setKapotpotMessage(kapotpotFinderState.isVisible
       ? "Your previous presence is still active and will expire automatically."

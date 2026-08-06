@@ -424,8 +424,8 @@
 
           <div class="kapotpot-finder-summary" aria-live="polite">
             <span class="kapotpot-active-dot" aria-hidden="true"></span>
-            <strong data-kapotpot-count>Open the Finder to check nearby riders</strong>
-            <span>Maximum 50 km radius</span>
+            <strong data-kapotpot-count>Open the Finder to see visible riders</strong>
+            <span>All active riders are shown</span>
           </div>
 
           <div class="kapotpot-finder-controls">
@@ -455,9 +455,9 @@
             </svg>
             <span data-kapotpot-chat-unread hidden></span>
           </button>
-          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and opted-in riders within fifty kilometers"></div>
+          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and all active opted-in riders"></div>
           <div class="kapotpot-map-preview" data-kapotpot-map-preview>
-            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder 50 kilometer map preview with a 5 kilometer inner zone">
+            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder map preview with 5 kilometer and 50 kilometer guide rings">
               <path d="M0 74L760 10M0 186L760 116M0 336L760 278M92 0L160 420M288 0L330 420M518 0L494 420M690 0L610 420" />
               <path class="kapotpot-preview-river" d="M700 -20C620 70 726 138 634 220S572 356 522 446" />
               <circle class="kapotpot-preview-radius" cx="380" cy="210" r="150" />
@@ -468,7 +468,7 @@
               <g class="kapotpot-preview-rider"><circle cx="342" cy="296" r="15"/><text x="342" y="302">●</text></g>
             </svg>
             <div>
-              <strong>Find Kapotpots near you</strong>
+              <strong>Find visible Kapotpots</strong>
               <span>The map loads only when you open the Finder.</span>
             </div>
           </div>
@@ -476,7 +476,7 @@
             <span><i class="is-you"></i>You</span>
             <span><i class="is-kapotpot"></i>Kapotpot</span>
             <span><i class="is-nearby-zone"></i>5 km zone</span>
-            <span><i class="is-search-zone"></i>50 km limit</span>
+            <span><i class="is-search-zone"></i>50 km guide</span>
           </div>
           <section class="kapotpot-chat-panel" data-kapotpot-chat-panel aria-label="Kapotpot chat" hidden>
             <div class="kapotpot-chat-panel-actions">
@@ -516,7 +516,7 @@
           <p>Location access</p>
           <h2 id="kapotpot-location-title">Allow location to open the Finder</h2>
           <p id="kapotpot-location-description" data-kapotpot-location-description>
-            Kapotpot Finder needs your current location to check for opted-in riders within 50 km.
+            Kapotpot Finder needs your current location to place you on the map and show active opted-in riders.
           </p>
           <ul data-kapotpot-location-steps>
             <li>Your exact location is never shown to other riders.</li>

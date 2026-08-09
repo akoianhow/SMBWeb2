@@ -542,14 +542,13 @@ function createKapotpotDivIcon(className, { imageUrl = "", label = "", imageAlt 
     marker.append(image);
   }
 
-  const isUserMarker = className === "kapotpot-user-marker";
   return window.L.divIcon({
     className: "",
     html: marker,
-    iconSize: isUserMarker ? [42, 42] : [36, 36],
-    iconAnchor: isUserMarker ? [21, 21] : [18, 18],
-    popupAnchor: [0, isUserMarker ? -22 : -19],
-    tooltipAnchor: [0, isUserMarker ? -22 : -19]
+    iconSize: [27, 27],
+    iconAnchor: [13.5, 13.5],
+    popupAnchor: [0, -15],
+    tooltipAnchor: [0, -15]
   });
 }
 
@@ -641,14 +640,33 @@ function renderKapotpotNearby(response) {
     const longitude = Number(rider.longitude);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
+    const displayName = String(rider.displayName || rider.username || "Kapotpot").trim() || "Kapotpot";
+    const distanceLabel = String(rider.distanceLabel || "Distance unavailable").trim();
+
     const marker = window.L.marker([latitude, longitude], {
       icon: createKapotpotDivIcon("kapotpot-rider-marker", {
         imageUrl: rider.avatarUrl || rider.profilePictureUrl || "",
         label: "",
         imageAlt: ""
       }),
-      interactive: false
+      interactive: true,
+      keyboard: true,
+      alt: `${displayName}, ${distanceLabel}`,
+      title: `View ${displayName}`
     });
+    const tooltip = document.createElement("span");
+    tooltip.className = "kapotpot-rider-tooltip-content";
+    const tooltipName = document.createElement("strong");
+    tooltipName.textContent = displayName;
+    const tooltipDistance = document.createElement("small");
+    tooltipDistance.textContent = distanceLabel;
+    tooltip.append(tooltipName, tooltipDistance);
+    marker.bindTooltip(tooltip, {
+      className: "kapotpot-rider-tooltip",
+      direction: "top",
+      opacity: 1
+    });
+    marker.on("click", () => marker.openTooltip());
     marker.addTo(kapotpotFinderState.nearbyLayer);
   });
 

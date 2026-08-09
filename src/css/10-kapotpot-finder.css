@@ -672,6 +672,38 @@ body.has-kapotpot-map-fullscreen {
 .kapotpot-rider-marker {
   background: var(--red);
   box-shadow: 0 0 0 2px var(--red), 0 3px 9px rgba(0, 0, 0, 0.34);
+  cursor: pointer;
+}
+
+.kapotpot-map .leaflet-tooltip.kapotpot-rider-tooltip {
+  padding: 7px 9px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  background: rgba(24, 24, 24, 0.94);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
+}
+
+.kapotpot-map .leaflet-tooltip-top.kapotpot-rider-tooltip::before {
+  border-top-color: rgba(24, 24, 24, 0.94);
+}
+
+.kapotpot-rider-tooltip-content,
+.kapotpot-rider-tooltip-content strong,
+.kapotpot-rider-tooltip-content small {
+  display: block;
+}
+
+.kapotpot-rider-tooltip-content strong {
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.kapotpot-rider-tooltip-content small {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 10px;
+  line-height: 1.2;
 }
 
 .kapotpot-marker-fallback {

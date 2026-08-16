@@ -21,6 +21,8 @@ async function startCatalog() {
   initializeCartUi();
   bindCustomerAccountUi();
   initializeKapotpotFinder();
+  initializePrivateRidePage();
+  initializePrivateGroupRides();
   bindCatalogUi();
   bindProductSearchUi();
   bindProductSearchPageUi();
@@ -71,7 +73,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-location-check-v7')
+    navigator.serviceWorker.register('./sw.js?v=20260809-finder-preview-action-v24')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

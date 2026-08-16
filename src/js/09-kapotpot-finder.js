@@ -17,10 +17,59 @@ const kapotpotFinderState = {
   chatReconnectTimer: null,
   chatReconnectAttempts: 0,
   chatShouldReconnect: false,
-  chatUnreadCount: 0
+  chatUnreadCount: 0,
+  automaticPromptScheduled: false,
+  dismissedPromptSessionKey: ""
 };
 
 let kapotpotMapLibraryPromise = null;
+const KAPOTPOT_LOCATION_PROMPT_DISMISSED_KEY = "smb.onlineUsers.locationPromptDismissed.v1";
+
+function getKapotpotLocationPromptSessionKey() {
+  const account = customerState.account || {};
+  return `${KAPOTPOT_LOCATION_PROMPT_DISMISSED_KEY}:${account.id || account.username || account.email || "customer"}`;
+}
+
+function wasKapotpotLocationPromptDismissed() {
+  const sessionKey = getKapotpotLocationPromptSessionKey();
+  if (kapotpotFinderState.dismissedPromptSessionKey === sessionKey) return true;
+  try {
+    return window.sessionStorage.getItem(sessionKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function rememberKapotpotLocationPromptDismissal() {
+  const sessionKey = getKapotpotLocationPromptSessionKey();
+  kapotpotFinderState.dismissedPromptSessionKey = sessionKey;
+  try {
+    window.sessionStorage.setItem(sessionKey, "true");
+  } catch {}
+}
+
+function scheduleAutomaticKapotpotLocationPrompt() {
+  if (
+    kapotpotFinderState.automaticPromptScheduled ||
+    !customerState.account ||
+    kapotpotFinderState.isVisible ||
+    kapotpotFinderState.isOpen ||
+    wasKapotpotLocationPromptDismissed()
+  ) return;
+
+  kapotpotFinderState.automaticPromptScheduled = true;
+  window.setTimeout(() => {
+    kapotpotFinderState.automaticPromptScheduled = false;
+    if (
+      customerState.account &&
+      !kapotpotFinderState.isVisible &&
+      !kapotpotFinderState.isOpen &&
+      !wasKapotpotLocationPromptDismissed()
+    ) {
+      openKapotpotLocationPrompt();
+    }
+  }, 450);
+}
 
 function getKapotpotInitials(value) {
   return String(value || "SMB")
@@ -36,7 +85,6 @@ function getKapotpotFinderElements() {
   return {
     root,
     openButton: root?.querySelector("[data-kapotpot-open]"),
-    count: root?.querySelector("[data-kapotpot-count]"),
     message: root?.querySelector("[data-kapotpot-message]"),
     mapShell: root?.querySelector("[data-kapotpot-map-shell]"),
     fullscreenButton: root?.querySelector("[data-kapotpot-fullscreen]"),
@@ -351,11 +399,16 @@ function renderKapotpotVisibility() {
   const isLoggedIn = Boolean(customerState.account);
   root.classList.toggle("is-visible", kapotpotFinderState.isVisible);
   if (openButton) {
-    openButton.textContent = !isLoggedIn
-      ? "Login to Open"
+    openButton.hidden = kapotpotFinderState.isVisible;
+    const actionLabel = !isLoggedIn
+      ? "Login to See Online Users"
       : kapotpotFinderState.isOpen
-        ? "Refresh Map"
-        : "Open Finder";
+        ? "Refresh Online Users"
+        : "Show Online Users";
+    openButton.setAttribute("aria-label", actionLabel);
+    openButton.title = actionLabel;
+    const visibleLabel = openButton.querySelector("[data-kapotpot-open-label]");
+    if (visibleLabel) visibleLabel.textContent = kapotpotFinderState.isOpen ? "Refresh Online Users" : "Show Online Users";
   }
 }
 
@@ -375,11 +428,9 @@ function resetKapotpotFinderForGuest() {
   kapotpotFinderState.latestPosition = null;
   kapotpotFinderState.visibleMarkerSignature = "";
   kapotpotFinderState.nearbyLayer?.clearLayers();
-  const { count } = getKapotpotFinderElements();
-  if (count) count.textContent = "Log in to see visible riders";
   renderKapotpotVisibility();
   renderKapotpotChatControl();
-  setKapotpotMessage("Log in to use Kapotpot Finder.");
+  setKapotpotMessage("Log in to see online users.");
 }
 
 function loadKapotpotMapLibrary() {
@@ -455,10 +506,10 @@ function renderKapotpotLocationPromptMode(isBlocked) {
   prompt.classList.toggle("is-permission-blocked", isBlocked);
   if (heading) heading.textContent = isBlocked
     ? "Turn on location for this site"
-    : "Allow location to open the Finder";
+    : "Appear on the Online Users map?";
   if (description) description.textContent = isBlocked
     ? "Your browser currently blocks location access for SarapMagBike. Change the site permission, then retry."
-    : "Kapotpot Finder needs your current location to place you on the map and show active opted-in riders.";
+    : "Share your approximate location so other SarapMagBike users can see that you are online. Your avatar will appear on the map.";
   if (steps) {
     const messages = isBlocked
       ? [
@@ -468,12 +519,13 @@ function renderKapotpotLocationPromptMode(isBlocked) {
         ]
       : [
           "Your exact location is never shown to other riders.",
-          "Opening the Finder makes you visible to other users for up to 10 minutes.",
+          "Your avatar marks your approximate location on the map.",
+          "Location sharing expires after 10 minutes of inactivity.",
           "You can remove access anytime in your browser settings."
         ];
     steps.replaceChildren(...messages.map((message) => createTextElement("li", message)));
   }
-  if (allowButton) allowButton.textContent = isBlocked ? "Try location again" : "Allow location access";
+  if (allowButton) allowButton.textContent = isBlocked ? "Try location again" : "Share my location";
   if (note) note.textContent = isBlocked
     ? "Browsers do not show another permission prompt until the blocked site setting is changed."
     : "Your browser will show its own location permission prompt next.";
@@ -494,6 +546,7 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
   prompt.hidden = true;
   document.body.classList.remove("has-kapotpot-location-prompt");
   if (cancelled) {
+    rememberKapotpotLocationPromptDismissal();
     renderKapotpotVisibility();
     setKapotpotMessage(wasPermissionBlocked
       ? "Location remains off for this site. You remain hidden."
@@ -504,7 +557,7 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
 
 function openKapotpotLocationPrompt({ blocked = kapotpotFinderState.locationPermissionBlocked } = {}) {
   if (!customerState.account) {
-    setKapotpotMessage("Log in to use Kapotpot Finder.");
+    setKapotpotMessage("Log in to see online users.");
     openCommunityLoginForm();
     return;
   }
@@ -626,13 +679,6 @@ async function ensureKapotpotMap(position) {
 
 function renderKapotpotNearby(response) {
   const nearby = Array.isArray(response?.nearby) ? response.nearby : [];
-  const { count } = getKapotpotFinderElements();
-  if (count) {
-    count.textContent = nearby.length === 0
-      ? "No other visible Kapotpots right now"
-      : `${nearby.length.toLocaleString("en-PH")} visible Kapotpot${nearby.length === 1 ? "" : "s"}`;
-  }
-
   if (!kapotpotFinderState.nearbyLayer || !window.L) return;
   kapotpotFinderState.nearbyLayer.clearLayers();
   nearby.forEach((rider) => {
@@ -641,8 +687,6 @@ function renderKapotpotNearby(response) {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
     const displayName = String(rider.displayName || rider.username || "Kapotpot").trim() || "Kapotpot";
-    const distanceLabel = String(rider.distanceLabel || "Distance unavailable").trim();
-
     const marker = window.L.marker([latitude, longitude], {
       icon: createKapotpotDivIcon("kapotpot-rider-marker", {
         imageUrl: rider.avatarUrl || rider.profilePictureUrl || "",
@@ -651,16 +695,14 @@ function renderKapotpotNearby(response) {
       }),
       interactive: true,
       keyboard: true,
-      alt: `${displayName}, ${distanceLabel}`,
+      alt: displayName,
       title: `View ${displayName}`
     });
     const tooltip = document.createElement("span");
     tooltip.className = "kapotpot-rider-tooltip-content";
     const tooltipName = document.createElement("strong");
     tooltipName.textContent = displayName;
-    const tooltipDistance = document.createElement("small");
-    tooltipDistance.textContent = distanceLabel;
-    tooltip.append(tooltipName, tooltipDistance);
+    tooltip.append(tooltipName);
     marker.bindTooltip(tooltip, {
       className: "kapotpot-rider-tooltip",
       direction: "top",
@@ -712,7 +754,7 @@ async function syncKapotpotPresence({ quiet = false } = {}) {
     kapotpotFinderState.isVisible = true;
     renderKapotpotNearby(response);
     renderKapotpotVisibility();
-    if (!quiet) setKapotpotMessage("You are visible using an approximate marker. Presence refreshes while this page is open.");
+    if (!quiet) setKapotpotMessage("You are online. Your approximate location is marked with your avatar and refreshes while this page is open.");
   } catch (error) {
     if (!quiet) setKapotpotMessage(error.message || "Nearby riders could not be refreshed.", "error");
     throw error;
@@ -739,7 +781,7 @@ function startKapotpotPresenceUpdates() {
 
 async function openKapotpotFinder() {
   if (!customerState.account) {
-    setKapotpotMessage("Log in to use Kapotpot Finder.");
+    setKapotpotMessage("Log in to see online users.");
     openCommunityLoginForm();
     return;
   }
@@ -752,8 +794,9 @@ async function openKapotpotFinder() {
     kapotpotFinderState.locationPermissionBlocked = false;
     kapotpotFinderState.latestPosition = position;
     await ensureKapotpotMap(position);
-    setKapotpotMessage("Checking for visible Kapotpots…");
+    setKapotpotMessage("Checking for online users…");
   } catch (error) {
+    kapotpotFinderState.isVisible = false;
     if (error.kapotpotPermissionBlocked) {
       setKapotpotMessage("Location is off for this site. Follow the browser steps shown, then retry.", "error");
       openKapotpotLocationPrompt({ blocked: true });
@@ -786,15 +829,17 @@ async function loadKapotpotPresenceStatus() {
   try {
     const response = await apiRequest("/api/public/kapotpot-finder/status");
     kapotpotFinderState.isVisible = Boolean(response?.isVisible);
-    const { count } = getKapotpotFinderElements();
-    if (count) {
-      count.textContent = kapotpotFinderState.isVisible
-        ? "You are visible—open to refresh the map"
-        : "Open the Finder to see visible riders";
-    }
     setKapotpotMessage(kapotpotFinderState.isVisible
       ? "Your previous presence is still active and will expire automatically."
-      : "Opening the Finder makes you visible to other users for up to 10 minutes.");
+      : "Share your location to appear on the Online Users map for up to 10 minutes.");
+    if (kapotpotFinderState.isVisible) {
+      renderKapotpotVisibility();
+      window.setTimeout(() => {
+        if (kapotpotFinderState.isVisible && !kapotpotFinderState.isOpen) void openKapotpotFinder();
+      }, 0);
+    } else {
+      scheduleAutomaticKapotpotLocationPrompt();
+    }
   } catch (error) {
     kapotpotFinderState.isVisible = false;
     setKapotpotMessage(error.status === 404
@@ -832,7 +877,7 @@ function initializeKapotpotFinder() {
     }).catch(() => {});
   }
 
-  openButton?.addEventListener("click", () => openKapotpotLocationPrompt());
+  openButton?.addEventListener("click", () => void openKapotpotFinder());
   fullscreenButton?.addEventListener("click", () => void toggleKapotpotMapFullscreen());
   chatToggle?.addEventListener("click", openKapotpotChat);
   chatCompose?.addEventListener("click", openKapotpotChatComposer);

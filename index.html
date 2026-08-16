@@ -18,7 +18,7 @@
     >
     <title>SarapMagBike Shop | Quezon City Bike Shop</title>
     <link rel="icon" href="assets/sarapmagbike-logo.png">
-    <link rel="stylesheet" href="styles.css?v=20260805-kapotpot-chat-bottom-spacer-v1">
+    <link rel="stylesheet" href="styles.css?v=20260810-header-hit-area-v36">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#df2027">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -419,24 +419,14 @@
       <section id="kapotpot-finder" class="kapotpot-finder" aria-labelledby="kapotpot-finder-title" data-home-section data-kapotpot-finder>
         <div class="kapotpot-finder-copy">
           <p class="kapotpot-finder-eyebrow">SarapMagBike Community</p>
-          <h2 id="kapotpot-finder-title">KAPOTPOT FINDER</h2>
-          <p class="kapotpot-finder-intro">When using Kapotpot Finder, you allow yourself to be visible to other users.</p>
-
-          <div class="kapotpot-finder-summary" aria-live="polite">
-            <span class="kapotpot-active-dot" aria-hidden="true"></span>
-            <strong data-kapotpot-count>Open the Finder to see visible riders</strong>
-            <span>All active riders are shown</span>
-          </div>
-
-          <div class="kapotpot-finder-controls">
-            <button type="button" data-kapotpot-open>Open Finder</button>
-          </div>
+          <h2 id="kapotpot-finder-title">ONLINE USERS</h2>
+          <p class="kapotpot-finder-intro">Share your approximate location to appear on the map and see other online SarapMagBike users.</p>
 
           <p class="kapotpot-privacy-note">
             <span aria-hidden="true">▣</span>
             Your exact location stays private. Visibility expires after 10 minutes of inactivity.
           </p>
-          <p class="kapotpot-finder-message" data-kapotpot-message role="status">Log in to use Kapotpot Finder.</p>
+          <p class="kapotpot-finder-message" data-kapotpot-message role="status">Log in to see online users.</p>
         </div>
 
         <div class="kapotpot-map-shell" data-kapotpot-map-shell>
@@ -455,9 +445,9 @@
             </svg>
             <span data-kapotpot-chat-unread hidden></span>
           </button>
-          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your location and all active opted-in riders"></div>
+          <div class="kapotpot-map" data-kapotpot-map aria-label="Map showing your approximate location and online SarapMagBike users"></div>
           <div class="kapotpot-map-preview" data-kapotpot-map-preview>
-            <svg viewBox="0 0 760 420" role="img" aria-label="Kapotpot Finder map preview with 5 kilometer and 50 kilometer guide rings">
+            <svg viewBox="0 0 760 420" role="img" aria-label="Online Users map preview with 5 kilometer and 50 kilometer guide rings">
               <path d="M0 74L760 10M0 186L760 116M0 336L760 278M92 0L160 420M288 0L330 420M518 0L494 420M690 0L610 420" />
               <path class="kapotpot-preview-river" d="M700 -20C620 70 726 138 634 220S572 356 522 446" />
               <circle class="kapotpot-preview-radius" cx="380" cy="210" r="150" />
@@ -467,10 +457,10 @@
               <g class="kapotpot-preview-rider"><circle cx="474" cy="164" r="15"/><text x="474" y="170">●</text></g>
               <g class="kapotpot-preview-rider"><circle cx="342" cy="296" r="15"/><text x="342" y="302">●</text></g>
             </svg>
-            <div>
-              <strong>Find visible Kapotpots</strong>
-              <span>The map loads only when you open the Finder.</span>
-            </div>
+            <button class="kapotpot-map-preview-card" type="button" data-kapotpot-open aria-label="Show Online Users" title="Show Online Users">
+              <strong data-kapotpot-open-label>Show Online Users</strong>
+              <span>Sharing starts only after you approve location access.</span>
+            </button>
           </div>
           <div class="kapotpot-map-legend" data-kapotpot-map-legend hidden>
             <span><i class="is-you"></i>You</span>
@@ -514,21 +504,49 @@
             <svg viewBox="0 0 24 24"><path d="M12 21s6-5.4 6-12a6 6 0 1 0-12 0c0 6.6 6 12 6 12Z"></path><circle cx="12" cy="9" r="2.2"></circle></svg>
           </span>
           <p>Location access</p>
-          <h2 id="kapotpot-location-title">Allow location to open the Finder</h2>
+          <h2 id="kapotpot-location-title">Appear on the Online Users map?</h2>
           <p id="kapotpot-location-description" data-kapotpot-location-description>
-            Kapotpot Finder needs your current location to place you on the map and show active opted-in riders.
+            Share your approximate location so other SarapMagBike users can see that you are online. Your avatar will appear on the map.
           </p>
           <ul data-kapotpot-location-steps>
             <li>Your exact location is never shown to other riders.</li>
-            <li>Opening the Finder makes you visible to other users for up to 10 minutes.</li>
+            <li>Your avatar marks your approximate location on the map.</li>
+            <li>Location sharing expires after 10 minutes of inactivity.</li>
             <li>You can remove access anytime in your browser settings.</li>
           </ul>
           <div class="kapotpot-location-actions">
-            <button type="button" data-kapotpot-location-allow>Allow location access</button>
+            <button type="button" data-kapotpot-location-allow>Share my location</button>
             <button type="button" data-kapotpot-location-cancel>Not now</button>
           </div>
           <p class="kapotpot-location-feedback" data-kapotpot-location-feedback role="status" hidden></p>
           <small data-kapotpot-location-note>Your browser will show its own location permission prompt next.</small>
+        </section>
+      </div>
+
+      <section id="private-rides" class="private-rides" data-private-rides data-home-section aria-labelledby="private-rides-title">
+        <header class="private-rides-heading">
+          <div>
+            <p>Members-only community</p>
+            <div class="private-rides-title-row">
+              <h2 id="private-rides-title">PRIVATE GROUP RIDES</h2>
+              <button type="button" class="private-rides-refresh" data-private-rides-refresh aria-label="Refresh private rides" title="Refresh private rides">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66"></path><path d="M20 4v7h-7"></path></svg>
+              </button>
+            </div>
+            <span>Create a private ride or join one using its passcode.</span>
+          </div>
+          <div class="private-rides-heading-actions">
+            <button type="button" class="is-primary" data-private-ride-create>Create ride</button>
+          </div>
+        </header>
+        <p class="private-rides-status" data-private-rides-status role="status">Log in to view your private rides.</p>
+        <div class="private-rides-cards" data-private-rides-cards></div>
+      </section>
+
+      <div class="private-ride-modal" data-private-ride-modal hidden>
+        <section role="dialog" aria-modal="true" aria-labelledby="private-ride-modal-title">
+          <button type="button" class="private-ride-modal-close" data-private-ride-modal-close aria-label="Close">×</button>
+          <div data-private-ride-modal-content></div>
         </section>
       </div>
 
@@ -824,6 +842,6 @@
     </nav>
 
     <script src="config.js?v=20260703-staging-api"></script>
-    <script src="script.js?v=20260805-kapotpot-chat-bottom-spacer-v1"></script>
+    <script src="script.js?v=20260810-header-hit-area-v36"></script>
   </body>
 </html>

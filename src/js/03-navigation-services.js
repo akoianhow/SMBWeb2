@@ -538,7 +538,8 @@ function setCatalogMode(isCatalogMode) {
   });
 }
 
-function returnToHome({ updatePath = false } = {}) {
+function returnToHome({ updatePath = false, preserveScroll = false } = {}) {
+  const previousScrollTop = window.scrollY;
   setCatalogMode(false);
   showCommunityMode(false);
   state.activeCategory = null;
@@ -550,7 +551,11 @@ function returnToHome({ updatePath = false } = {}) {
   if (updatePath && window.location.pathname !== "/services.html") {
     window.history.replaceState({ view: "home" }, "", window.location.pathname || "index.html");
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (preserveScroll) {
+    window.requestAnimationFrame(() => window.scrollTo({ top: previousScrollTop, behavior: "instant" }));
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 function renderCategoryNav() {

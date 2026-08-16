@@ -2445,7 +2445,8 @@ function setCatalogMode(isCatalogMode) {
   });
 }
 
-function returnToHome({ updatePath = false } = {}) {
+function returnToHome({ updatePath = false, preserveScroll = false } = {}) {
+  const previousScrollTop = window.scrollY;
   setCatalogMode(false);
   showCommunityMode(false);
   state.activeCategory = null;
@@ -2457,7 +2458,11 @@ function returnToHome({ updatePath = false } = {}) {
   if (updatePath && window.location.pathname !== "/services.html") {
     window.history.replaceState({ view: "home" }, "", window.location.pathname || "index.html");
   }
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (preserveScroll) {
+    window.requestAnimationFrame(() => window.scrollTo({ top: previousScrollTop, behavior: "instant" }));
+  } else {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 }
 
 function renderCategoryNav() {
@@ -6604,9 +6609,13 @@ function updateNotificationBadges(count = 0) {
 }
 
 function ensureAccountNotificationTrigger() {
-  document.querySelectorAll("[data-customer-session]").forEach((session) => {
+  const sessions = [...document.querySelectorAll("[data-customer-session]")];
+  if (document.body.classList.contains("is-private-ride-page")) {
+    sessions.push(...document.querySelectorAll("[data-mobile-header-session]"));
+  }
+  sessions.forEach((session) => {
     if (session.querySelector("[data-avatar-notification-trigger]")) return;
-    const avatar = session.querySelector("[data-account-menu-toggle]");
+    const avatar = session.querySelector("[data-account-menu-toggle], [data-mobile-header-menu-toggle]");
     if (!avatar) return;
     const button = document.createElement("button");
     button.type = "button";
@@ -6919,6 +6928,13 @@ function renderAvatar(container, account = customerState.account) {
   container.textContent = getAccountInitials(account);
 }
 
+function syncAccountMenuLayer() {
+  const hasOpenAccountMenu = Array.from(document.querySelectorAll(
+    "[data-account-menu], [data-mobile-header-menu], [data-coming-soon-header-menu]"
+  )).some((menu) => !menu.hidden);
+  document.body.classList.toggle("has-account-menu-open", hasOpenAccountMenu);
+}
+
 function setAccountMenuOpen(open) {
   const menu = document.querySelector("[data-account-menu]");
   const toggle = document.querySelector("[data-account-menu-toggle]");
@@ -6928,6 +6944,7 @@ function setAccountMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setComingSoonHeaderMenuOpen(open) {
@@ -6939,6 +6956,7 @@ function setComingSoonHeaderMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setMobileHeaderMenuOpen(open) {
@@ -6950,6 +6968,7 @@ function setMobileHeaderMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setMessage(element, message, type = "") {
@@ -7468,7 +7487,7 @@ async function loginCustomer(event) {
       showProfileMode(false);
       loadCommunityDiscussions(true);
     } else {
-      returnToHome();
+      returnToHome({ preserveScroll: true });
     }
   } catch (error) {
     if (message) {
@@ -9354,10 +9373,59 @@ const kapotpotFinderState = {
   chatReconnectTimer: null,
   chatReconnectAttempts: 0,
   chatShouldReconnect: false,
-  chatUnreadCount: 0
+  chatUnreadCount: 0,
+  automaticPromptScheduled: false,
+  dismissedPromptSessionKey: ""
 };
 
 let kapotpotMapLibraryPromise = null;
+const KAPOTPOT_LOCATION_PROMPT_DISMISSED_KEY = "smb.onlineUsers.locationPromptDismissed.v1";
+
+function getKapotpotLocationPromptSessionKey() {
+  const account = customerState.account || {};
+  return `${KAPOTPOT_LOCATION_PROMPT_DISMISSED_KEY}:${account.id || account.username || account.email || "customer"}`;
+}
+
+function wasKapotpotLocationPromptDismissed() {
+  const sessionKey = getKapotpotLocationPromptSessionKey();
+  if (kapotpotFinderState.dismissedPromptSessionKey === sessionKey) return true;
+  try {
+    return window.sessionStorage.getItem(sessionKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function rememberKapotpotLocationPromptDismissal() {
+  const sessionKey = getKapotpotLocationPromptSessionKey();
+  kapotpotFinderState.dismissedPromptSessionKey = sessionKey;
+  try {
+    window.sessionStorage.setItem(sessionKey, "true");
+  } catch {}
+}
+
+function scheduleAutomaticKapotpotLocationPrompt() {
+  if (
+    kapotpotFinderState.automaticPromptScheduled ||
+    !customerState.account ||
+    kapotpotFinderState.isVisible ||
+    kapotpotFinderState.isOpen ||
+    wasKapotpotLocationPromptDismissed()
+  ) return;
+
+  kapotpotFinderState.automaticPromptScheduled = true;
+  window.setTimeout(() => {
+    kapotpotFinderState.automaticPromptScheduled = false;
+    if (
+      customerState.account &&
+      !kapotpotFinderState.isVisible &&
+      !kapotpotFinderState.isOpen &&
+      !wasKapotpotLocationPromptDismissed()
+    ) {
+      openKapotpotLocationPrompt();
+    }
+  }, 450);
+}
 
 function getKapotpotInitials(value) {
   return String(value || "SMB")
@@ -9373,7 +9441,6 @@ function getKapotpotFinderElements() {
   return {
     root,
     openButton: root?.querySelector("[data-kapotpot-open]"),
-    count: root?.querySelector("[data-kapotpot-count]"),
     message: root?.querySelector("[data-kapotpot-message]"),
     mapShell: root?.querySelector("[data-kapotpot-map-shell]"),
     fullscreenButton: root?.querySelector("[data-kapotpot-fullscreen]"),
@@ -9688,11 +9755,16 @@ function renderKapotpotVisibility() {
   const isLoggedIn = Boolean(customerState.account);
   root.classList.toggle("is-visible", kapotpotFinderState.isVisible);
   if (openButton) {
-    openButton.textContent = !isLoggedIn
-      ? "Login to Open"
+    openButton.hidden = kapotpotFinderState.isVisible;
+    const actionLabel = !isLoggedIn
+      ? "Login to See Online Users"
       : kapotpotFinderState.isOpen
-        ? "Refresh Map"
-        : "Open Finder";
+        ? "Refresh Online Users"
+        : "Show Online Users";
+    openButton.setAttribute("aria-label", actionLabel);
+    openButton.title = actionLabel;
+    const visibleLabel = openButton.querySelector("[data-kapotpot-open-label]");
+    if (visibleLabel) visibleLabel.textContent = kapotpotFinderState.isOpen ? "Refresh Online Users" : "Show Online Users";
   }
 }
 
@@ -9712,11 +9784,9 @@ function resetKapotpotFinderForGuest() {
   kapotpotFinderState.latestPosition = null;
   kapotpotFinderState.visibleMarkerSignature = "";
   kapotpotFinderState.nearbyLayer?.clearLayers();
-  const { count } = getKapotpotFinderElements();
-  if (count) count.textContent = "Log in to see visible riders";
   renderKapotpotVisibility();
   renderKapotpotChatControl();
-  setKapotpotMessage("Log in to use Kapotpot Finder.");
+  setKapotpotMessage("Log in to see online users.");
 }
 
 function loadKapotpotMapLibrary() {
@@ -9792,10 +9862,10 @@ function renderKapotpotLocationPromptMode(isBlocked) {
   prompt.classList.toggle("is-permission-blocked", isBlocked);
   if (heading) heading.textContent = isBlocked
     ? "Turn on location for this site"
-    : "Allow location to open the Finder";
+    : "Appear on the Online Users map?";
   if (description) description.textContent = isBlocked
     ? "Your browser currently blocks location access for SarapMagBike. Change the site permission, then retry."
-    : "Kapotpot Finder needs your current location to place you on the map and show active opted-in riders.";
+    : "Share your approximate location so other SarapMagBike users can see that you are online. Your avatar will appear on the map.";
   if (steps) {
     const messages = isBlocked
       ? [
@@ -9805,12 +9875,13 @@ function renderKapotpotLocationPromptMode(isBlocked) {
         ]
       : [
           "Your exact location is never shown to other riders.",
-          "Opening the Finder makes you visible to other users for up to 10 minutes.",
+          "Your avatar marks your approximate location on the map.",
+          "Location sharing expires after 10 minutes of inactivity.",
           "You can remove access anytime in your browser settings."
         ];
     steps.replaceChildren(...messages.map((message) => createTextElement("li", message)));
   }
-  if (allowButton) allowButton.textContent = isBlocked ? "Try location again" : "Allow location access";
+  if (allowButton) allowButton.textContent = isBlocked ? "Try location again" : "Share my location";
   if (note) note.textContent = isBlocked
     ? "Browsers do not show another permission prompt until the blocked site setting is changed."
     : "Your browser will show its own location permission prompt next.";
@@ -9831,6 +9902,7 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
   prompt.hidden = true;
   document.body.classList.remove("has-kapotpot-location-prompt");
   if (cancelled) {
+    rememberKapotpotLocationPromptDismissal();
     renderKapotpotVisibility();
     setKapotpotMessage(wasPermissionBlocked
       ? "Location remains off for this site. You remain hidden."
@@ -9841,7 +9913,7 @@ function closeKapotpotLocationPrompt({ cancelled = false } = {}) {
 
 function openKapotpotLocationPrompt({ blocked = kapotpotFinderState.locationPermissionBlocked } = {}) {
   if (!customerState.account) {
-    setKapotpotMessage("Log in to use Kapotpot Finder.");
+    setKapotpotMessage("Log in to see online users.");
     openCommunityLoginForm();
     return;
   }
@@ -9963,13 +10035,6 @@ async function ensureKapotpotMap(position) {
 
 function renderKapotpotNearby(response) {
   const nearby = Array.isArray(response?.nearby) ? response.nearby : [];
-  const { count } = getKapotpotFinderElements();
-  if (count) {
-    count.textContent = nearby.length === 0
-      ? "No other visible Kapotpots right now"
-      : `${nearby.length.toLocaleString("en-PH")} visible Kapotpot${nearby.length === 1 ? "" : "s"}`;
-  }
-
   if (!kapotpotFinderState.nearbyLayer || !window.L) return;
   kapotpotFinderState.nearbyLayer.clearLayers();
   nearby.forEach((rider) => {
@@ -9978,8 +10043,6 @@ function renderKapotpotNearby(response) {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
     const displayName = String(rider.displayName || rider.username || "Kapotpot").trim() || "Kapotpot";
-    const distanceLabel = String(rider.distanceLabel || "Distance unavailable").trim();
-
     const marker = window.L.marker([latitude, longitude], {
       icon: createKapotpotDivIcon("kapotpot-rider-marker", {
         imageUrl: rider.avatarUrl || rider.profilePictureUrl || "",
@@ -9988,16 +10051,14 @@ function renderKapotpotNearby(response) {
       }),
       interactive: true,
       keyboard: true,
-      alt: `${displayName}, ${distanceLabel}`,
+      alt: displayName,
       title: `View ${displayName}`
     });
     const tooltip = document.createElement("span");
     tooltip.className = "kapotpot-rider-tooltip-content";
     const tooltipName = document.createElement("strong");
     tooltipName.textContent = displayName;
-    const tooltipDistance = document.createElement("small");
-    tooltipDistance.textContent = distanceLabel;
-    tooltip.append(tooltipName, tooltipDistance);
+    tooltip.append(tooltipName);
     marker.bindTooltip(tooltip, {
       className: "kapotpot-rider-tooltip",
       direction: "top",
@@ -10049,7 +10110,7 @@ async function syncKapotpotPresence({ quiet = false } = {}) {
     kapotpotFinderState.isVisible = true;
     renderKapotpotNearby(response);
     renderKapotpotVisibility();
-    if (!quiet) setKapotpotMessage("You are visible using an approximate marker. Presence refreshes while this page is open.");
+    if (!quiet) setKapotpotMessage("You are online. Your approximate location is marked with your avatar and refreshes while this page is open.");
   } catch (error) {
     if (!quiet) setKapotpotMessage(error.message || "Nearby riders could not be refreshed.", "error");
     throw error;
@@ -10076,7 +10137,7 @@ function startKapotpotPresenceUpdates() {
 
 async function openKapotpotFinder() {
   if (!customerState.account) {
-    setKapotpotMessage("Log in to use Kapotpot Finder.");
+    setKapotpotMessage("Log in to see online users.");
     openCommunityLoginForm();
     return;
   }
@@ -10089,8 +10150,9 @@ async function openKapotpotFinder() {
     kapotpotFinderState.locationPermissionBlocked = false;
     kapotpotFinderState.latestPosition = position;
     await ensureKapotpotMap(position);
-    setKapotpotMessage("Checking for visible Kapotpots…");
+    setKapotpotMessage("Checking for online users…");
   } catch (error) {
+    kapotpotFinderState.isVisible = false;
     if (error.kapotpotPermissionBlocked) {
       setKapotpotMessage("Location is off for this site. Follow the browser steps shown, then retry.", "error");
       openKapotpotLocationPrompt({ blocked: true });
@@ -10123,15 +10185,17 @@ async function loadKapotpotPresenceStatus() {
   try {
     const response = await apiRequest("/api/public/kapotpot-finder/status");
     kapotpotFinderState.isVisible = Boolean(response?.isVisible);
-    const { count } = getKapotpotFinderElements();
-    if (count) {
-      count.textContent = kapotpotFinderState.isVisible
-        ? "You are visible—open to refresh the map"
-        : "Open the Finder to see visible riders";
-    }
     setKapotpotMessage(kapotpotFinderState.isVisible
       ? "Your previous presence is still active and will expire automatically."
-      : "Opening the Finder makes you visible to other users for up to 10 minutes.");
+      : "Share your location to appear on the Online Users map for up to 10 minutes.");
+    if (kapotpotFinderState.isVisible) {
+      renderKapotpotVisibility();
+      window.setTimeout(() => {
+        if (kapotpotFinderState.isVisible && !kapotpotFinderState.isOpen) void openKapotpotFinder();
+      }, 0);
+    } else {
+      scheduleAutomaticKapotpotLocationPrompt();
+    }
   } catch (error) {
     kapotpotFinderState.isVisible = false;
     setKapotpotMessage(error.status === 404
@@ -10169,7 +10233,7 @@ function initializeKapotpotFinder() {
     }).catch(() => {});
   }
 
-  openButton?.addEventListener("click", () => openKapotpotLocationPrompt());
+  openButton?.addEventListener("click", () => void openKapotpotFinder());
   fullscreenButton?.addEventListener("click", () => void toggleKapotpotMapFullscreen());
   chatToggle?.addEventListener("click", openKapotpotChat);
   chatCompose?.addEventListener("click", openKapotpotChatComposer);
@@ -10279,6 +10343,48 @@ function initializeKapotpotFinder() {
   renderKapotpotChatControl();
   renderKapotpotChatMessages();
 }
+const privateRideState={rides:[],current:null,currentMembership:null,map:null,markers:null,ownMarker:null,watchId:null,presenceTimer:null,spectatorTimer:null,statusTimer:null,chat:null,messages:[],hadAuthenticatedSession:false};
+function privateRideElements(){return{root:document.querySelector('[data-private-rides]'),page:document.querySelector('[data-private-ride-page]'),cards:document.querySelector('[data-private-rides-cards]'),status:document.querySelector('[data-private-rides-status]'),modal:document.querySelector('[data-private-ride-modal]'),content:document.querySelector('[data-private-ride-page-content]')||document.querySelector('[data-private-ride-modal-content]')}}
+function setPrivateRideStatus(message){const el=privateRideElements().status;if(el){el.textContent=message;el.hidden=!message}}
+function privateRideButton(text,action,primary=false){const button=createTextElement('button',text);button.type='button';button.dataset.privateRideAction=action;if(primary)button.classList.add('is-primary');return button}
+function privateRideActionChip(label,action,className){const button=privateRideButton(label.replace(/ ride$/i,''),action);button.className=`private-ride-action-chip ${className}`;button.setAttribute('aria-label',label);button.title=label;return button}
+function privateRideIconButton(label,action,className,icon){const button=privateRideButton('',action);button.className=`private-ride-icon-action ${className}`;button.innerHTML=`${icon}<span>${label}</span>`;button.setAttribute('aria-label',label);button.title=label;return button}
+function privateRideInitials(value){const words=String(value||'?').trim().split(/[^A-Za-z0-9]+/).filter(Boolean);return(words.length>1?words.slice(0,2).map(word=>word[0]):[words[0]?.[0]||'?']).join('').toUpperCase()}
+function openPrivateRideModal(){const{modal}=privateRideElements();if(!modal)return;modal.hidden=false;document.body.style.overflow='hidden'}
+function closePrivateRideModal(){const{modal,page,content}=privateRideElements();stopPrivateRideLive();if(page){window.location.href='index.html#private-rides';return}if(modal)modal.hidden=true;if(content)content.replaceChildren();document.body.style.overflow=''}
+function privateRideImage(src,className=''){const image=document.createElement('img');image.src=src?normalizeApiUrl(src):'assets/private-group-riders.png';image.alt='Private group riders';if(className)image.className=className;if(!src)image.classList.add('is-default-private-ride-image');image.addEventListener('error',()=>{if(!image.src.endsWith('/assets/private-group-riders.png')){image.src='assets/private-group-riders.png';image.classList.add('is-default-private-ride-image')}},{once:true});return image}
+function privateRideDisplayStatus(ride){const status=String(ride.status||'').toLowerCase();if(status==='ended')return{label:'ended',className:'is-ended',title:'Will be removed in an hour'};if(status!=='live')return{label:status,className:''};const lastActivity=new Date(ride.lastActivityAt||ride.createdAt||ride.startsAt).getTime();const inactiveFor=Math.max(0,Date.now()-lastActivity);if(inactiveFor>=3*60*60*1000)return{label:'inactive',className:'is-inactive',title:'Will be removed after 5 hours of inactivity'};if(inactiveFor>30*60*1000)return{label:'idle',className:'is-idle'};return{label:'live',className:'is-live'}}
+function privateRidePageUrl(rideId,spectator=false){const params=new URLSearchParams({id:rideId});if(spectator)params.set('spectator','1');return `private-ride.html?${params}`}
+function updatePrivateRideCreateAction(){const button=privateRideElements().root?.querySelector('[data-private-ride-create]');privateRideState.currentMembership=privateRideState.rides.find(ride=>ride.myRole)||null;if(!button)return;button.textContent=privateRideState.currentMembership?'Open current ride':'Create ride';button.title=privateRideState.currentMembership?`You are currently active in ${privateRideState.currentMembership.rideName}.`:''}
+function renderPrivateRideCards(){const{cards}=privateRideElements();if(!cards)return;cards.replaceChildren();updatePrivateRideCreateAction();if(!privateRideState.rides.length){setPrivateRideStatus('No active private rides right now.');return}setPrivateRideStatus('');privateRideState.rides.forEach(ride=>{const card=document.createElement('article');card.className='private-ride-card';const isEnded=String(ride.status||'').toLowerCase()==='ended';const icon=privateRideButton('','ride-icon');icon.className='private-ride-icon-button';icon.dataset.rideId=ride.id;icon.dataset.rideRole=ride.myRole||'';icon.dataset.allowSpectators=ride.allowSpectators?'true':'false';icon.disabled=isEnded;icon.setAttribute('aria-label',isEnded?`${ride.rideName} has ended`:ride.myRole?`Open ${ride.rideName}`:`Enter the code for ${ride.rideName}`);const media=document.createElement('span');media.className='private-ride-card-media';media.append(privateRideImage(ride.groupImageUrl));const displayStatus=privateRideDisplayStatus(ride);const status=createTextElement('span',displayStatus.label,'private-ride-pill');if(displayStatus.className)status.classList.add(displayStatus.className);if(displayStatus.title){status.title=displayStatus.title;status.setAttribute('aria-label',`${displayStatus.label}. ${displayStatus.title}`)}media.append(status);icon.append(media);const details=document.createElement('div');details.className='private-ride-card-details';details.append(createTextElement('strong',ride.rideName),createTextElement('span',ride.groupName),createTextElement('small',`Created by: ${ride.leaderUsername}`),createTextElement('small',`${ride.memberCount} ${ride.memberCount===1?'joiner':'joiners'}`),createTextElement('time',`Created ${new Intl.DateTimeFormat('en-PH',{dateStyle:'medium'}).format(new Date(ride.createdAt||ride.startsAt))}`),createTextElement('time',`Last activity ${new Intl.DateTimeFormat('en-PH',{dateStyle:'medium',timeStyle:'short'}).format(new Date(ride.lastActivityAt||ride.createdAt||ride.startsAt))}`));card.append(icon,details);cards.append(card)})}
+async function loadPrivateRides(){if(!privateRideElements().root)return;setPrivateRideStatus('Loading private rides…');try{privateRideState.rides=await apiRequest(withPublicLocation('/api/public/private-rides'));renderPrivateRideCards()}catch(error){privateRideState.rides=[];setPrivateRideStatus(error.message)}}
+function buildPrivateRideForm(){const wrap=document.createElement('div');wrap.innerHTML='<h2 id="private-ride-modal-title">CREATE PRIVATE RIDE</h2><form class="private-ride-form" data-private-ride-form><label>Group name<input name="groupName" maxlength="120" required></label><label>Ride name<input name="rideName" maxlength="160" required></label><label class="is-wide">Ride passcode<input name="passcode" type="text" minlength="6" maxlength="24" pattern="[A-Za-z]{6,24}" autocomplete="off" autocapitalize="characters" required placeholder="Minimum 6 letters"><small>Use 6 to 24 letters only. Share it with invited riders.</small></label><div class="is-wide private-ride-photo-field"><strong>Ride display photo (optional)</strong><button type="button" class="private-ride-photo-picker" data-private-ride-photo-picker aria-label="Choose a ride display photo"><span class="private-ride-photo-placeholder" data-private-ride-photo-placeholder><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h4l2-2h4l2 2h4v12H4z"></path><circle cx="12" cy="13" r="3"></circle></svg><b>Add photo</b></span><img data-private-ride-photo-preview alt="Ride display preview" hidden></button><input name="groupImage" type="file" accept="image/jpeg,image/png,image/webp" data-private-ride-image-input hidden><small>JPG, PNG or WebP, up to 5 MB. The photo is cropped square.</small></div><label class="is-wide private-ride-spectator-option"><input name="allowSpectators" type="checkbox"><span><strong>Allow spectators</strong><small>People without the ride passcode can view the live map and riders, but cannot appear on the map or use chat.</small></span></label><label class="is-wide">Description / instructions (optional)<textarea name="description" maxlength="1000" rows="4"></textarea></label><p class="private-ride-feedback is-wide" data-private-ride-feedback role="status"></p><div class="private-ride-form-actions"><button type="button" data-private-ride-cancel>Cancel</button><button type="submit" class="is-primary">Create ride</button></div></form>';return wrap}
+function bindPrivateRidePhotoPicker(form){const picker=form.querySelector('[data-private-ride-photo-picker]');const input=form.querySelector('[data-private-ride-image-input]');const preview=form.querySelector('[data-private-ride-photo-preview]');const placeholder=form.querySelector('[data-private-ride-photo-placeholder]');picker.addEventListener('click',()=>input.click());input.addEventListener('change',()=>{const file=input.files?.[0];if(!file){preview.hidden=true;preview.removeAttribute('src');placeholder.hidden=false;return}const reader=new FileReader();reader.addEventListener('load',()=>{preview.src=String(reader.result);preview.hidden=false;placeholder.hidden=true});reader.readAsDataURL(file)})}
+async function preparePrivateRideImage(file){if(!file)return{};if(file.size>5*1024*1024)throw new Error('Group picture must be 5 MB or smaller.');if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw new Error('Choose a JPG, PNG, or WebP picture.');const url=URL.createObjectURL(file);try{const image=await new Promise((resolve,reject)=>{const img=new Image();img.onload=()=>resolve(img);img.onerror=()=>reject(new Error('This picture could not be read.'));img.src=url});const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const size=Math.min(image.naturalWidth,image.naturalHeight);const x=(image.naturalWidth-size)/2;const y=(image.naturalHeight-size)/2;canvas.getContext('2d').drawImage(image,x,y,size,size,0,0,512,512);return{groupImageBase64:canvas.toDataURL('image/webp',.86),groupImageContentType:'image/webp'}}finally{URL.revokeObjectURL(url)}}
+function showCreatePrivateRide(){if(!customerState.account){openCommunityLoginForm();return}const{content}=privateRideElements();content.replaceChildren(buildPrivateRideForm());openPrivateRideModal();const form=content.querySelector('form');bindPrivateRidePhotoPicker(form);content.querySelector('[data-private-ride-cancel]').addEventListener('click',closePrivateRideModal);form.addEventListener('submit',async event=>{event.preventDefault();const form=event.currentTarget;const feedback=form.querySelector('[data-private-ride-feedback]');const submit=form.querySelector('[type=submit]');submit.disabled=true;feedback.textContent='Creating live private ride…';try{const data=new FormData(form);const image=await preparePrivateRideImage(data.get('groupImage')?.size?data.get('groupImage'):null);const result=await apiRequest(withPublicLocation('/api/public/private-rides'),{method:'POST',body:JSON.stringify({groupName:data.get('groupName'),rideName:data.get('rideName'),passcode:data.get('passcode'),maximumRiders:null,meetingLocation:null,description:data.get('description'),allowSpectators:data.get('allowSpectators')==='on',...image})});await loadPrivateRides();showPrivateRideCode(result.ride.id,result.rideCode,result.message)}catch(error){feedback.textContent=error.message;submit.disabled=false}})}
+function showPrivateRideCode(rideId,code,message){const{content}=privateRideElements();content.replaceChildren();content.append(createTextElement('h2','RIDE CREATED'));const panel=document.createElement('div');panel.className='private-ride-code';panel.append(createTextElement('p',message||'Share this code only with invited riders.'),createTextElement('strong',code));const copy=privateRideButton('Copy code','copy',true);copy.addEventListener('click',async()=>{await navigator.clipboard?.writeText(code);copy.textContent='Copied'});panel.append(copy);content.append(panel);const open=privateRideButton('Open ride','open-created',true);open.addEventListener('click',()=>openPrivateRide(rideId));content.append(open)}
+function showJoinPrivateRide(rideId,allowSpectators=false){const{content}=privateRideElements();content.innerHTML='<h2 id="private-ride-modal-title">ENTER RIDE PASSCODE</h2><form class="private-ride-form" data-private-ride-join-form><label class="is-wide">Ride passcode<input name="rideCode" minlength="6" maxlength="24" autocomplete="off" required placeholder="Enter passcode"></label><p class="private-ride-feedback is-wide" data-private-ride-feedback role="status"></p><div class="private-ride-form-actions"><button type="button" data-private-ride-cancel>Cancel</button><button type="button" class="private-ride-spectator-button" data-private-ride-spectate hidden>Spectator mode</button><button type="submit" class="is-primary">Join ride</button></div></form>';openPrivateRideModal();content.querySelector('[data-private-ride-cancel]').addEventListener('click',closePrivateRideModal);const spectator=content.querySelector('[data-private-ride-spectate]');spectator.hidden=!allowSpectators;if(allowSpectators)spectator.addEventListener('click',()=>openPrivateRideSpectator(rideId));content.querySelector('form').addEventListener('submit',async event=>{event.preventDefault();const feedback=event.currentTarget.querySelector('[data-private-ride-feedback]');if(!customerState.account){feedback.textContent='Log in first to join this private ride.';return}try{const result=await apiRequest('/api/public/private-rides/join',{method:'POST',body:JSON.stringify({rideCode:new FormData(event.currentTarget).get('rideCode'),rideId})});await loadPrivateRides();openPrivateRide(result.ride.id)}catch(error){feedback.textContent=error.message}})}
+async function openPrivateRideSpectator(rideId){const{page,content}=privateRideElements();if(!page){window.location.href=privateRidePageUrl(rideId,true);return}stopPrivateRideLive();content.innerHTML='<p>Opening spectator mode…</p>';try{const ride=await apiRequest(`/api/public/private-rides/${rideId}/spectator`);privateRideState.current={...ride,isSpectator:true};renderPrivateRideSpectator(ride)}catch(error){content.replaceChildren(createTextElement('p',error.message,'private-ride-feedback'))}}
+function renderPrivateRideSpectator(ride){const{content}=privateRideElements();content.replaceChildren();content.append(createTextElement('h2',ride.groupName),createTextElement('h3',ride.rideName),createTextElement('p','Spectator mode — view only. You will not appear on the map and cannot use ride chat.','private-ride-spectator-note'));const riders=document.createElement('div');riders.className='private-ride-spectator-riders';riders.dataset.privateRideSpectatorRiders='';content.append(riders);const live=document.createElement('section');live.className='private-ride-live private-ride-spectator-live';live.innerHTML='<div class="private-ride-map" data-private-ride-map></div><p class="private-ride-map-message" data-private-ride-map-message>Loading visible riders…</p>';content.append(live);setTimeout(()=>openPrivateRideSpectatorMap(live,ride),0)}
+function renderPrivateRideSpectatorRiders(live,ride){const list=document.querySelector('[data-private-ride-spectator-riders]');if(list){list.replaceChildren();if(!ride.riders.length)list.append(createTextElement('p','No riders are currently sharing their location.'));ride.riders.forEach(rider=>{const item=document.createElement('span');if(rider.avatarUrl)item.append(privateRideImage(rider.avatarUrl));item.append(createTextElement('strong',rider.username));list.append(item)})}const message=live.querySelector('[data-private-ride-map-message]');privateRideState.markers.clearLayers();const bounds=[];ride.riders.forEach(rider=>{const marker=window.L.marker([rider.latitude,rider.longitude],{icon:privateRideMarkerIcon(rider.avatarUrl,'R')}).addTo(privateRideState.markers);marker.bindPopup(rider.username);bounds.push([rider.latitude,rider.longitude])});message.hidden=ride.riders.length>0;message.textContent='No riders are currently sharing their location.';if(bounds.length)privateRideState.map.fitBounds(bounds,{padding:[28,28],maxZoom:15})}
+async function openPrivateRideSpectatorMap(live,ride){try{const L=await loadKapotpotMapLibrary();if(!live.isConnected)return;privateRideState.map=L.map(live.querySelector('[data-private-ride-map]'),{zoomControl:true}).setView([14.6507,121.0494],12);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(privateRideState.map);privateRideState.markers=L.layerGroup().addTo(privateRideState.map);renderPrivateRideSpectatorRiders(live,ride);privateRideState.spectatorTimer=window.setInterval(async()=>{try{const updated=await apiRequest(`/api/public/private-rides/${ride.id}/spectator`);if(privateRideState.current?.id!==ride.id||!privateRideState.current?.isSpectator)return;privateRideState.current={...updated,isSpectator:true};renderPrivateRideSpectatorRiders(live,updated)}catch(error){live.querySelector('[data-private-ride-map-message]').hidden=false;live.querySelector('[data-private-ride-map-message]').textContent=error.message}},30000)}catch(error){live.querySelector('[data-private-ride-map-message]').textContent=error.message}}
+function memberNode(member,isLeader){const removable=isLeader&&member.role!=='leader';const node=document.createElement(removable?'button':'span');node.className='private-ride-member';if(removable){node.type='button';node.dataset.privateRideAction='remove-member';node.dataset.accountId=member.accountId;node.setAttribute('aria-label',`Remove ${member.username} from this ride`)}else node.setAttribute('aria-label',`${member.username}, ${member.role}`);node.title=`${member.username} · ${member.role}`;if(member.avatarUrl){const image=privateRideImage(member.avatarUrl);image.alt='';node.append(image)}else node.append(createTextElement('span',privateRideInitials(member.username),'private-ride-member-initial'));return node}
+async function openPrivateRide(rideId){const{page,content}=privateRideElements();if(!page){window.location.href=privateRidePageUrl(rideId);return}stopPrivateRideLive();content.innerHTML='<p class="private-ride-page-loading">Loading private ride…</p>';try{const ride=await apiRequest(`/api/public/private-rides/${rideId}`);privateRideState.current=ride;document.title=`${ride.rideName} | Private Group Ride`;renderPrivateRideDetail(ride)}catch(error){content.replaceChildren(createTextElement('p',error.message,'private-ride-feedback'))}}
+function renderPrivateRideDetail(ride){const{content}=privateRideElements();content.replaceChildren();const refresh=privateRideIconButton('Refresh Ride','refresh','is-refresh','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.34 5.66"></path><path d="M20 4v7h-7"></path></svg>');refresh.classList.add('private-ride-page-refresh');content.append(refresh);const media=document.createElement('div');media.className='private-ride-group-media';media.append(privateRideImage(ride.groupImageUrl,'private-ride-group-image'),privateRideStatusChip(ride,true));content.append(media,createTextElement('h2',ride.groupName,'private-ride-page-group'),createTextElement('h3',ride.rideName,'private-ride-page-title'));if(ride.description)content.append(createTextElement('p',ride.description,'private-ride-description'));const actions=document.createElement('div');actions.className='private-ride-detail-actions';if(ride.myRole==='leader'){if(ride.status==='scheduled')actions.append(privateRideButton('Start ride','start',true));else{actions.classList.add('is-centered');actions.append(privateRideIconButton('End Ride','end','is-end','<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="1"></rect></svg>'))}}else actions.append(privateRideIconButton('Leave Ride','leave','is-leave','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5H5v14h5M14 8l4 4-4 4M8 12h10"></path></svg>'));content.append(actions);if(ride.status==='live')content.append(buildPrivateRideLive());else content.append(createTextElement('p','The private map and chat open when the ride leader starts the ride.','private-ride-feedback'))}
+function privateRideStatusChip(ride,onPicture=false){const displayStatus=privateRideDisplayStatus(ride);const statusChip=createTextElement('span',displayStatus.label,`private-ride-detail-chip private-ride-detail-status ${displayStatus.className}${onPicture?' is-picture-overlay':''}`);if(displayStatus.title){statusChip.title=displayStatus.title;statusChip.setAttribute('aria-label',`${displayStatus.label}. ${displayStatus.title}`)}return statusChip}
+function privateRideMaximizeIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"></path></svg>'}
+function togglePrivateRideMapMaximize(live,button,force){const maximize=typeof force==='boolean'?force:!live.classList.contains('is-maximized');live.classList.toggle('is-maximized',maximize);document.body.classList.toggle('has-private-ride-map-maximized',maximize);button.classList.toggle('is-active',maximize);button.setAttribute('aria-pressed',String(maximize));button.setAttribute('aria-label',maximize?'Restore map size':'Maximize map');button.title=maximize?'Restore map size':'Maximize map';window.setTimeout(()=>privateRideState.map?.invalidateSize(),120)}
+function buildPrivateRideLive(){const live=document.createElement('section');live.className='private-ride-live';live.innerHTML='<div class="private-ride-map" data-private-ride-map></div><p class="private-ride-map-message" data-private-ride-map-message>Allow location to join the private live map.</p><button type="button" class="private-ride-map-maximize" data-private-ride-map-maximize aria-label="Maximize map" aria-pressed="false" title="Maximize map">'+privateRideMaximizeIcon()+'</button><button type="button" class="private-ride-chat-toggle" data-private-ride-chat-toggle aria-label="Show ride chat" aria-expanded="false" title="Ride chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14v10H9l-4 4z"></path><path d="M9 9h6M9 12h4"></path></svg></button><div class="private-ride-chat" data-private-ride-chat role="log" aria-label="Ride chat messages" hidden></div><form class="private-ride-chat-form" data-private-ride-chat-form hidden><input maxlength="120" required aria-label="Ride message" placeholder="Message the ride…"><button type="submit">Send</button></form>';const maximize=live.querySelector('[data-private-ride-map-maximize]');maximize.addEventListener('click',()=>togglePrivateRideMapMaximize(live,maximize));setTimeout(()=>openPrivateRideLive(live),0);return live}
+async function privateRideAction(action,target){const ride=privateRideState.current;if(!ride)return;try{if(action==='refresh'){target.disabled=true;target.classList.add('is-refreshing');await openPrivateRide(ride.id);return}if(['end','cancel','leave'].includes(action)&&!window.confirm(`Continue and ${action} this ride?`))return;if(action==='rotate'){const result=await apiRequest(`/api/public/private-rides/${ride.id}/rotate-code`,{method:'POST'});showPrivateRideCode(ride.id,result.rideCode,result.message);return}if(action==='remove-member'){if(!window.confirm('Remove this rider from the private ride?'))return;await apiRequest(`/api/public/private-rides/${ride.id}/members/${target.dataset.accountId}`,{method:'DELETE'});return openPrivateRide(ride.id)}const method=action==='leave'?'DELETE':'POST';await apiRequest(`/api/public/private-rides/${ride.id}/${action}`,{method});await loadPrivateRides();if(['end','cancel','leave'].includes(action))closePrivateRideModal();else openPrivateRide(ride.id)}catch(error){window.alert(error.message)}}
+async function openPrivateRideLive(live){connectPrivateRideChat(live);try{const position=await requestKapotpotPosition();const L=await loadKapotpotMapLibrary();if(!live.isConnected)return;const mapNode=live.querySelector('[data-private-ride-map]');privateRideState.map=L.map(mapNode,{zoomControl:true}).setView([position.coords.latitude,position.coords.longitude],13);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(privateRideState.map);privateRideState.markers=L.layerGroup().addTo(privateRideState.map);const message=live.querySelector('[data-private-ride-map-message]');message.hidden=true;await updatePrivateRidePresence(position);privateRideState.watchId=navigator.geolocation.watchPosition(updatePrivateRidePresence,()=>{}, {enableHighAccuracy:true,maximumAge:30000,timeout:12000});privateRideState.presenceTimer=window.setInterval(()=>{if(privateRideState.latestPosition)updatePrivateRidePresence(privateRideState.latestPosition)},60000)}catch(error){live.querySelector('[data-private-ride-map-message]').textContent=error.message}}
+function privateRideMarkerIcon(imageUrl,label){return createKapotpotDivIcon('private-ride-marker',{imageUrl,label,imageAlt:''})}
+async function updatePrivateRidePresence(position){privateRideState.latestPosition=position;const ride=privateRideState.current;if(!ride||!privateRideState.map)return;try{const result=await apiRequest(`/api/public/private-rides/${ride.id}/presence`,{method:'POST',body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude,accuracyMeters:position.coords.accuracy})});const L=window.L;privateRideState.markers.clearLayers();const account=customerState.account||{};const own=L.marker([position.coords.latitude,position.coords.longitude],{icon:privateRideMarkerIcon(account.profilePictureUrl||customerState.profile?.profilePictureUrl||'','YOU')}).addTo(privateRideState.markers);own.bindPopup('You');result.riders.forEach(rider=>{const marker=L.marker([rider.latitude,rider.longitude],{icon:privateRideMarkerIcon(rider.avatarUrl,'R')}).addTo(privateRideState.markers);marker.bindPopup(`${rider.username}<br>${rider.distanceLabel}`)})}catch(error){if(error.status===410){await loadPrivateRides();closePrivateRideModal()}}}
+function privateRideSocketUrl(rideId){const base=getApiBaseUrl()||window.location.origin;const url=new URL(`/api/public/private-rides/${rideId}/chat/socket`,base);url.protocol=url.protocol==='https:'?'wss:':'ws:';return url.toString()}
+function connectPrivateRideChat(live){const ride=privateRideState.current;if(!ride)return;privateRideState.chat=new WebSocket(privateRideSocketUrl(ride.id));privateRideState.chat.addEventListener('message',event=>{const payload=JSON.parse(event.data);if(payload.type==='snapshot')privateRideState.messages=payload.messages||[];if(payload.type==='message')privateRideState.messages=[...privateRideState.messages,payload.message].slice(-50);renderPrivateRideChat(live);if(payload.type==='error')window.alert(payload.error)});live.querySelector('[data-private-ride-chat-toggle]').addEventListener('click',event=>{const panel=live.querySelector('[data-private-ride-chat]');const form=live.querySelector('[data-private-ride-chat-form]');const show=panel.hidden;panel.hidden=!show;form.hidden=!show;event.currentTarget.setAttribute('aria-expanded',String(show));event.currentTarget.setAttribute('aria-label',show?'Hide ride chat':'Show ride chat');if(show)panel.scrollTop=panel.scrollHeight});live.querySelector('[data-private-ride-chat-form]').addEventListener('submit',event=>{event.preventDefault();const input=event.currentTarget.querySelector('input');const message=input.value.trim();if(!message||message.length>120||privateRideState.chat?.readyState!==WebSocket.OPEN)return;privateRideState.chat.send(JSON.stringify({type:'send',message}));input.value=''})}
+function renderPrivateRideChat(live){const panel=live.querySelector('[data-private-ride-chat]');panel.replaceChildren();privateRideState.messages.forEach(message=>{const row=document.createElement('div');row.className='private-ride-chat-message';if(message.avatarUrl){const avatar=privateRideImage(message.avatarUrl);avatar.alt='';row.append(avatar)}else row.append(createTextElement('span',privateRideInitials(message.username),'private-ride-chat-avatar-initials'));row.append(createTextElement('span',message.body));panel.append(row)});panel.scrollTop=panel.scrollHeight}
+function stopPrivateRideLive(){if(privateRideState.watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(privateRideState.watchId);privateRideState.watchId=null;window.clearInterval(privateRideState.presenceTimer);privateRideState.presenceTimer=null;window.clearInterval(privateRideState.spectatorTimer);privateRideState.spectatorTimer=null;privateRideState.chat?.close();privateRideState.chat=null;privateRideState.map?.remove();privateRideState.map=null;document.body.classList.remove('has-private-ride-map-maximized');privateRideState.current=null;privateRideState.messages=[]}
+function initializePrivateRidePage(){const{page}=privateRideElements();if(!page)return;const handleSessionChange=()=>{if(customerState.account){privateRideState.hadAuthenticatedSession=true;return}if(privateRideState.hadAuthenticatedSession)window.location.href='index.html#top'};handleSessionChange();window.addEventListener('customer-session-changed',handleSessionChange);page.addEventListener('click',event=>{const button=event.target.closest('[data-private-ride-action]');if(button&&!['copy','open-created'].includes(button.dataset.privateRideAction))privateRideAction(button.dataset.privateRideAction,button)});document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;const live=page.querySelector('.private-ride-live.is-maximized');const button=live?.querySelector('[data-private-ride-map-maximize]');if(live&&button)togglePrivateRideMapMaximize(live,button,false)});const params=new URLSearchParams(window.location.search);const rideId=params.get('id');if(!rideId){privateRideElements().content.replaceChildren(createTextElement('p','This private ride link is incomplete.','private-ride-feedback'));return}if(params.get('spectator')==='1')openPrivateRideSpectator(rideId);else openPrivateRide(rideId)}
+function initializePrivateGroupRides(){const{root,modal}=privateRideElements();if(!root)return;root.querySelector('[data-private-ride-create]').addEventListener('click',()=>{if(privateRideState.currentMembership)openPrivateRide(privateRideState.currentMembership.id);else showCreatePrivateRide()});root.querySelector('[data-private-rides-refresh]').addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;button.classList.add('is-refreshing');try{await loadPrivateRides()}finally{button.disabled=false;button.classList.remove('is-refreshing')}});root.addEventListener('click',event=>{const icon=event.target.closest('[data-private-ride-action="ride-icon"]');if(icon){if(icon.dataset.rideRole)openPrivateRide(icon.dataset.rideId);else showJoinPrivateRide(icon.dataset.rideId,icon.dataset.allowSpectators==='true')}});modal.querySelector('[data-private-ride-modal-close]').addEventListener('click',closePrivateRideModal);modal.addEventListener('click',event=>{if(event.target===modal)closePrivateRideModal()});modal.addEventListener('click',event=>{const button=event.target.closest('[data-private-ride-action]');if(button&&!['copy','open-created'].includes(button.dataset.privateRideAction))privateRideAction(button.dataset.privateRideAction,button)});window.addEventListener('customer-session-changed',loadPrivateRides);window.addEventListener('public-location-changed',loadPrivateRides);privateRideState.statusTimer=window.setInterval(renderPrivateRideCards,60000);loadPrivateRides()}
 async function startCatalog() {
   await initializePublicLocations();
   if (await enforcePublicWebsiteMode()) {
@@ -10302,6 +10408,8 @@ async function startCatalog() {
   initializeCartUi();
   bindCustomerAccountUi();
   initializeKapotpotFinder();
+  initializePrivateRidePage();
+  initializePrivateGroupRides();
   bindCatalogUi();
   bindProductSearchUi();
   bindProductSearchPageUi();
@@ -10352,7 +10460,7 @@ if (document.readyState === "loading") {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js?v=20260805-location-check-v7')
+    navigator.serviceWorker.register('./sw.js?v=20260809-finder-preview-action-v24')
       .then((reg) => {
         console.log('SMBWeb2 Service Worker registered successfully on scope:', reg.scope);
       })

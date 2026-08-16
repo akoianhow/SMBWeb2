@@ -18,6 +18,7 @@ const bundles = [
       "src/js/06-customer-account.js",
       "src/js/07-product-cart.js",
       "src/js/09-kapotpot-finder.js",
+      "src/js/10-private-group-rides.js",
       "src/js/08-bootstrap-pwa.js"
     ]
   },
@@ -33,7 +34,8 @@ const bundles = [
       "src/css/07-responsive.css",
       "src/css/08-stories-cart-guest.css",
       "src/css/09-notifications-polish.css",
-      "src/css/10-kapotpot-finder.css"
+      "src/css/10-kapotpot-finder.css",
+      "src/css/11-private-group-rides.css"
     ]
   }
 ];

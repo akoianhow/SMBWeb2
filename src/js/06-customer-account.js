@@ -156,9 +156,13 @@ function updateNotificationBadges(count = 0) {
 }
 
 function ensureAccountNotificationTrigger() {
-  document.querySelectorAll("[data-customer-session]").forEach((session) => {
+  const sessions = [...document.querySelectorAll("[data-customer-session]")];
+  if (document.body.classList.contains("is-private-ride-page")) {
+    sessions.push(...document.querySelectorAll("[data-mobile-header-session]"));
+  }
+  sessions.forEach((session) => {
     if (session.querySelector("[data-avatar-notification-trigger]")) return;
-    const avatar = session.querySelector("[data-account-menu-toggle]");
+    const avatar = session.querySelector("[data-account-menu-toggle], [data-mobile-header-menu-toggle]");
     if (!avatar) return;
     const button = document.createElement("button");
     button.type = "button";
@@ -471,6 +475,13 @@ function renderAvatar(container, account = customerState.account) {
   container.textContent = getAccountInitials(account);
 }
 
+function syncAccountMenuLayer() {
+  const hasOpenAccountMenu = Array.from(document.querySelectorAll(
+    "[data-account-menu], [data-mobile-header-menu], [data-coming-soon-header-menu]"
+  )).some((menu) => !menu.hidden);
+  document.body.classList.toggle("has-account-menu-open", hasOpenAccountMenu);
+}
+
 function setAccountMenuOpen(open) {
   const menu = document.querySelector("[data-account-menu]");
   const toggle = document.querySelector("[data-account-menu-toggle]");
@@ -480,6 +491,7 @@ function setAccountMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setComingSoonHeaderMenuOpen(open) {
@@ -491,6 +503,7 @@ function setComingSoonHeaderMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setMobileHeaderMenuOpen(open) {
@@ -502,6 +515,7 @@ function setMobileHeaderMenuOpen(open) {
   if (toggle) {
     toggle.setAttribute("aria-expanded", String(open));
   }
+  syncAccountMenuLayer();
 }
 
 function setMessage(element, message, type = "") {
@@ -1020,7 +1034,7 @@ async function loginCustomer(event) {
       showProfileMode(false);
       loadCommunityDiscussions(true);
     } else {
-      returnToHome();
+      returnToHome({ preserveScroll: true });
     }
   } catch (error) {
     if (message) {

@@ -1,4 +1,4 @@
-const STATIC_CACHE = 'smbweb2-static-v65-kapotpot-chat-bottom-spacer';
+const STATIC_CACHE = 'smbweb2-static-v102-header-hit-area';
 const CATALOG_CACHE = 'smbweb2-catalog-v3-kapotpot-finder';
 const PRODUCT_IMAGE_CACHE = 'smbweb2-product-images-v1';
 const ACTIVE_CACHES = new Set([STATIC_CACHE, CATALOG_CACHE, PRODUCT_IMAGE_CACHE]);
@@ -12,6 +12,7 @@ const ASSETS_TO_CACHE = [
   './',
   './404.html',
   './index.html',
+  './private-ride.html',
   './leaderboard.html',
   './coming-soon.html',
   './guest-order.html',
@@ -37,6 +38,7 @@ const ASSETS_TO_CACHE = [
   './badge.js',
   './manifest.json',
   './assets/sarapmagbike-logo.png',
+  './assets/private-group-riders.png',
   './assets/gcash-mark.svg',
   './assets/category-bike-frames.jpg',
   './assets/category-parts-components.jpg',

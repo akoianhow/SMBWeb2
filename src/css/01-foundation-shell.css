@@ -124,7 +124,7 @@ p {
 }
 
 .topbar a,
-.topbar-options span {
+.topbar-options > span {
   display: grid;
   place-items: center;
   min-width: 106px;
@@ -133,7 +133,7 @@ p {
   border-right: 1px solid #555555;
 }
 
-.topbar-options span {
+.topbar-options > span {
   min-width: 132px;
   color: #dcdcdc;
   text-transform: none;
@@ -348,6 +348,22 @@ p {
   border: 1px solid #cfcfcf;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
   text-transform: none;
+}
+
+body.has-account-menu-open .header-main {
+  z-index: 20000 !important;
+}
+
+body.has-account-menu-open .customer-session,
+body.has-account-menu-open .mobile-header-session,
+body.has-account-menu-open .mobile-header-actions {
+  z-index: 20001 !important;
+}
+
+body.has-account-menu-open .account-menu,
+body.has-account-menu-open .mobile-header-menu,
+body.has-account-menu-open [data-coming-soon-header-menu] {
+  z-index: 20002 !important;
 }
 
 .account-menu-header {
